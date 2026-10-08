@@ -200,11 +200,41 @@
         document.addEventListener("click", e => { if (!box.contains(e.target)) close(); });
     }
 
+    /* ---------------- unit form: types allowed under the chosen parent ---------------- */
+    function unitForm(form) {
+        const parent = $("[data-oc-parent]", form);
+        const type = $("[data-oc-type-select]", form);
+        const none = $("[data-oc-no-type]", form);
+        if (!parent || !type) return;
+        const sync = () => {
+            const p = parent.selectedOptions[0];
+            const isRoot = !parent.value;
+            const parentLevel = p?.dataset.level ? +p.dataset.level : null;
+            let firstAllowed = null;
+            $$("option", type).forEach(o => {
+                const level = o.dataset.level ? +o.dataset.level : null;
+                const ok = isRoot ? o.dataset.root === "1" : (level === null || parentLevel === null || level > parentLevel);
+                o.disabled = !ok;
+                o.hidden = !ok;
+                if (ok && !firstAllowed) firstAllowed = o;
+            });
+            if (type.selectedOptions[0]?.disabled) type.value = firstAllowed ? firstAllowed.value : "";
+            if (none) none.hidden = !!firstAllowed;
+        };
+        parent.addEventListener("change", sync);
+        sync();
+    }
+
     function init() {
         flash();
         tree();
-        if (window.MX?.component) window.MX.component("oc-user-search", userSearch);
-        else $$("[data-mx-init='oc-user-search']").forEach(userSearch);
+        if (window.MX?.component) {
+            window.MX.component("oc-user-search", userSearch);
+            window.MX.component("oc-unit-form", unitForm);
+        } else {
+            $$("[data-mx-init='oc-user-search']").forEach(userSearch);
+            $$("[data-mx-init='oc-unit-form']").forEach(unitForm);
+        }
     }
 
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);

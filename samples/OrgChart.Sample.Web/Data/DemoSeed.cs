@@ -32,7 +32,8 @@ public static class DemoSeed
         (string Key, string Title)[] unitTypes = [("COMPANY", "شرکت"), ("BRANCH", "شعبه"), ("DIVISION", "معاونت"), ("DEPARTMENT", "اداره"), ("SECTION", "بخش"), ("TEAM", "تیم")];
         for (int i = 0; i < unitTypes.Length; i++)
         {
-            await admin.CreateTypeAsync(OrgTypeKind.Unit, new OrgTypeInput(unitTypes[i].Key, unitTypes[i].Title, i + 1));
+            // Level = place in the hierarchy; only companies may be roots.
+            await admin.CreateTypeAsync(OrgTypeKind.Unit, new OrgTypeInput(unitTypes[i].Key, unitTypes[i].Title, i + 1, Level: i + 1, CanBeRoot: i == 0));
         }
 
         (string Key, string Title)[] positionTypes = [("MANAGERIAL", "مدیریتی"), ("SUPERVISORY", "سرپرستی"), ("EXPERT", "کارشناسی"), ("ADMIN", "اداری")];
@@ -57,6 +58,8 @@ public static class DemoSeed
         await admin.CreatePositionAsync(new PositionInput("POS-FIN-VP", "معاون مالی", "DV-FIN", "MANAGERIAL", true));
         await admin.CreatePositionAsync(new PositionInput("POS-ACC-MGR", "رئیس حسابداری", "DP-ACC", "MANAGERIAL", true));
         await admin.CreatePositionAsync(new PositionInput("POS-ACC-EXP", "کارشناس حسابداری", "DP-ACC", "EXPERT"));
+        await admin.CreatePositionAsync(new PositionInput("POS-ACC-OIL", "مسئول حسابداری نفت", "DP-ACC", "SUPERVISORY", ParentPositionKey: "POS-ACC-MGR"));
+        await admin.CreatePositionAsync(new PositionInput("POS-ACC-OIL-EXP", "کارشناس حسابداری نفت", "DP-ACC", "EXPERT", ParentPositionKey: "POS-ACC-OIL"));
         await admin.CreatePositionAsync(new PositionInput("POS-PUR-MGR", "مدیر خرید", "DP-PUR", "MANAGERIAL", true, SortOrder: 1));
         await admin.CreatePositionAsync(new PositionInput("POS-PUR-EXP1", "کارشناس خرید ارشد", "DP-PUR", "EXPERT", SortOrder: 2));
         await admin.CreatePositionAsync(new PositionInput("POS-PUR-EXP2", "کارشناس خرید", "DP-PUR", "EXPERT", SortOrder: 3));
@@ -79,5 +82,6 @@ public static class DemoSeed
         await admin.AssignAsync(new AssignmentInput("POS-FIN-VP", "u-001", AssignmentKind.Acting, year.AddMonths(16), Note: "تا تعیین معاون جدید"));
         await admin.AssignAsync(new AssignmentInput("POS-ACC-EXP", "u-006", ValidFrom: year.AddMonths(-30), ValidTo: year.AddMonths(2)));
         await admin.AssignAsync(new AssignmentInput("POS-ACC-MGR", "u-006", ValidFrom: year.AddMonths(2)));
+        await admin.AssignAsync(new AssignmentInput("POS-ACC-OIL", "u-008", ValidFrom: year.AddMonths(4)));
     }
 }

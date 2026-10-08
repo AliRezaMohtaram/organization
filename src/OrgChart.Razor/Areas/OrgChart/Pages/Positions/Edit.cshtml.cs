@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 
 using OrgChart.Core.Admin;
 using OrgChart.Core.Chart;
+using OrgChart.Core.Model;
 using OrgChart.Razor.Resources;
 
 namespace OrgChart.Razor.Admin.Pages.Positions;
@@ -20,6 +21,10 @@ public sealed class EditModel(IOrgChartReader reader, IOrgChartAdministration ad
     [BindProperty(SupportsGet = true)]
     public string? Unit { get; set; }
 
+    /// <summary>Parent position proposed for a new position.</summary>
+    [BindProperty(SupportsGet = true)]
+    public string? Parent { get; set; }
+
     [BindProperty]
     public PositionForm Input { get; set; } = new();
 
@@ -27,6 +32,9 @@ public sealed class EditModel(IOrgChartReader reader, IOrgChartAdministration ad
     public PositionNode? Existing { get; private set; }
     public UnitNode? OwnerUnit { get; private set; }
     public bool IsEdit => Existing is not null;
+
+    /// <summary>The position heads its unit, so it cannot report to a position of the unit.</summary>
+    public bool IsHead => Existing is not null && OrgKey.AreEqual(OwnerUnit?.ManagerPositionKey, Existing.Key);
 
     public async Task<IActionResult> OnGetAsync(CancellationToken cancellationToken)
     {
@@ -47,10 +55,12 @@ public sealed class EditModel(IOrgChartReader reader, IOrgChartAdministration ad
                 SortOrder = position.SortOrder,
                 ValidFrom = Dates.Input(position.ValidFrom),
                 ValidTo = Dates.Input(position.ValidTo, isEnd: true),
+                ParentPositionKey = position.ParentKey,
             };
         }
         else
         {
+            Input.ParentPositionKey = Chart.FindPosition(Parent) is { } parent && OrgKey.AreEqual(parent.UnitKey, OwnerUnit!.Key) ? parent.Key : null;
             IReadOnlyList<PositionNode> siblings = Chart.GetPositions(OwnerUnit!.Key);
             Input.SortOrder = siblings.Count == 0 ? 0 : siblings.Max(p => p.SortOrder) + 1;
         }
@@ -71,17 +81,18 @@ public sealed class EditModel(IOrgChartReader reader, IOrgChartAdministration ad
         }
 
         string? type = string.IsNullOrWhiteSpace(Input.TypeKey) ? null : Input.TypeKey;
+        string? parentKey = string.IsNullOrWhiteSpace(Input.ParentPositionKey) ? null : Input.ParentPositionKey;
         try
         {
             if (Existing is { } position)
             {
                 await admin.UpdatePositionAsync(position.Key,
-                    new PositionUpdate(Input.Title ?? "", type, Input.IsManagerial, Input.Code, Input.SortOrder, from, to), cancellationToken);
+                    new PositionUpdate(Input.Title ?? "", type, Input.IsManagerial, Input.Code, Input.SortOrder, from, to, parentKey), cancellationToken);
             }
             else
             {
                 await admin.CreatePositionAsync(new PositionInput(
-                    Input.Key?.Trim() ?? "", Input.Title ?? "", OwnerUnit!.Key, type, Input.IsManagerial, Input.Code, Input.SortOrder, from, to), cancellationToken);
+                    Input.Key?.Trim() ?? "", Input.Title ?? "", OwnerUnit!.Key, type, Input.IsManagerial, Input.Code, Input.SortOrder, from, to, parentKey), cancellationToken);
             }
 
             return Done(UnitUrl(OwnerUnit!.Key, IndexModel.TabPositions),
@@ -121,4 +132,5 @@ public sealed class PositionForm
     public int SortOrder { get; set; }
     public string? ValidFrom { get; set; }
     public string? ValidTo { get; set; }
+    public string? ParentPositionKey { get; set; }
 }

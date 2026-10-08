@@ -28,12 +28,29 @@
             {
                 <div class="tbl-wrap">
                     <table class="tbl">
-                        <thead><tr><th>@OrgText.Get("Col_Type")</th><th>@OrgText.Get("Col_Used")</th><th>@OrgText.Get("Col_Status")</th><th></th></tr></thead>
+                        <thead><tr><th>@OrgText.Get("Col_Type")</th>@if (kind == OrgTypeKind.Unit) { <th>@OrgText.Get("Col_Level")</th> }<th>@OrgText.Get("Col_Used")</th><th>@OrgText.Get("Col_Status")</th><th></th></tr></thead>
                         <tbody>
                             @foreach (OrgTypeNode type in types)
                             {
                                 <tr class="@(type.IsActive ? "" : "oc-inactive")">
                                     <td><div class="cell-main">@type.Title</div><div class="code">@type.Key</div></td>
+                                    @if (kind == OrgTypeKind.Unit)
+                                    {
+                                        <td>
+                                            @if (type.Level is { } level)
+                                            {
+                                                <span class="nums">@OrgFormat.Number(level)</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="cell-sub">@OrgText.Get("Types_NoLevel")</span>
+                                            }
+                                            @if (type.CanBeRoot)
+                                            {
+                                                <span class="tag tg-alias">@OrgText.Get("Types_Root")</span>
+                                            }
+                                        </td>
+                                    }
                                     <td class="nums">@OrgFormat.Number(kind == OrgTypeKind.Unit ? Model.UnitsUsing(type.Key) : Model.PositionsUsing(type.Key))</td>
                                     <td><span class="badge @(type.IsActive ? "st-active" : "st-inactive")">@OrgText.Get(type.IsActive ? "Status_Active" : "Status_Inactive")</span></td>
                                     <td>

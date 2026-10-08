@@ -34,6 +34,21 @@
                 <label class="label" for="SortOrder">@OrgText.Get("Field_SortOrder")</label>
                 <input class="input ltr" asp-for="SortOrder" type="number" />
             </div>
+            @if (Model.Kind == OrgTypeKind.Unit)
+            {
+                <div class="field">
+                    <label class="label" for="Level">@OrgText.Get("Field_Level")</label>
+                    <input class="input ltr" asp-for="Level" type="number" min="1" />
+                </div>
+                <div class="field">
+                    <label class="toggle" style="margin-top:1.6rem">
+                        <input asp-for="CanBeRoot" type="checkbox" />
+                        <span class="toggle-track"></span>
+                        <span>@OrgText.Get("Field_CanBeRoot")</span>
+                    </label>
+                </div>
+                <p class="hint span-2" style="margin:0">@OrgText.Get("Field_LevelHint") @OrgText.Get("Field_CanBeRootHint")</p>
+            }
         </div>
     </div>
     <div class="modal-foot">

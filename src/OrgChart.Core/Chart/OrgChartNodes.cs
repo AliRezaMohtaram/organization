@@ -26,6 +26,9 @@ public sealed record PositionNode(
     int SortOrder,
     bool IsActive,
     DateTime? ValidFrom,
-    DateTime? ValidTo);
+    DateTime? ValidTo,
+    string? ParentKey = null);
 
-public sealed record OrgTypeNode(string Key, string Title, int SortOrder, bool IsActive);
+/// <param name="Level">Unit types only: place in the hierarchy (1 = top); null = no rule.</param>
+/// <param name="CanBeRoot">Unit types only: units of this type may be roots.</param>
+public sealed record OrgTypeNode(string Key, string Title, int SortOrder, bool IsActive, int? Level = null, bool CanBeRoot = true);

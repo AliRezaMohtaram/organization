@@ -139,6 +139,17 @@ All UI must follow the **MX design system** from https://github.com/AliRezaMohta
 9. Companies: root units whose type is "company"; no separate entity.
 10. Unit relations (reporting, collaboration, succession): not in v1.
 11. Position categories: admin-editable lookup (`PositionType`) plus the `IsManagerial` flag.
+12. Positions form a tree inside their unit: `Position.ParentPositionId`, **same unit only**. Reporting line
+    (superior): parent position; else the unit's head (unless it is the head); else the head of the nearest
+    ancestor unit that has one (e.g. head of accounting → head of the finance management above it).
+13. Unit hierarchy levels: `OrgUnitType.Level` (1 = top; a unit's type needs a greater level than its parent's;
+    null = no rule) and `CanBeRoot`.
+14. Next features, in order: succession (deputy positions) and delegation (temporary transfer of a position's
+    authority, seen by Acl as a temporary assignment); then a separate `Users` module (Identity, MX pages,
+    implements `IUserDirectory`; replaceable by AD/SSO later) and one admin panel for users, org chart and Acl
+    (Acl's admin UI to move to MX). Partial delegation of single permissions stays in Acl (dated `UserPermission`).
+15. Testing: the user runs browser tests; Claude runs automated tests only and writes a manual checklist
+    (`docs/test-checklist.md`) instead of driving a browser, unless asked (saves tokens).
 
 ## Domain model (src/OrgChart.Core/Model, namespace OrgChart.Core.Model)
 
@@ -152,7 +163,9 @@ All UI must follow the **MX design system** from https://github.com/AliRezaMohta
 - `OrgUnitType`, `PositionType`: lookup tables.
 - `OrgUnit`: Code? (editable, unique when set), TypeId, ParentId?, ManagerPositionId? (unique when set),
   ValidFrom?, ValidTo?.
-- `Position`: Code? (editable, unique when set), OrgUnitId, TypeId?, IsManagerial, ValidFrom?, ValidTo?.
+- `Position`: Code? (editable, unique when set), OrgUnitId, ParentPositionId? (same unit; Restrict), TypeId?,
+  IsManagerial, ValidFrom?, ValidTo?.
+- `OrgUnitType` (besides the keyed fields): Level? (CHECK ≥ 1), CanBeRoot (default true).
 - `Assignment`: Id, PositionId, UserId (string, 450), Kind (`AssignmentKind`: Primary = 1, Acting = 2 —
   persisted as int, never renumber), ValidFrom?, ValidTo?, Note?. Several concurrent assignments per user;
   future-dated rows are planned moves; ending one sets ValidTo (rows are history).
@@ -262,5 +275,21 @@ All UI must follow the **MX design system** from https://github.com/AliRezaMohta
      protocol, form POST with antiforgery, errors in the form, invalid dates, user search.
    - Checked in Chromium (Playwright) at 1440px and 390px, dark and light, host and standalone layouts; screenshots in
      `docs/screenshots`.
-5. NEXT (ask the user): `OrgChart.Acl` bridge (needs Acl.Core: internal NuGet feed or git submodule); graphical chart
-   view; NuGet packaging (as Acl: pack, verify with a throwaway consumer); unit relations (decided: not in v1).
+5. DONE: Position tree and unit levels (decisions 12–13). Migration `PositionHierarchyAndTypeLevels`.
+   - Snapshot: `PositionNode.ParentKey`; `GetPositions(unit)` in tree order; `GetChildPositions`, `GetParentPositionKey`,
+     `GetPositionDepth`, `IsSelfOrSubordinate`, `GetSuperiorKey` (rule above), `GetManagerChain` (walks superiors,
+     active only). A parent in another unit is ignored; position cycles are cut like unit cycles (`CutCycles`).
+   - Admin rules: parent must be an active position of the same unit, no cycle (`ParentPositionNotInUnit`,
+     `ParentPositionCycle`); a unit head cannot have a parent and a position with a parent cannot become head
+     (`UnitHeadHasParent`); a position with subordinates cannot move (`PositionHasSubordinates`), with active ones
+     cannot be deactivated; moving clears the parent; reactivating needs an active parent. Parent change = Structure.
+   - Levels: create/move/change type checked (`TypeLevelNotAllowed`, `TypeCannotBeRoot`), children must fit a new type;
+     changing a type's level/root flag is rejected when existing units would break (`TypeLevelConflict`); `InvalidLevel`.
+   - UI: tree nests positions under their parents; positions table indented by depth with a "reports to" column and a
+     "new subordinate" action (`Positions/Edit?unit=&parent=`); position form has the parent select (heads: hint
+     instead); types form/list show Level and CanBeRoot; unit form offers only types allowed under the chosen parent
+     (MX component `oc-unit-form`), move form only allowed parents (`OrgOptions.ParentsFor/Fits/PositionParents`).
+   - Sample seed: type levels 1–6 (only companies are roots) and the oil-accounting example under DP-ACC.
+     Delete `orgchart-sample.db` to reseed.
+6. NEXT: succession and delegation (decision 14) — design to be agreed with the user first.
+   Later: `Users` module + unified admin panel; `OrgChart.Acl` bridge; graphical chart; NuGet packaging.

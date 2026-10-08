@@ -2,7 +2,7 @@
 @{
     string cancel = Model.UnitUrl(Model.OwnerUnit!.Key, IndexModel.TabPositions);
 }
-<form class="modal" method="post" asp-area="OrgChart" asp-page="/Positions/Edit" asp-route-key="@Model.Key" asp-route-unit="@(Model.IsEdit ? null : Model.OwnerUnit.Key)" data-mx-ajax novalidate>
+<form class="modal" method="post" asp-area="OrgChart" asp-page="/Positions/Edit" asp-route-key="@Model.Key" asp-route-unit="@(Model.IsEdit ? null : Model.OwnerUnit.Key)" asp-route-parent="@(Model.IsEdit ? null : Model.Parent)" data-mx-ajax novalidate>
     <div class="modal-head">
         <span class="modal-head-ico"><svg class="ico"><use href="#oc-position" /></svg></span>
         <div>
@@ -34,6 +34,21 @@
             <div class="field span-2">
                 <label class="label" for="Input_Title">@OrgText.Get("Field_Title")<span class="req">*</span></label>
                 <input class="input" asp-for="Input.Title" autocomplete="off" required autofocus />
+            </div>
+            <div class="field span-2">
+                <label class="label" for="Input_ParentPositionKey">@OrgText.Get("Field_ParentPosition")</label>
+                @if (Model.IsHead)
+                {
+                    <input type="hidden" asp-for="Input.ParentPositionKey" value="" />
+                    <span class="hint">@OrgText.Get("Field_ParentPositionHead")</span>
+                }
+                else
+                {
+                    <select class="select" asp-for="Input.ParentPositionKey" asp-items="OrgOptions.PositionParents(Model.Chart, Model.OwnerUnit.Key, Model.Input.ParentPositionKey, Model.Existing?.Key)">
+                        <option value="">@OrgText.Get("Position_TopLevel")</option>
+                    </select>
+                    <span class="hint">@OrgText.Get("Field_ParentPositionHint")</span>
+                }
             </div>
             <div class="field">
                 <label class="label" for="Input_TypeKey">@OrgText.Get("Field_PositionType")</label>

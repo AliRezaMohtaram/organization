@@ -40,4 +40,12 @@ public static class OrgChartErrors
     public const string AssignmentOverlap = "AssignmentOverlap";
     public const string AssignmentAlreadyEnded = "AssignmentAlreadyEnded";
     public const string InvalidEndDate = "InvalidEndDate";
+    public const string ParentPositionNotInUnit = "ParentPositionNotInUnit";
+    public const string ParentPositionCycle = "ParentPositionCycle";
+    public const string PositionHasSubordinates = "PositionHasSubordinates";
+    public const string UnitHeadHasParent = "UnitHeadHasParent";
+    public const string InvalidLevel = "InvalidLevel";
+    public const string TypeLevelNotAllowed = "TypeLevelNotAllowed";
+    public const string TypeCannotBeRoot = "TypeCannotBeRoot";
+    public const string TypeLevelConflict = "TypeLevelConflict";
 }

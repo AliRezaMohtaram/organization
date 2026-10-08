@@ -374,6 +374,94 @@ public sealed class AdministrationTests : IDisposable
         Assert.Equal(3, _s.Changes.All.Count(c => c.Kind == OrgChartChangeKind.Assignments));
     }
 
+    // ---------------------------------------------------------------- position tree
+
+    [Fact]
+    public async Task Positions_can_report_to_positions_of_the_same_unit()
+    {
+        await _s.SeedAsync();
+        await _s.AdminAsync(async a =>
+        {
+            await a.CreatePositionAsync(new PositionInput("OIL-LEAD", "Oil lead", "ACC", ParentPositionKey: "POS-CLERK"));
+            await a.CreatePositionAsync(new PositionInput("OIL-EXP", "Oil expert", "ACC", ParentPositionKey: "oil-lead"));
+        });
+
+        OrgChartSnapshot chart = await SnapshotAsync();
+        Assert.Equal("OIL-LEAD", chart.FindPosition("OIL-EXP")!.ParentKey);
+        Assert.Equal(["OIL-LEAD", "POS-CLERK", "POS-CFO", "POS-CEO"], chart.GetManagerChain("OIL-EXP"));
+
+        Assert.Equal(OrgChartErrors.ParentPositionNotInUnit,
+            await ExpectErrorAsync(a => a.CreatePositionAsync(new PositionInput("X", "X", "ACC", ParentPositionKey: "POS-CFO"))));
+        Assert.Equal(OrgChartErrors.ParentPositionCycle,
+            await ExpectErrorAsync(a => a.UpdatePositionAsync("POS-CLERK", new PositionUpdate("Clerk", null, false, null, 0, null, null, "OIL-EXP"))));
+        Assert.Equal(OrgChartErrors.ParentPositionCycle,
+            await ExpectErrorAsync(a => a.UpdatePositionAsync("OIL-LEAD", new PositionUpdate("Oil lead", null, false, null, 0, null, null, "OIL-LEAD"))));
+        Assert.Equal(OrgChartErrors.PositionHasSubordinates, await ExpectErrorAsync(a => a.SetPositionActiveAsync("OIL-LEAD", false)));
+        Assert.Equal(OrgChartErrors.PositionHasSubordinates, await ExpectErrorAsync(a => a.MovePositionAsync("OIL-LEAD", "FIN")));
+
+        // A head cannot report to a position of its own unit, and a position with a parent cannot become head.
+        Assert.Equal(OrgChartErrors.UnitHeadHasParent, await ExpectErrorAsync(a => a.SetUnitManagerAsync("ACC", "OIL-LEAD")));
+        await _s.AdminAsync(a => a.SetUnitManagerAsync("ACC", "POS-CLERK"));
+        await _s.AdminAsync(a => a.CreatePositionAsync(new PositionInput("ACC-2", "Second", "ACC")));
+        Assert.Equal(OrgChartErrors.UnitHeadHasParent,
+            await ExpectErrorAsync(a => a.UpdatePositionAsync("POS-CLERK", new PositionUpdate("Clerk", null, false, null, 0, null, null, "ACC-2"))));
+    }
+
+    [Fact]
+    public async Task Moving_a_position_clears_its_parent()
+    {
+        await _s.SeedAsync();
+        await _s.AdminAsync(async a =>
+        {
+            await a.CreatePositionAsync(new PositionInput("SUB", "Sub", "FIN", ParentPositionKey: "POS-ACC"));
+            await a.MovePositionAsync("SUB", "ACC");
+        });
+
+        PositionNode moved = (await SnapshotAsync()).FindPosition("SUB")!;
+        Assert.Equal(("ACC", (string?)null), (moved.UnitKey, moved.ParentKey));
+    }
+
+    // ---------------------------------------------------------------- unit levels
+
+    [Fact]
+    public async Task Unit_type_levels_are_enforced()
+    {
+        await _s.AdminAsync(async a =>
+        {
+            await a.CreateTypeAsync(OrgTypeKind.Unit, new OrgTypeInput("COMPANY", "Company", Level: 1));
+            await a.CreateTypeAsync(OrgTypeKind.Unit, new OrgTypeInput("BRANCH", "Branch", Level: 2, CanBeRoot: false));
+            await a.CreateTypeAsync(OrgTypeKind.Unit, new OrgTypeInput("DEPT", "Department", Level: 4, CanBeRoot: false));
+            await a.CreateUnitAsync(new UnitInput("C", "Company", "COMPANY"));
+            await a.CreateUnitAsync(new UnitInput("B", "Branch", "BRANCH", "C"));
+            await a.CreateUnitAsync(new UnitInput("D", "Dept", "DEPT", "B"));
+            await a.CreateUnitAsync(new UnitInput("D2", "Dept under company", "DEPT", "C")); // skipping a level is fine
+        });
+
+        Assert.Equal(OrgChartErrors.TypeLevelNotAllowed, await ExpectErrorAsync(a => a.CreateUnitAsync(new UnitInput("X", "X", "BRANCH", "D"))));
+        Assert.Equal(OrgChartErrors.TypeLevelNotAllowed, await ExpectErrorAsync(a => a.CreateUnitAsync(new UnitInput("X", "X", "COMPANY", "C"))));
+        Assert.Equal(OrgChartErrors.TypeCannotBeRoot, await ExpectErrorAsync(a => a.CreateUnitAsync(new UnitInput("X", "X", "DEPT"))));
+        Assert.Equal(OrgChartErrors.TypeLevelNotAllowed, await ExpectErrorAsync(a => a.MoveUnitAsync("B", "D2")));
+        Assert.Equal(OrgChartErrors.TypeCannotBeRoot, await ExpectErrorAsync(a => a.MoveUnitAsync("D", null)));
+        Assert.Equal(OrgChartErrors.TypeLevelNotAllowed,
+            await ExpectErrorAsync(a => a.UpdateUnitAsync("B", new UnitUpdate("Branch", "DEPT", null, 0, null, null)))); // its child D is DEPT too
+        Assert.Equal(OrgChartErrors.TypeLevelConflict,
+            await ExpectErrorAsync(a => a.UpdateTypeAsync(OrgTypeKind.Unit, "BRANCH", new OrgTypeUpdate("Branch", 0, 5, false))));
+        Assert.Equal(OrgChartErrors.TypeLevelConflict,
+            await ExpectErrorAsync(a => a.UpdateTypeAsync(OrgTypeKind.Unit, "COMPANY", new OrgTypeUpdate("Company", 0, 1, CanBeRoot: false))));
+        Assert.Equal(OrgChartErrors.InvalidLevel,
+            await ExpectErrorAsync(a => a.UpdateTypeAsync(OrgTypeKind.Unit, "DEPT", new OrgTypeUpdate("Dept", 0, 0, false))));
+
+        // Types without a level have no rule.
+        await _s.AdminAsync(async a =>
+        {
+            await a.CreateTypeAsync(OrgTypeKind.Unit, new OrgTypeInput("FREE", "Free"));
+            await a.CreateUnitAsync(new UnitInput("F", "Free", "FREE", "D"));
+            await a.UpdateTypeAsync(OrgTypeKind.Unit, "BRANCH", new OrgTypeUpdate("Branch", 0, 3, false));
+        });
+        OrgTypeNode branch = (await SnapshotAsync()).FindUnitType("BRANCH")!;
+        Assert.Equal((3, false), (branch.Level, branch.CanBeRoot));
+    }
+
     [Fact]
     public async Task Listener_failure_reaches_caller_but_change_is_saved()
     {

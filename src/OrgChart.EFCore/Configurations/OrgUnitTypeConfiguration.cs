@@ -9,7 +9,8 @@ internal sealed class OrgUnitTypeConfiguration : IEntityTypeConfiguration<OrgUni
 {
     public void Configure(EntityTypeBuilder<OrgUnitType> builder)
     {
-        builder.ToTable("OrgUnitTypes");
+        builder.ToTable("OrgUnitTypes", t => t.HasCheckConstraint("CK_OrgUnitTypes_Level", "[Level] IS NULL OR [Level] >= 1"));
         builder.ConfigureKeyed();
+        builder.Property(e => e.CanBeRoot).HasDefaultValue(true).HasSentinel(true);
     }
 }

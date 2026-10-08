@@ -101,7 +101,7 @@
   <data name="Field_Parent" xml:space="preserve"><value>واحد والد</value></data>
   <data name="Field_NewParent" xml:space="preserve"><value>والد جدید</value></data>
   <data name="Field_NewUnit" xml:space="preserve"><value>واحد جدید</value></data>
-  <data name="Field_Level" xml:space="preserve"><value>سطح در درخت</value></data>
+  <data name="Field_TreeLevel" xml:space="preserve"><value>سطح در درخت</value></data>
   <data name="Field_Manager" xml:space="preserve"><value>مدیر واحد</value></data>
   <data name="Field_ManagerPosition" xml:space="preserve"><value>سمت مدیر</value></data>
   <data name="Field_PositionsCount" xml:space="preserve"><value>سمت‌های فعال</value></data>
@@ -280,4 +280,28 @@
   <data name="Entity_OrgUnitType" xml:space="preserve"><value>نوع واحد</value></data>
   <data name="Entity_PositionType" xml:space="preserve"><value>نوع سمت</value></data>
   <data name="Tree_ShowPositions" xml:space="preserve"><value>نمایش سمت‌ها</value></data>
+  <data name="Error_ParentPositionNotInUnit" xml:space="preserve"><value>سمت بالادست باید از سمت‌های همین واحد باشد.</value></data>
+  <data name="Error_ParentPositionCycle" xml:space="preserve"><value>سمت را نمی‌شود زیر خودش یا یکی از زیرمجموعه‌هایش برد.</value></data>
+  <data name="Error_PositionHasSubordinates" xml:space="preserve"><value>سمت‌های دیگری زیر این سمت هستند؛ اول آن‌ها را جابه‌جا یا غیرفعال کنید.</value></data>
+  <data name="Error_UnitHeadHasParent" xml:space="preserve"><value>رئیس واحد نمی‌تواند زیر سمت دیگری از همان واحد باشد؛ بالادستش خودکار رئیس واحد بالاتر است.</value></data>
+  <data name="Error_InvalidLevel" xml:space="preserve"><value>سطح باید عدد ۱ یا بزرگ‌تر باشد (یا خالی).</value></data>
+  <data name="Error_TypeLevelNotAllowed" xml:space="preserve"><value>این نوع واحد در این سطح مجاز نیست؛ سطح نوع واحد باید از سطح نوع والد بیشتر باشد.</value></data>
+  <data name="Error_TypeCannotBeRoot" xml:space="preserve"><value>واحد از این نوع نمی‌تواند بدون والد (ریشه) باشد.</value></data>
+  <data name="Error_TypeLevelConflict" xml:space="preserve"><value>با این سطح، بعضی از واحدهای موجود قانون سلسله‌مراتب را می‌شکنند. اول آن واحدها را اصلاح کنید.</value></data>
+  <data name="Field_ParentPosition" xml:space="preserve"><value>سمت بالادست</value></data>
+  <data name="Field_ParentPositionHint" xml:space="preserve"><value>خالی یعنی مستقیم زیر رئیس واحد (و رئیس واحد زیر رئیس واحد بالاتر).</value></data>
+  <data name="Field_ParentPositionHead" xml:space="preserve"><value>رئیس واحد بالادستی در همین واحد ندارد؛ به رئیس واحد بالاتر گزارش می‌دهد.</value></data>
+  <data name="Position_TopLevel" xml:space="preserve"><value>— مستقیم زیر رئیس واحد —</value></data>
+  <data name="Position_ReportsTo" xml:space="preserve"><value>گزارش به: {0}</value></data>
+  <data name="Position_ReportsToNone" xml:space="preserve"><value>بالاترین سمت</value></data>
+  <data name="Field_Level" xml:space="preserve"><value>سطح</value></data>
+  <data name="Field_LevelHint" xml:space="preserve"><value>۱ برای بالاترین (مثلاً شرکت). زیرواحد باید سطح بزرگ‌تری از والدش داشته باشد. خالی یعنی بدون محدودیت.</value></data>
+  <data name="Field_CanBeRoot" xml:space="preserve"><value>می‌تواند واحد ریشه باشد</value></data>
+  <data name="Field_CanBeRootHint" xml:space="preserve"><value>مثلاً شرکت؛ واحدهای این نوع می‌توانند بدون والد باشند.</value></data>
+  <data name="Col_Level" xml:space="preserve"><value>سطح</value></data>
+  <data name="Col_ReportsTo" xml:space="preserve"><value>گزارش به</value></data>
+  <data name="Types_Root" xml:space="preserve"><value>ریشه</value></data>
+  <data name="Types_NoLevel" xml:space="preserve"><value>بدون محدودیت</value></data>
+  <data name="Unit_NoTypeForParent" xml:space="preserve"><value>برای این والد نوع واحد مجازی تعریف نشده است. سطح انواع واحد را در «انواع واحد و سمت» بررسی کنید.</value></data>
+  <data name="Position_NewSubordinate" xml:space="preserve"><value>سمت زیرمجموعه</value></data>
 </root>

@@ -28,6 +28,13 @@ public sealed class EditModel(IOrgChartReader reader, IOrgChartAdministration ad
     [BindProperty]
     public int SortOrder { get; set; }
 
+    /// <summary>Unit types: place in the hierarchy (1 = top); empty = no rule.</summary>
+    [BindProperty]
+    public int? Level { get; set; }
+
+    [BindProperty]
+    public bool CanBeRoot { get; set; } = true;
+
     public OrgTypeNode? Existing { get; private set; }
     public bool IsEdit => Existing is not null;
     public string BackUrl => Url.Page("/Types/Index", new { area = "OrgChart" }) ?? "/OrgChart/Types";
@@ -43,6 +50,8 @@ public sealed class EditModel(IOrgChartReader reader, IOrgChartAdministration ad
         {
             Title = type.Title;
             SortOrder = type.SortOrder;
+            Level = type.Level;
+            CanBeRoot = type.CanBeRoot;
         }
 
         return Form(FormPath);
@@ -59,11 +68,11 @@ public sealed class EditModel(IOrgChartReader reader, IOrgChartAdministration ad
         {
             if (Existing is { } type)
             {
-                await admin.UpdateTypeAsync(Kind, type.Key, new OrgTypeUpdate(Title ?? "", SortOrder), cancellationToken);
+                await admin.UpdateTypeAsync(Kind, type.Key, new OrgTypeUpdate(Title ?? "", SortOrder, Level, CanBeRoot), cancellationToken);
             }
             else
             {
-                await admin.CreateTypeAsync(Kind, new OrgTypeInput(NewKey?.Trim() ?? "", Title ?? "", SortOrder), cancellationToken);
+                await admin.CreateTypeAsync(Kind, new OrgTypeInput(NewKey?.Trim() ?? "", Title ?? "", SortOrder, Level, CanBeRoot), cancellationToken);
             }
 
             return Done(BackUrl, OrgText.Format("Flash_TypeSaved", Title?.Trim()));

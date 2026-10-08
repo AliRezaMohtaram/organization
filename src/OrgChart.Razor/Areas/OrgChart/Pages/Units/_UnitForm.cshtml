@@ -2,7 +2,7 @@
 @{
     string cancel = Model.UnitUrl(Model.Existing?.Key ?? Model.Input.ParentKey);
 }
-<form class="modal" method="post" asp-area="OrgChart" asp-page="/Units/Edit" asp-route-key="@Model.Key" data-mx-ajax novalidate>
+<form class="modal" method="post" asp-area="OrgChart" asp-page="/Units/Edit" asp-route-key="@Model.Key" data-mx-ajax data-mx-init="oc-unit-form" novalidate>
     <div class="modal-head">
         <span class="modal-head-ico"><svg class="ico"><use href="#oc-unit" /></svg></span>
         <div>
@@ -37,8 +37,12 @@
                 </div>
                 <div class="field">
                     <label class="label" for="Input_ParentKey">@OrgText.Get("Field_Parent")</label>
-                    <select class="select" asp-for="Input.ParentKey" asp-items="OrgOptions.Units(Model.Chart, Model.Input.ParentKey)">
+                    <select class="select" asp-for="Input.ParentKey" data-oc-parent>
                         <option value="">@OrgText.Get("Unit_Root")</option>
+                        @foreach (UnitNode parent in Model.Chart.Units.Where(u => u.IsActive))
+                        {
+                            <option value="@parent.Key" data-level="@(Model.Chart.FindUnitType(parent.TypeKey)?.Level)" selected="@OrgKey.AreEqual(parent.Key, Model.Input.ParentKey)">@string.Concat(Enumerable.Repeat("\u00A0\u00A0\u00A0", Model.Chart.GetLevel(parent.Key)))@parent.Title</option>
+                        }
                     </select>
                 </div>
             }
@@ -48,7 +52,13 @@
             </div>
             <div class="field">
                 <label class="label" for="Input_TypeKey">@OrgText.Get("Field_UnitType")<span class="req">*</span></label>
-                <select class="select" asp-for="Input.TypeKey" asp-items="OrgOptions.Types(Model.Chart.UnitTypes, Model.Input.TypeKey)" required></select>
+                <select class="select" asp-for="Input.TypeKey" data-oc-type-select required>
+                    @foreach (OrgTypeNode type in Model.AllowedTypes)
+                    {
+                        <option value="@type.Key" data-level="@type.Level" data-root="@(type.CanBeRoot ? "1" : "0")" selected="@OrgKey.AreEqual(type.Key, Model.Input.TypeKey)">@type.Title</option>
+                    }
+                </select>
+                <span class="hint" data-oc-no-type hidden>@OrgText.Get("Unit_NoTypeForParent")</span>
             </div>
             <div class="field">
                 <label class="label" for="Input_Code">@OrgText.Get("Field_Code")</label>

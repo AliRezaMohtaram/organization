@@ -15,6 +15,43 @@
 <partial name="/Areas/OrgChart/Pages/Shared/_OrgPage.cshtml" model="Model" />
 
 @functions {
+    // A position under its unit, with the positions that report to it nested below; recursive.
+    void PositionLeaf(UnitNode unit, PositionNode position)
+    {
+        IReadOnlyList<AssignmentInfo> holders = Model.HoldersOf(position.Key);
+        IReadOnlyList<PositionNode> subordinates = Model.Chart.GetChildPositions(position.Key);
+        string names = string.Join("، ", holders.Select(h => Model.UserName(h.UserId)));
+        bool head = OrgKey.AreEqual(position.Key, unit.ManagerPositionKey);
+        string href = Url.Page("/Index", new { area = "OrgChart", unit = unit.Key, tab = IndexModel.TabPositions }) + "#pos-" + position.Key;
+        <li class="oc-node oc-pos@(position.IsActive ? "" : " is-inactive")" role="treeitem" data-key="@position.Key"
+            aria-expanded="@(subordinates.Count > 0 ? "true" : null)" data-unit-type="@unit.TypeKey" data-search="@position.Title @position.Key @names">
+            <div class="oc-row">
+                @if (subordinates.Count > 0)
+                {
+                    <button type="button" class="oc-toggle" tabindex="-1" aria-label="@OrgText.Get("Tree_Toggle")"><svg class="ico"><use href="#oc-chev" /></svg></button>
+                }
+                else
+                {
+                    <span class="oc-toggle is-leaf" aria-hidden="true"></span>
+                }
+                <a class="oc-link" href="@href" tabindex="-1">
+                    <svg class="ico"><use href="#@(head ? "oc-star" : "oc-position")" /></svg>
+                    <span class="oc-label">@position.Title</span>
+                </a>
+                <span class="oc-pos-holder@(holders.Count == 0 ? " is-vacant" : "")" title="@names">@(holders.Count == 0 ? OrgText.Get("Position_Vacant") : names)</span>
+            </div>
+            @if (subordinates.Count > 0)
+            {
+                <ul role="group">
+                    @foreach (PositionNode child in subordinates)
+                    {
+                        PositionLeaf(unit, child);
+                    }
+                </ul>
+            }
+        </li>
+    }
+
     // Tree node; recursive.
     async Task Node(UnitNode node, UnitNode? selected, HashSet<string> open)
     {
@@ -45,22 +82,9 @@
             @if (hasItems)
             {
                 <ul role="group" hidden="@(!expanded)">
-                    @foreach (PositionNode position in positions)
+                    @foreach (PositionNode position in positions.Where(p => Model.Chart.GetParentPositionKey(p.Key) is null))
                     {
-                        IReadOnlyList<AssignmentInfo> holders = Model.HoldersOf(position.Key);
-                        string names = string.Join("، ", holders.Select(h => Model.UserName(h.UserId)));
-                        bool head = OrgKey.AreEqual(position.Key, node.ManagerPositionKey);
-                        <li class="oc-node oc-pos@(position.IsActive ? "" : " is-inactive")" role="treeitem" data-key="@position.Key"
-                            data-unit-type="@node.TypeKey" data-search="@position.Title @position.Key @names">
-                            <div class="oc-row">
-                                <span class="oc-toggle is-leaf" aria-hidden="true"></span>
-                                <a class="oc-link" href="@(Url.Page("/Index", new { area = "OrgChart", unit = node.Key, tab = IndexModel.TabPositions }) + "#pos-" + position.Key)" tabindex="-1">
-                                    <svg class="ico"><use href="#@(head ? "oc-star" : "oc-position")" /></svg>
-                                    <span class="oc-label">@position.Title</span>
-                                </a>
-                                <span class="oc-pos-holder@(holders.Count == 0 ? " is-vacant" : "")" title="@names">@(holders.Count == 0 ? OrgText.Get("Position_Vacant") : names)</span>
-                            </div>
-                        </li>
+                        PositionLeaf(node, position);
                     }
                     @foreach (UnitNode child in children)
                     {
@@ -209,7 +233,7 @@
                 <dl class="dl oc-info">
                     <div><dt>@OrgText.Get("Field_Key")</dt><dd><span class="code-chip">@unit.Key</span></dd></div>
                     <div><dt>@OrgText.Get("Field_Code")</dt><dd>@(unit.Code is null ? "—" : OrgFormat.Digits(unit.Code))</dd></div>
-                    <div><dt>@OrgText.Get("Field_Level")</dt><dd>@OrgFormat.Number(chart.GetLevel(unit.Key))</dd></div>
+                    <div><dt>@OrgText.Get("Field_TreeLevel")</dt><dd>@OrgFormat.Number(chart.GetLevel(unit.Key))</dd></div>
                     <div>
                         <dt>@OrgText.Get("Field_Manager")</dt>
                         <dd>
@@ -262,14 +286,15 @@
                     {
                         <div class="tbl-wrap">
                             <table class="tbl">
-                                <thead><tr><th>@OrgText.Get("Col_Position")</th><th>@OrgText.Get("Col_Type")</th><th>@OrgText.Get("Col_Holders")</th><th>@OrgText.Get("Col_Status")</th><th></th></tr></thead>
+                                <thead><tr><th>@OrgText.Get("Col_Position")</th><th>@OrgText.Get("Col_ReportsTo")</th><th>@OrgText.Get("Col_Type")</th><th>@OrgText.Get("Col_Holders")</th><th>@OrgText.Get("Col_Status")</th><th></th></tr></thead>
                                 <tbody>
                                     @foreach (PositionNode position in positions)
                                     {
                                         IReadOnlyList<AssignmentInfo> holders = Model.HoldersOf(position.Key);
                                         bool isHead = OrgKey.AreEqual(position.Key, unit.ManagerPositionKey);
+                                        PositionNode? superior = chart.FindPosition(chart.GetSuperiorKey(position.Key));
                                         <tr id="pos-@position.Key" class="@(position.IsActive ? "" : "oc-inactive")">
-                                            <td>
+                                            <td class="oc-pos-cell" style="--oc-depth:@chart.GetPositionDepth(position.Key)">
                                                 <div class="cell-main">
                                                     @position.Title
                                                     @if (isHead)
@@ -278,6 +303,20 @@
                                                     }
                                                 </div>
                                                 <div class="code">@position.Key</div>
+                                            </td>
+                                            <td>
+                                                @if (superior is null)
+                                                {
+                                                    <span class="cell-sub">@OrgText.Get("Position_ReportsToNone")</span>
+                                                }
+                                                else
+                                                {
+                                                    <span>@superior.Title</span>
+                                                    @if (!OrgKey.AreEqual(superior.UnitKey, unit.Key))
+                                                    {
+                                                        <div class="cell-sub">@chart.FindUnit(superior.UnitKey)?.Title</div>
+                                                    }
+                                                }
                                             </td>
                                             <td>
                                                 <span class="cell-sub">@(position.TypeKey is null ? "—" : Model.TypeTitle(position.TypeKey, unit: false))</span>
@@ -316,6 +355,7 @@
                                                         @if (position.IsActive)
                                                         {
                                                             <a class="icon-btn sm primary" asp-area="OrgChart" asp-page="/Assignments/Edit" asp-route-position="@position.Key" data-modal title="@OrgText.Get("Assignment_New")" aria-label="@OrgText.Get("Assignment_New")"><svg class="ico"><use href="#oc-user" /></svg></a>
+                                                            <a class="icon-btn sm" asp-area="OrgChart" asp-page="/Positions/Edit" asp-route-unit="@unit.Key" asp-route-parent="@position.Key" data-modal title="@OrgText.Get("Position_NewSubordinate")" aria-label="@OrgText.Get("Position_NewSubordinate")"><svg class="ico"><use href="#oc-plus" /></svg></a>
                                                         }
                                                         <a class="icon-btn sm" asp-area="OrgChart" asp-page="/Positions/Edit" asp-route-key="@position.Key" data-modal title="@OrgText.Get("Edit")" aria-label="@OrgText.Get("Edit")"><svg class="ico"><use href="#oc-edit" /></svg></a>
                                                         <a class="icon-btn sm" asp-area="OrgChart" asp-page="/Positions/Move" asp-route-key="@position.Key" data-modal title="@OrgText.Get("Position_Move")" aria-label="@OrgText.Get("Position_Move")"><svg class="ico"><use href="#oc-move" /></svg></a>

@@ -348,6 +348,63 @@ BEGIN
     VALUES (N'20261008103136_ChartStamps', N'9.0.20');
 END;
 
+IF NOT EXISTS (
+    SELECT * FROM [org].[__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261008120251_PositionHierarchyAndTypeLevels'
+)
+BEGIN
+    ALTER TABLE [org].[Positions] ADD [ParentPositionId] int NULL;
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [org].[__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261008120251_PositionHierarchyAndTypeLevels'
+)
+BEGIN
+    ALTER TABLE [org].[OrgUnitTypes] ADD [CanBeRoot] bit NOT NULL DEFAULT CAST(1 AS bit);
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [org].[__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261008120251_PositionHierarchyAndTypeLevels'
+)
+BEGIN
+    ALTER TABLE [org].[OrgUnitTypes] ADD [Level] int NULL;
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [org].[__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261008120251_PositionHierarchyAndTypeLevels'
+)
+BEGIN
+    CREATE INDEX [IX_Positions_ParentPositionId] ON [org].[Positions] ([ParentPositionId]);
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [org].[__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261008120251_PositionHierarchyAndTypeLevels'
+)
+BEGIN
+    EXEC(N'ALTER TABLE [org].[OrgUnitTypes] ADD CONSTRAINT [CK_OrgUnitTypes_Level] CHECK ([Level] IS NULL OR [Level] >= 1)');
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [org].[__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261008120251_PositionHierarchyAndTypeLevels'
+)
+BEGIN
+    ALTER TABLE [org].[Positions] ADD CONSTRAINT [FK_Positions_Positions_ParentPositionId] FOREIGN KEY ([ParentPositionId]) REFERENCES [org].[Positions] ([Id]) ON DELETE NO ACTION;
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [org].[__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261008120251_PositionHierarchyAndTypeLevels'
+)
+BEGIN
+    INSERT INTO [org].[__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20261008120251_PositionHierarchyAndTypeLevels', N'9.0.20');
+END;
+
 COMMIT;
 GO
 

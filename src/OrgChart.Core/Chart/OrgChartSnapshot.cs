@@ -24,6 +24,8 @@ public sealed class OrgChartSnapshot
     private readonly Dictionary<string, OrgTypeNode> _positionTypes;
     private readonly Dictionary<string, List<UnitNode>> _children;
     private readonly Dictionary<string, List<PositionNode>> _positionsByUnit;
+    private readonly Dictionary<string, string> _positionParents;
+    private readonly Dictionary<string, List<PositionNode>> _positionChildren;
     private readonly Dictionary<string, IReadOnlyList<string>> _ancestors;
 
     public OrgChartSnapshot(
@@ -72,15 +74,41 @@ public sealed class OrgChartSnapshot
         roots.Sort(s_unitOrder);
         Roots = roots;
 
-        _positionsByUnit = new Dictionary<string, List<PositionNode>>(OrgKey.Comparer);
+        // Positions: a parent counts only when it exists in the same unit; cycles are cut like the unit tree's.
+        _positionParents = CutCycles(
+            _positions.Values
+                .Where(p => FindPosition(p.ParentKey) is { } parent && OrgKey.AreEqual(parent.UnitKey, p.UnitKey))
+                .ToDictionary(p => p.Key, p => _positions[p.ParentKey!].Key, OrgKey.Comparer),
+            _positions.Keys);
+        _positionChildren = new Dictionary<string, List<PositionNode>>(OrgKey.Comparer);
+        Dictionary<string, List<PositionNode>> tops = new(OrgKey.Comparer);
         foreach (PositionNode position in _positions.Values)
         {
-            GetOrAdd(_positionsByUnit, position.UnitKey).Add(position);
+            GetOrAdd(_positionParents.TryGetValue(position.Key, out string? parentKey) ? _positionChildren : tops,
+                parentKey ?? position.UnitKey).Add(position);
         }
 
-        foreach (List<PositionNode> list in _positionsByUnit.Values)
+        foreach (List<PositionNode> list in _positionChildren.Values.Concat(tops.Values))
         {
             list.Sort(s_positionOrder);
+        }
+
+        // Each unit's positions in tree order: a top position, then everything below it.
+        _positionsByUnit = new Dictionary<string, List<PositionNode>>(OrgKey.Comparer);
+        foreach ((string unitKey, List<PositionNode> top) in tops)
+        {
+            List<PositionNode> ordered = [];
+            Stack<PositionNode> stack = new(Enumerable.Reverse(top));
+            while (stack.TryPop(out PositionNode? position))
+            {
+                ordered.Add(position);
+                foreach (PositionNode child in Enumerable.Reverse(GetChildPositions(position.Key)))
+                {
+                    stack.Push(child);
+                }
+            }
+
+            _positionsByUnit[unitKey] = ordered;
         }
 
         Units = TreeOrder().ToList();
@@ -159,30 +187,86 @@ public sealed class OrgChartSnapshot
     public bool IsSelfOrDescendant(string unitKey, string ancestorKey) =>
         OrgKey.AreEqual(unitKey, ancestorKey) || GetAncestorKeys(unitKey).Contains(ancestorKey, OrgKey.Comparer);
 
-    /// <summary>Positions of the unit, in display order. Empty for an unknown unit.</summary>
+    /// <summary>Positions of the unit in tree order (each top position followed by those below it). Empty for an unknown unit.</summary>
     public IReadOnlyList<PositionNode> GetPositions(string unitKey) =>
         _positionsByUnit.TryGetValue(unitKey, out List<PositionNode>? positions) ? positions : [];
 
+    /// <summary>Positions directly below the position (same unit), in display order.</summary>
+    public IReadOnlyList<PositionNode> GetChildPositions(string positionKey) =>
+        _positionChildren.TryGetValue(positionKey, out List<PositionNode>? children) ? children : [];
+
+    /// <summary>The explicit parent position (same unit), or null for a top position.</summary>
+    public string? GetParentPositionKey(string positionKey) => _positionParents.GetValueOrDefault(positionKey);
+
+    /// <summary>Depth of the position below the top positions of its unit: 0 for a top position.</summary>
+    public int GetPositionDepth(string positionKey)
+    {
+        int depth = 0;
+        for (string key = positionKey; _positionParents.TryGetValue(key, out string? parent); key = parent)
+        {
+            depth++;
+        }
+
+        return depth;
+    }
+
+    /// <summary>True when <paramref name="positionKey"/> is <paramref name="ancestorKey"/> or below it.</summary>
+    public bool IsSelfOrSubordinate(string positionKey, string ancestorKey)
+    {
+        for (string? key = positionKey; key is not null; key = _positionParents.GetValueOrDefault(key))
+        {
+            if (OrgKey.AreEqual(key, ancestorKey))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     /// <summary>
-    /// The reporting line above a position: the manager positions of its unit and then of each ancestor,
-    /// nearest first. The position itself, units without a manager and inactive manager positions are skipped,
-    /// so the head of a unit reports to the manager of the parent unit.
+    /// The position this one reports to: its parent position; else the head of its unit (unless it is the head);
+    /// else the head of the nearest ancestor unit that has an active head. Null at the top of the chart.
+    /// </summary>
+    public string? GetSuperiorKey(string positionKey)
+    {
+        if (FindPosition(positionKey) is not { } position)
+        {
+            return null;
+        }
+
+        if (_positionParents.TryGetValue(position.Key, out string? parent))
+        {
+            return parent;
+        }
+
+        if (FindUnit(position.UnitKey) is not { } unit)
+        {
+            return null;
+        }
+
+        IEnumerable<string> units = OrgKey.AreEqual(unit.ManagerPositionKey, position.Key)
+            ? GetAncestorKeys(unit.Key)
+            : GetAncestorKeys(unit.Key).Prepend(unit.Key);
+        return units
+            .Select(k => FindPosition(_units[k].ManagerPositionKey))
+            .FirstOrDefault(head => head is { IsActive: true } && !OrgKey.AreEqual(head.Key, position.Key))
+            ?.Key;
+    }
+
+    /// <summary>
+    /// The reporting line above a position, nearest first (see <see cref="GetSuperiorKey"/>), active positions only.
+    /// For example: clerk → section lead → head of department → head of the parent unit → …
     /// </summary>
     public IReadOnlyList<string> GetManagerChain(string positionKey)
     {
-        if (FindPosition(positionKey) is not { } position || FindUnit(position.UnitKey) is not { } unit)
-        {
-            return [];
-        }
-
         List<string> chain = [];
-        foreach (string key in GetAncestorKeys(unit.Key).Prepend(unit.Key))
+        HashSet<string> seen = new(OrgKey.Comparer) { positionKey };
+        for (string? key = GetSuperiorKey(positionKey); key is not null && seen.Add(key); key = GetSuperiorKey(key))
         {
-            if (FindPosition(_units[key].ManagerPositionKey) is { IsActive: true } manager
-                && !OrgKey.AreEqual(manager.Key, position.Key)
-                && !chain.Contains(manager.Key, OrgKey.Comparer))
+            if (_positions[key].IsActive)
             {
-                chain.Add(manager.Key);
+                chain.Add(key);
             }
         }
 
@@ -193,19 +277,16 @@ public sealed class OrgChartSnapshot
     /// Child key → parent key, keeping only parents that exist. Each cycle is cut at its member with the
     /// smallest key, which becomes a root, so the result is a forest.
     /// </summary>
-    private Dictionary<string, string> EffectiveParents()
-    {
-        Dictionary<string, string> parents = new(OrgKey.Comparer);
-        foreach (UnitNode unit in _units.Values)
-        {
-            if (FindUnit(unit.ParentKey) is { } parent)
-            {
-                parents[unit.Key] = parent.Key;
-            }
-        }
+    private Dictionary<string, string> EffectiveParents() =>
+        CutCycles(
+            _units.Values.Where(u => FindUnit(u.ParentKey) is not null).ToDictionary(u => u.Key, u => _units[u.ParentKey!].Key, OrgKey.Comparer),
+            _units.Keys);
 
+    /// <summary>Removes one link of every cycle in a child → parent map (at the member with the smallest key).</summary>
+    private static Dictionary<string, string> CutCycles(Dictionary<string, string> parents, IEnumerable<string> keys)
+    {
         HashSet<string> done = new(OrgKey.Comparer);
-        foreach (string start in _units.Keys)
+        foreach (string start in keys)
         {
             List<string> trail = [];
             HashSet<string> onTrail = new(OrgKey.Comparer);

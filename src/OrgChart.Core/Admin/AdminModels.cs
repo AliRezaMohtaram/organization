@@ -9,9 +9,12 @@ public enum OrgTypeKind
     Position = 2,
 }
 
-public sealed record OrgTypeInput(string Key, string Title, int SortOrder = 0);
+/// <param name="Level">Unit types only: place in the hierarchy (1 = top); a unit's type needs a greater level than its parent's. Null = no rule.</param>
+/// <param name="CanBeRoot">Unit types only: units of this type may be roots of the tree.</param>
+public sealed record OrgTypeInput(string Key, string Title, int SortOrder = 0, int? Level = null, bool CanBeRoot = true);
 
-public sealed record OrgTypeUpdate(string Title, int SortOrder);
+/// <param name="Level">Unit types only; see <see cref="OrgTypeInput"/>. Rejected when existing units would break the rule.</param>
+public sealed record OrgTypeUpdate(string Title, int SortOrder, int? Level = null, bool CanBeRoot = true);
 
 /// <param name="ParentKey">Null for a root unit (e.g. a company).</param>
 /// <param name="ValidFrom">Inclusive start (UTC), or null for unbounded.</param>
@@ -35,6 +38,7 @@ public sealed record UnitUpdate(
     DateTime? ValidFrom,
     DateTime? ValidTo);
 
+/// <param name="ParentPositionKey">The position (in the same unit) this one reports to; null for a top position.</param>
 public sealed record PositionInput(
     string Key,
     string Title,
@@ -44,9 +48,11 @@ public sealed record PositionInput(
     string? Code = null,
     int SortOrder = 0,
     DateTime? ValidFrom = null,
-    DateTime? ValidTo = null);
+    DateTime? ValidTo = null,
+    string? ParentPositionKey = null);
 
 /// <summary>Everything about a position that can change in place. Moving is <c>MovePositionAsync</c>.</summary>
+/// <param name="ParentPositionKey">The position (in the same unit) this one reports to; null makes it a top position.</param>
 public sealed record PositionUpdate(
     string Title,
     string? TypeKey,
@@ -54,7 +60,8 @@ public sealed record PositionUpdate(
     string? Code,
     int SortOrder,
     DateTime? ValidFrom,
-    DateTime? ValidTo);
+    DateTime? ValidTo,
+    string? ParentPositionKey = null);
 
 public sealed record AssignmentInput(
     string PositionKey,

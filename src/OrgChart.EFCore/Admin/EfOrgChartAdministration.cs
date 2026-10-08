@@ -32,7 +32,9 @@ internal sealed class EfOrgChartAdministration(
                 throw Error(OrgChartErrors.KeyTaken, $"A {kind} type with key '{key}' already exists.");
             }
 
-            KeyedEntity type = kind == OrgTypeKind.Unit ? new OrgUnitType() : new PositionType();
+            KeyedEntity type = kind == OrgTypeKind.Unit
+                ? new OrgUnitType { Level = RequireLevel(input.Level), CanBeRoot = input.CanBeRoot }
+                : new PositionType();
             type.Key = key;
             type.Title = RequireTitle(input.Title);
             type.SortOrder = input.SortOrder;
@@ -53,6 +55,13 @@ internal sealed class EfOrgChartAdministration(
             object before = TypeState(type);
             type.Title = RequireTitle(update.Title);
             type.SortOrder = update.SortOrder;
+            if (type is OrgUnitType unitType)
+            {
+                unitType.Level = RequireLevel(update.Level);
+                unitType.CanBeRoot = update.CanBeRoot;
+                await EnsureTypeFitsExistingUnitsAsync(unitType, cancellationToken);
+            }
+
             if (Changed(before, TypeState(type)))
             {
                 audit.Write("TypeUpdated", TypeEntity(kind), type.Key, new { before, after = TypeState(type) });
@@ -91,7 +100,8 @@ internal sealed class EfOrgChartAdministration(
             OrgUnit? parent = null;
             if (input.ParentKey is not null)
             {
-                parent = await db.OrgUnits.SingleOrDefaultAsync(u => u.NormalizedKey == OrgKey.Normalize(input.ParentKey), cancellationToken)
+                parent = await db.OrgUnits.Include(u => u.Type)
+                        .SingleOrDefaultAsync(u => u.NormalizedKey == OrgKey.Normalize(input.ParentKey), cancellationToken)
                     ?? throw Error(OrgChartErrors.ParentNotFound, $"Parent unit '{input.ParentKey}' does not exist.");
                 if (!parent.IsActive)
                 {
@@ -111,6 +121,7 @@ internal sealed class EfOrgChartAdministration(
                 ValidFrom = from,
                 ValidTo = to,
             };
+            EnsureLevelFits(unit.Type, parent);
             db.OrgUnits.Add(unit);
 
             audit.Write("UnitCreated", nameof(OrgUnit), unit.Key, new { after = UnitState(unit) });
@@ -135,6 +146,13 @@ internal sealed class EfOrgChartAdministration(
             if (!OrgKey.AreEqual(unit.Type.Key, update.TypeKey))
             {
                 unit.Type = (OrgUnitType)await FindActiveTypeAsync(OrgTypeKind.Unit, update.TypeKey, cancellationToken);
+                if (unit.ParentId is not null)
+                {
+                    await db.Entry(unit).Reference(u => u.Parent).Query().Include(u => u.Type).LoadAsync(cancellationToken);
+                }
+
+                EnsureLevelFits(unit.Type, unit.Parent);
+                await EnsureChildrenFitAsync(unit.Id, unit.Type.Level, cancellationToken);
             }
 
             object after = UnitState(unit);
@@ -155,7 +173,8 @@ internal sealed class EfOrgChartAdministration(
             OrgUnit? parent = null;
             if (newParentKey is not null)
             {
-                parent = await db.OrgUnits.SingleOrDefaultAsync(u => u.NormalizedKey == OrgKey.Normalize(newParentKey), cancellationToken)
+                parent = await db.OrgUnits.Include(u => u.Type)
+                        .SingleOrDefaultAsync(u => u.NormalizedKey == OrgKey.Normalize(newParentKey), cancellationToken)
                     ?? throw Error(OrgChartErrors.ParentNotFound, $"Parent unit '{newParentKey}' does not exist.");
             }
 
@@ -177,6 +196,7 @@ internal sealed class EfOrgChartAdministration(
                 }
             }
 
+            EnsureLevelFits(unit.Type, parent);
             string? from = unit.Parent?.Key;
             unit.Parent = parent;
             audit.Write("UnitMoved", nameof(OrgUnit), unit.Key, new { before = new { Parent = from }, after = new { Parent = parent?.Key } });
@@ -234,6 +254,11 @@ internal sealed class EfOrgChartAdministration(
                 {
                     throw Error(OrgChartErrors.PositionInactive, $"Position '{manager.Key}' is inactive.");
                 }
+
+                if (manager.ParentPositionId is not null)
+                {
+                    throw Error(OrgChartErrors.UnitHeadHasParent, $"Position '{manager.Key}' reports to another position of the unit; a head cannot.");
+                }
             }
 
             if (manager?.Id == unit.ManagerPositionId)
@@ -281,6 +306,7 @@ internal sealed class EfOrgChartAdministration(
                 SortOrder = input.SortOrder,
                 ValidFrom = from,
                 ValidTo = to,
+                ParentPosition = await ParentPositionAsync(input.ParentPositionKey, unit.Id, null, cancellationToken),
             };
             db.Positions.Add(position);
 
@@ -311,11 +337,18 @@ internal sealed class EfOrgChartAdministration(
                     : (PositionType)await FindActiveTypeAsync(OrgTypeKind.Position, update.TypeKey, cancellationToken);
             }
 
+            int? oldParent = position.ParentPositionId;
+            position.ParentPosition = await ParentPositionAsync(update.ParentPositionKey, position.OrgUnitId, position, cancellationToken);
+            if (position.ParentPosition is not null && await HeadsUnitAsync(position.Id, cancellationToken))
+            {
+                throw Error(OrgChartErrors.UnitHeadHasParent, $"Position '{position.Key}' heads its unit and cannot report to a position of it.");
+            }
+
             object after = PositionState(position);
             if (Changed(before, after))
             {
                 audit.Write("PositionUpdated", nameof(Position), position.Key, new { before, after });
-                change.Kind = position.ValidFrom != oldFrom || position.ValidTo != oldTo
+                change.Kind = position.ValidFrom != oldFrom || position.ValidTo != oldTo || position.ParentPosition?.Id != oldParent
                     ? OrgChartChangeKind.Structure
                     : OrgChartChangeKind.Details;
             }
@@ -342,9 +375,18 @@ internal sealed class EfOrgChartAdministration(
                 throw Error(OrgChartErrors.PositionIsUnitManager, $"Position '{position.Key}' heads its unit.");
             }
 
+            if (await db.Positions.AnyAsync(p => p.ParentPositionId == position.Id, cancellationToken))
+            {
+                throw Error(OrgChartErrors.PositionHasSubordinates, $"Position '{position.Key}' has positions reporting to it.");
+            }
+
+            // The parent must be in the same unit, so a moved position starts at the top of its new unit.
             string from = position.OrgUnit.Key;
+            string? fromParent = position.ParentPosition?.Key;
             position.OrgUnit = unit;
-            audit.Write("PositionMoved", nameof(Position), position.Key, new { before = new { Unit = from }, after = new { Unit = unit.Key } });
+            position.ParentPosition = null;
+            audit.Write("PositionMoved", nameof(Position), position.Key,
+                new { before = new { Unit = from, Parent = fromParent }, after = new { Unit = unit.Key, Parent = (string?)null } });
             change.Kind = OrgChartChangeKind.Structure;
         }, cancellationToken);
 
@@ -363,9 +405,19 @@ internal sealed class EfOrgChartAdministration(
                 {
                     throw Error(OrgChartErrors.UnitInactive, $"Unit '{position.OrgUnit.Key}' is inactive.");
                 }
+
+                if (position.ParentPosition is { IsActive: false })
+                {
+                    throw Error(OrgChartErrors.PositionInactive, $"Parent position '{position.ParentPosition.Key}' is inactive.");
+                }
             }
             else
             {
+                if (await db.Positions.AnyAsync(p => p.ParentPositionId == position.Id && p.IsActive, cancellationToken))
+                {
+                    throw Error(OrgChartErrors.PositionHasSubordinates, $"Position '{position.Key}' has active positions reporting to it.");
+                }
+
                 if (await HeadsUnitAsync(position.Id, cancellationToken))
                 {
                     throw Error(OrgChartErrors.PositionIsUnitManager, $"Position '{position.Key}' heads its unit.");
@@ -596,6 +648,7 @@ internal sealed class EfOrgChartAdministration(
         return await db.Positions
                 .Include(p => p.OrgUnit)
                 .Include(p => p.Type)
+                .Include(p => p.ParentPosition)
                 .SingleOrDefaultAsync(p => p.NormalizedKey == normalized, cancellationToken)
             ?? throw Error(OrgChartErrors.PositionNotFound, $"Position '{key}' does not exist.");
     }
@@ -609,6 +662,98 @@ internal sealed class EfOrgChartAdministration(
     private async Task<Assignment> FindAssignmentAsync(int id, CancellationToken cancellationToken) =>
         await db.Assignments.Include(a => a.Position).SingleOrDefaultAsync(a => a.Id == id, cancellationToken)
         ?? throw Error(OrgChartErrors.AssignmentNotFound, $"Assignment {id} does not exist.");
+
+    /// <summary>
+    /// The parent position for <paramref name="key"/>: null for none; else an active position of the same unit that is
+    /// not <paramref name="self"/> or below it.
+    /// </summary>
+    private async Task<Position?> ParentPositionAsync(string? key, int unitId, Position? self, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(key))
+        {
+            return null;
+        }
+
+        string normalized = OrgKey.Normalize(key.Trim());
+        Position parent = await db.Positions.SingleOrDefaultAsync(p => p.NormalizedKey == normalized, cancellationToken)
+            ?? throw Error(OrgChartErrors.PositionNotFound, $"Position '{key}' does not exist.");
+        if (parent.OrgUnitId != unitId)
+        {
+            throw Error(OrgChartErrors.ParentPositionNotInUnit, $"Position '{parent.Key}' is not in the same unit.");
+        }
+
+        if (!parent.IsActive)
+        {
+            throw Error(OrgChartErrors.PositionInactive, $"Position '{parent.Key}' is inactive.");
+        }
+
+        if (self is not null)
+        {
+            Dictionary<int, int?> parents = await db.Positions.AsNoTracking()
+                .Where(p => p.OrgUnitId == unitId)
+                .ToDictionaryAsync(p => p.Id, p => p.ParentPositionId, cancellationToken);
+            HashSet<int> seen = [];
+            for (int? id = parent.Id; id is { } current && seen.Add(current); id = parents.GetValueOrDefault(current))
+            {
+                if (current == self.Id)
+                {
+                    throw Error(OrgChartErrors.ParentPositionCycle, $"Position '{parent.Key}' is '{self.Key}' or below it.");
+                }
+            }
+        }
+
+        return parent;
+    }
+
+    /// <summary>The unit type's level must be greater than its parent's; without a parent the type must allow roots.</summary>
+    private static void EnsureLevelFits(OrgUnitType type, OrgUnit? parent)
+    {
+        if (parent is null)
+        {
+            if (!type.CanBeRoot)
+            {
+                throw Error(OrgChartErrors.TypeCannotBeRoot, $"Units of type '{type.Key}' cannot be roots.");
+            }
+        }
+        else if (!OrgUnitType.AllowsUnder(type.Level, parent.Type.Level))
+        {
+            throw Error(OrgChartErrors.TypeLevelNotAllowed,
+                $"A unit of type '{type.Key}' (level {type.Level}) cannot be under '{parent.Key}' of type '{parent.Type.Key}' (level {parent.Type.Level}).");
+        }
+    }
+
+    private async Task EnsureChildrenFitAsync(int unitId, int? level, CancellationToken cancellationToken)
+    {
+        List<int?> childLevels = await db.OrgUnits.Where(u => u.ParentId == unitId).Select(u => u.Type.Level).ToListAsync(cancellationToken);
+        if (childLevels.Any(child => !OrgUnitType.AllowsUnder(child, level)))
+        {
+            throw Error(OrgChartErrors.TypeLevelNotAllowed, $"Sub-units of unit {unitId} do not fit under level {level}.");
+        }
+    }
+
+    /// <summary>A changed level or root flag must keep every existing unit valid.</summary>
+    private async Task EnsureTypeFitsExistingUnitsAsync(OrgUnitType type, CancellationToken cancellationToken)
+    {
+        var units = await db.OrgUnits.AsNoTracking()
+            .Select(u => new { u.Id, u.ParentId, u.TypeId, u.Type.Level })
+            .ToListAsync(cancellationToken);
+        Dictionary<int, int?> levels = units.ToDictionary(u => u.Id, u => u.TypeId == type.Id ? type.Level : u.Level);
+
+        foreach (var unit in units)
+        {
+            bool broken = unit.ParentId is { } parentId
+                ? (unit.TypeId == type.Id || units.Any(p => p.Id == parentId && p.TypeId == type.Id))
+                    && !OrgUnitType.AllowsUnder(levels[unit.Id], levels[parentId])
+                : unit.TypeId == type.Id && !type.CanBeRoot;
+            if (broken)
+            {
+                throw Error(OrgChartErrors.TypeLevelConflict, $"Existing units would break the hierarchy rules of type '{type.Key}'.");
+            }
+        }
+    }
+
+    private static int? RequireLevel(int? level) =>
+        level is null or >= 1 ? level : throw Error(OrgChartErrors.InvalidLevel, $"Level {level} is not valid; use 1 or more.");
 
     private Task<bool> HeadsUnitAsync(int positionId, CancellationToken cancellationToken) =>
         db.OrgUnits.AnyAsync(u => u.ManagerPositionId == positionId, cancellationToken);
@@ -770,7 +915,9 @@ internal sealed class EfOrgChartAdministration(
 
     private static bool Changed(object before, object after) => !before.Equals(after);
 
-    private static object TypeState(KeyedEntity type) => new { type.Key, type.Title, type.SortOrder };
+    private static object TypeState(KeyedEntity type) => type is OrgUnitType unit
+        ? new { type.Key, type.Title, type.SortOrder, Level = unit.Level, CanBeRoot = (bool?)unit.CanBeRoot }
+        : new { type.Key, type.Title, type.SortOrder, Level = (int?)null, CanBeRoot = (bool?)null };
 
     private static object UnitState(OrgUnit unit) => new
     {
@@ -792,6 +939,7 @@ internal sealed class EfOrgChartAdministration(
         Unit = position.OrgUnit.Key,
         Type = position.Type?.Key,
         position.IsManagerial,
+        Parent = position.ParentPosition?.Key,
         position.SortOrder,
         position.ValidFrom,
         position.ValidTo,

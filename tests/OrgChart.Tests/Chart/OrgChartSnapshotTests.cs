@@ -7,8 +7,8 @@ public sealed class OrgChartSnapshotTests
     private static UnitNode Unit(string key, string? parent = null, int sort = 0, string? manager = null) =>
         new(key, key, null, "T", parent, manager, sort, true, null, null);
 
-    private static PositionNode Position(string key, string unit, bool active = true) =>
-        new(key, key, null, unit, null, false, 0, active, null, null);
+    private static PositionNode Position(string key, string unit, bool active = true, string? parent = null, int sort = 0) =>
+        new(key, key, null, unit, null, false, sort, active, null, null, parent);
 
     private static OrgChartSnapshot Snapshot(IEnumerable<UnitNode> units, IEnumerable<PositionNode>? positions = null) =>
         new(units, positions ?? [], [], []);
@@ -107,5 +107,46 @@ public sealed class OrgChartSnapshotTests
 
         // An inactive manager position is skipped.
         Assert.Equal(["CFO", "CEO"], chart.GetManagerChain("T1"));
+    }
+
+    [Fact]
+    public void Positions_form_a_tree_inside_their_unit()
+    {
+        // The user's example: head of accounting → oil accounting lead → oil accounting expert.
+        OrgChartSnapshot chart = Snapshot(
+            [Unit("FIN", manager: "FIN-MGR"), Unit("ACC", "FIN", manager: "ACC-HEAD"), Unit("STORE", "FIN")],
+            [
+                Position("FIN-MGR", "FIN"),
+                Position("ACC-HEAD", "ACC", sort: 1),
+                Position("OIL-LEAD", "ACC", parent: "ACC-HEAD"),
+                Position("OIL-EXP", "ACC", parent: "OIL-LEAD"),
+                Position("ACC-CLERK", "ACC", sort: 2),
+                Position("STORE-CLERK", "STORE"),
+                Position("WRONG", "ACC", parent: "STORE-CLERK", sort: 3), // parent in another unit: ignored
+            ]);
+
+        Assert.Equal(["ACC-HEAD", "OIL-LEAD", "OIL-EXP", "ACC-CLERK", "WRONG"], chart.GetPositions("ACC").Select(p => p.Key));
+        Assert.Equal(["OIL-LEAD"], chart.GetChildPositions("ACC-HEAD").Select(p => p.Key));
+        Assert.Equal(2, chart.GetPositionDepth("OIL-EXP"));
+        Assert.Null(chart.GetParentPositionKey("WRONG"));
+        Assert.True(chart.IsSelfOrSubordinate("OIL-EXP", "ACC-HEAD"));
+        Assert.False(chart.IsSelfOrSubordinate("ACC-CLERK", "OIL-LEAD"));
+
+        // Reporting line: parent position, else the unit's head, else the head of the nearest ancestor unit.
+        Assert.Equal(["OIL-LEAD", "ACC-HEAD", "FIN-MGR"], chart.GetManagerChain("OIL-EXP"));
+        Assert.Equal("ACC-HEAD", chart.GetSuperiorKey("ACC-CLERK"));
+        Assert.Equal("FIN-MGR", chart.GetSuperiorKey("ACC-HEAD"));
+        Assert.Equal("FIN-MGR", chart.GetSuperiorKey("STORE-CLERK")); // STORE has no head
+        Assert.Null(chart.GetSuperiorKey("FIN-MGR"));
+    }
+
+    [Fact]
+    public void Position_cycle_is_cut()
+    {
+        OrgChartSnapshot chart = Snapshot([Unit("U")], [Position("A", "U", parent: "B"), Position("B", "U", parent: "A")]);
+
+        Assert.Equal(["A", "B"], chart.GetPositions("U").Select(p => p.Key));
+        Assert.Equal(["A"], chart.GetManagerChain("B"));
+        Assert.Empty(chart.GetManagerChain("A"));
     }
 }

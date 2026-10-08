@@ -27,6 +27,14 @@ public sealed class EditModel(IOrgChartReader reader, IOrgChartAdministration ad
     public UnitNode? Existing { get; private set; }
     public bool IsEdit => Existing is not null;
 
+    /// <summary>
+    /// Types offered: active ones (plus the current one). For an existing unit only those that fit under its parent;
+    /// for a new one all of them, narrowed in the browser as the parent changes (the server checks again).
+    /// </summary>
+    public IEnumerable<OrgTypeNode> AllowedTypes => Chart.UnitTypes.Where(t =>
+        (t.IsActive || Core.Model.OrgKey.AreEqual(t.Key, Input.TypeKey))
+        && (Existing is null || OrgOptions.Fits(t, Chart.FindUnitType(Chart.FindUnit(Existing.ParentKey)?.TypeKey))));
+
     public async Task<IActionResult> OnGetAsync(CancellationToken cancellationToken)
     {
         if (!await LoadAsync(cancellationToken))
@@ -108,12 +116,13 @@ public sealed class EditModel(IOrgChartReader reader, IOrgChartAdministration ad
     }
 
     /// <summary>
-    /// A sensible type for a new unit: the most common type among its future siblings, else the active type that
-    /// follows the parent's type, else the first active type.
+    /// A sensible type for a new unit: the most common allowed type among its future siblings, else the allowed type
+    /// with the lowest level.
     /// </summary>
     private string? SuggestType(UnitNode? parent, IReadOnlyList<UnitNode> siblings)
     {
-        List<OrgTypeNode> active = Chart.UnitTypes.Where(t => t.IsActive).ToList();
+        OrgTypeNode? parentType = Chart.FindUnitType(parent?.TypeKey);
+        List<OrgTypeNode> active = Chart.UnitTypes.Where(t => t.IsActive && OrgOptions.Fits(t, parentType)).ToList();
         string? common = siblings
             .Where(u => active.Any(t => Core.Model.OrgKey.AreEqual(t.Key, u.TypeKey)))
             .GroupBy(u => u.TypeKey, Core.Model.OrgKey.Comparer)
@@ -125,8 +134,8 @@ public sealed class EditModel(IOrgChartReader reader, IOrgChartAdministration ad
             return common;
         }
 
-        int index = parent is null ? -1 : active.FindIndex(t => Core.Model.OrgKey.AreEqual(t.Key, parent.TypeKey));
-        return index >= 0 && index + 1 < active.Count ? active[index + 1].Key : active.FirstOrDefault()?.Key;
+        // The allowed type closest below the parent: lowest level first, then display order.
+        return active.OrderBy(t => t.Level ?? int.MaxValue).ThenBy(t => t.SortOrder).FirstOrDefault()?.Key;
     }
 
     private static string? NullIfEmpty(string? value) => string.IsNullOrWhiteSpace(value) ? null : value;

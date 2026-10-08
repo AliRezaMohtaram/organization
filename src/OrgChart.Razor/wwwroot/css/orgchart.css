@@ -75,6 +75,7 @@
 .oc-pos-holder { flex:none; max-width:45%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:.74rem; color:var(--text); }
 .oc-pos-holder.is-vacant { color:var(--faint); }
 .tbl tr:target td { background:var(--primary-soft); }
+.oc-pos-cell { padding-inline-start:calc(1rem + var(--oc-depth, 0) * 1.25rem) !important; }
 .oc-node.is-match > .oc-row .oc-label { color:var(--text-strong); font-weight:700; }
 
 /* ── Unit header ────────────────────────────────────────────── */

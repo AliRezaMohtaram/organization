@@ -23,6 +23,11 @@ internal sealed class PositionConfiguration : IEntityTypeConfiguration<Position>
             .HasForeignKey(e => e.OrgUnitId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        builder.HasOne(e => e.ParentPosition)
+            .WithMany()
+            .HasForeignKey(e => e.ParentPositionId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         builder.HasOne(e => e.Type)
             .WithMany()
             .HasForeignKey(e => e.TypeId)
