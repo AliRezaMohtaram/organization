@@ -61,7 +61,11 @@ public sealed record PositionAssignment(
     string OrgUnitKey,                          // the position's unit
     IReadOnlyList<string> OrgUnitAncestorKeys,  // ancestors of that unit, nearest first
     DateTime? ValidFrom,                        // UTC, inclusive
-    DateTime? ValidTo);                         // UTC, exclusive
+    DateTime? ValidTo)                          // UTC, exclusive
+{
+    PositionAssignmentKind Kind { get; init; }  // Holder (default), Delegated, Deputy — Acl 0.2.0
+    IReadOnlyCollection<int>? RoleIds { get; init; } // delegated/deputy: position roles passed on; null = all
+}
 
 public sealed record OrgUnitInfo(string Key, string Title, string? ParentKey);
 public sealed record PositionInfo(string Key, string Title, string OrgUnitKey);
@@ -321,7 +325,19 @@ All UI must follow the **MX design system** from https://github.com/AliRezaMohta
      `ui.SelfPolicy`, default authenticated): my positions, given (end now; not-yet-started ones are deleted), received;
      `My/Delegate?position=` only for positions the user holds now or later (else 404). Shared `_ScopeFields` partial.
    - Sample: deputy and a 30-day delegation on POS-PUR-MGR; `DemoAuthorityCatalog` offers three demo authorities.
-7. NEXT: Acl contract change (approved: `PositionAssignment` gets Kind and the role scope; `RoleAssignmentResolver`
-   filters roles by scope) and the `OrgChart.Acl` bridge (`IOrgStructure`, change listener → stamps, `IAuthorityCatalog`
-   from PositionRoles). Ask the user before pushing to the Acl repo (branch).
-   Later: `Users` module + unified admin panel; graphical chart; NuGet packaging.
+7. DONE: Acl 0.2.0 (pushed to Acl's `master`, user's choice) and the `OrgChart.Acl` bridge.
+   - Acl: `PositionAssignment.Kind`/`RoleIds` (see contract above); a delegate/deputy gets only the position's
+     PositionRoles filtered by RoleIds, in the position's unit, no OrgUnitRoles, and does not count as a member of the
+     unit for user data-scope rules. `IAssignmentAdministration.GetPositionRolesAsync(positionKey)`.
+   - Distribution (user's choice): local NuGet feed. `OrgChart.Acl` and `tests/OrgChart.Acl.Tests` add
+     `$(AclPackages)` (default `../Acl/artifacts/packages`, overridable by property/env var) via
+     `RestoreAdditionalProjectSources`; pack Acl first (`dotnet pack Acl.sln -c Release`). In the cloud container the
+     clone is `/home/user/acl`: run with `AclPackages=/home/user/acl/artifacts/packages`.
+   - Bridge: `OrgChartBuilder.AddAcl()` = `OrgChartOrgStructure` (replaces Acl's `NullOrgStructure`; active units and
+     positions for pickers; Primary/Acting → Holder, Delegated/Deputy mapped, AuthorityKeys parsed as role ids),
+     `AclStampChangeListener` (Assignments → BumpUsers, Structure → BumpGlobal, Details → nothing),
+     `AclAuthorityCatalog` (authority key = Acl role id, title = role name). `AclBuilder.AddOrgChart()` for the Acl side only.
+   - Tests: `tests/OrgChart.Acl.Tests` (both modules in one container, each on its own SQLite connection):
+     holder/delegate/deputy access, immediate effect of ending, catalog, stamps, IOrgStructure lists.
+8. NEXT (decision 14): `Users` module (Identity, MX pages, implements `IUserDirectory`) + unified admin panel
+   (users, chart and Acl; Acl's admin UI to move to MX). Later: graphical chart; NuGet packaging.

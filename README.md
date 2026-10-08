@@ -15,7 +15,7 @@ never change when the chart is restructured.
 | `OrgChart.EFCore` | `OrgChartDbContext` (schema `org`), migrations. |
 | `OrgChart.AspNetCore` | Current user from the HTTP request (`AddHttpContextUser()`). |
 | `OrgChart.Razor` | Persian/RTL admin pages under `/OrgChart` on the MX design system (`AddAdminUi()`). |
-| `OrgChart.Acl` | *(planned)* Bridge implementing Acl's `IOrgStructure`. |
+| `OrgChart.Acl` | Bridge to the [Acl](https://github.com/AliRezaMohtaram/Acl) module (`AddAcl()`). |
 
 ## Host setup
 
@@ -42,6 +42,20 @@ By default the pages render in the host's `_Layout`, which must load the MX desi
 
 ![Chart page](docs/screenshots/index-dark.png)
 
+## With Acl
+
+```csharp
+builder.Services.AddOrgChart().AddSqlServerStore(cs).AddAcl();          // OrgChart.Acl
+builder.Services.AddAccessControl(o => o.ApplicationKey = "MyApp").AddSqlServerStore(cs);
+```
+
+Acl then reads positions from the chart (delegations and deputies included, limited to the delegated roles), chart
+changes refresh Acl's cached access, and the delegation forms offer the Acl roles bound to the position.
+
+`OrgChart.Acl` needs the Acl packages (0.2.0+). Until they are on a shared feed, it restores them from
+`../Acl/artifacts/packages` (an Acl clone next to this repository, after `dotnet pack Acl.sln -c Release`); point the
+`AclPackages` property or environment variable elsewhere if needed.
+
 ## Database
 
 - `db/orgchart-schema.sql` — idempotent SQL Server DDL generated from the migrations.
@@ -53,3 +67,5 @@ By default the pages render in the host's `_Layout`, which must load the MX desi
 dotnet build
 dotnet test
 ```
+
+The whole solution includes `OrgChart.Acl`, so pack Acl first (see above).
