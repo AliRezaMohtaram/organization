@@ -93,12 +93,31 @@ OrgChart defines its **own** `IUserDirectory` (same shape as Acl's: `SearchAsync
     framework), Jalali (Shamsi) dates, texts in `.resx`
 - NuGet packaging like Acl: `Directory.Build.props`, output in `artifacts/packages`.
 
+## UI design system (mandatory for any front-end)
+
+All UI must follow the **MX design system** from https://github.com/AliRezaMohtaram/DataMapper
+(`Mapper/wwwroot/`). Do not invent new visual styles; stay within its bounds.
+
+- `css/mx.css` — the design system (tokens + components). `css/theme.css` and `css/mx-legacy.css`
+  are legacy/bridge files: do **not** build on them.
+- Theme axes are attributes on `<html>` (managed by `js/theme.js`): `data-theme` (dark|light|system),
+  `data-preset`, `data-accent`, `data-size`, `data-radius`. Use the CSS tokens, never hard-coded colors.
+- Font: Vazir (`font/Vazir.woff2`). Icons: SVG sprite (`Views/Shared/_Icons.cshtml`, `<use href="#i-...">`).
+- Components to reuse: `.app/.sidebar/.topbar/.main/.page` shell, `.card*`, `.btn*`, `.tbl*`,
+  `.field/.label/.input/.select/.hint`, `.badge` + `.st-*`, `.modal*` (modal-first workflows),
+  `.mx-drawer`, `.toast`, `.toolbar`, `.empty`, `.tl*` (timeline), `.tone-*`.
+- Behaviours from `js/mx.js` via declarative hooks (`data-open`, `data-close`, `data-dd`, `data-tabs`, …);
+  Jalali dates via `js/jalali-picker.js`.
+- The user will provide a sample org-chart page as a **pattern only**; where it deviates from MX, MX wins.
+
 ## Open questions (to be answered by the user)
 
 1. Data source: edited only in this module, or sometimes synced from another system (HR / existing DB)?
 2. Reporting line: is a "manager" of a unit/position needed (workflows, approvals)?
 3. Structure history: needed ("what did the chart look like on date X"), or is assignment history enough?
-4. Graphical chart view needed, or is a tree list enough?
+4. Graphical chart view needed, or is a tree list enough? (UI must use MX — see above.)
+7. MX assets: does `OrgChart.Razor` ship its own copy of `mx.css`/`mx.js`/icons, or rely on the host layout already loading them?
+8. Sample org-chart page mentioned by the user — not yet received.
 5. Project/package names: `OrgChart.*` or something else?
 6. Bridge package `OrgChart.Acl` (implements `IOrgStructure`): built in this repo, or written per host app?
 
