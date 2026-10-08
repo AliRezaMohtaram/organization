@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 
 using OrgChart.Core.Model;
 using OrgChart.EFCore.Configurations;
+using OrgChart.EFCore.Services;
 
 namespace OrgChart.EFCore;
 
@@ -16,6 +17,7 @@ public class OrgChartDbContext(DbContextOptions<OrgChartDbContext> options) : Db
     public DbSet<Position> Positions => Set<Position>();
     public DbSet<Assignment> Assignments => Set<Assignment>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
+    internal DbSet<ChartStamp> ChartStamps => Set<ChartStamp>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

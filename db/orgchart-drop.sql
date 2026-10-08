@@ -19,6 +19,7 @@ DROP TABLE IF EXISTS [org].[OrgUnits];
 DROP TABLE IF EXISTS [org].[PositionTypes];
 DROP TABLE IF EXISTS [org].[OrgUnitTypes];
 DROP TABLE IF EXISTS [org].[AuditLogs];
+DROP TABLE IF EXISTS [org].[ChartStamps];
 DROP TABLE IF EXISTS [org].[__EFMigrationsHistory];
 
 IF SCHEMA_ID(N'org') IS NOT NULL

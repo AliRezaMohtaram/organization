@@ -88,9 +88,11 @@ OrgChart defines its **own** `IUserDirectory` (same shape as Acl's: `SearchAsync
 - Projects:
   - `OrgChart.Core` — domain, abstractions, services; no ASP.NET or EF dependency
   - `OrgChart.EFCore` — persistence
-  - `OrgChart.AspNetCore` — DI wiring, single entry point `services.AddOrgChart(o => ...)`
+  - `OrgChart.AspNetCore` — ASP.NET Core integration (current user from HttpContext, etc.)
   - `OrgChart.Razor` — admin pages: Persian, RTL, Razor Pages, plain CSS/JS (no CDN, no SPA
     framework), Jalali (Shamsi) dates, texts in `.resx`
+- Single entry point `services.AddOrgChart(o => ...)` lives in `OrgChart.Core` (DI abstractions only, so it
+  also works outside ASP.NET Core); stores and integrations plug in via `OrgChartBuilder`, like Acl's `AclBuilder`.
 - NuGet packaging like Acl: `Directory.Build.props`, output in `artifacts/packages`.
 
 ## UI design system (mandatory for any front-end)
@@ -184,10 +186,43 @@ All UI must follow the **MX design system** from https://github.com/AliRezaMohta
      `org.__EFMigrationsHistory`, UTC converter), migration `InitialCreate`, `db/orgchart-schema.sql`,
      `db/orgchart-drop.sql` (drops the OrgUnits↔Positions FK first).
    - Tests: `tests/OrgChart.Tests/EFCore` (SQLite in-memory via `SqliteOrgChartDb`).
-3. NEXT: Stage 2 — Core abstractions and services:
-   - `IOrgChartReader` (tree, descendants/ancestors, user positions incl. past/future), cached snapshot.
-   - Admin services (create/move/rename/deactivate units and positions, assign/end/plan assignments)
-     with validation (key format, no cycles, manager position in its unit) and audit log.
-   - `IOrgChartChangeListener` hook: user-assignment changes vs. structural changes.
-   - `IUserDirectory` (same shape as Acl's).
-4. Later: `OrgChart.AspNetCore` (`AddOrgChart`), `OrgChart.Razor` (MX UI), `OrgChart.Acl` bridge, sample host, NuGet.
+3. DONE: Stage 2 — Core abstractions and services.
+   - Host setup: `services.AddOrgChart().AddSqlServerStore(cs)` (or `.AddEntityFrameworkStore(o => ...)`),
+     optional `.AddCurrentUser<T>()` (default `NullCurrentUser`), `.AddUserDirectory<T>()` (default
+     `NullUserDirectory`), `.AddChangeListener<T>()` (several allowed, scoped). `TimeProvider` is TryAdd'ed.
+   - `OrgChart.Core.Abstractions`: `ICurrentUser`, `IUserDirectory` + `UserInfo` (same shape as Acl's),
+     `IOrgChartChangeListener` with `OrgChartChange(Kind, UserIds)`; kinds: `Assignments` (only those users),
+     `Structure` (tree/validity/active/manager — anyone), `Details` (titles, codes, sort order, types).
+     A bridge to Acl maps Assignments → `BumpUsersAsync`, Structure → `BumpGlobalAsync`, Details → nothing.
+   - `OrgChart.Core.Chart`: `OrgChartSnapshot` (pure, immutable, case-insensitive keys): Units in tree order,
+     Roots, GetChildren, GetAncestorKeys (nearest first), GetDescendantKeys, GetLevel, GetPath, IsSelfOrDescendant,
+     GetPositions, GetManagerChain (unit's manager, then each ancestor's; skips self, missing and inactive
+     managers). Missing parent → root; a cycle is cut at its smallest key (becomes a root).
+     `Period` helpers ([from, to), null = unbounded).
+   - `IOrgChartReader` (EF: `EfOrgChartReader`): GetSnapshotAsync (cached), GetUserPositionsAsync (past/current/
+     future; period = assignment ∩ position ∩ unit validity; inactive position/unit or empty period → left out),
+     GetUnitAssignmentsAsync (optionally with sub-units), GetHoldersAsync(positionKeys, at),
+     GetManagersAsync(userId, at) (nearest manager position in the chain held by someone else).
+   - Snapshot cache: singleton `SnapshotCache` keyed by the `org.ChartStamps` row (one row, Id 1, seeded).
+     Every read compares the stamp (one query), so other servers see changes at once. Admin operations on
+     units/positions/types update the stamp first inside their transaction: invalidates caches everywhere and,
+     since the row stays locked until commit, serializes structural changes (cycle checks see committed data).
+     Assignment operations do not touch the stamp.
+   - `IOrgChartAdministration` (EF: `EfOrgChartAdministration`), all by key: types (create/update/activate, per
+     `OrgTypeKind`), units (create/update/move/activate/set manager), positions (create/update/move/activate),
+     assignments (assign/update/end/transfer/remove). One transaction each, audit row, listeners notified after
+     commit (a listener exception reaches the caller; the change stays saved). No-op changes write no audit
+     and notify nobody. On failure the change tracker is cleared so nothing half-applied is saved later.
+     Errors: `OrgChartAdminException(code)` with codes in `OrgChartErrors`.
+   - Rules: keys per `OrgKey.IsValid` and unique; title required ≤ 256; code ≤ 64, unique per table; parent/type
+     must be active when chosen; no cycles; deactivate unit only without active sub-units/positions; reactivate
+     needs an active parent/unit; manager position must be an active position of the unit; a unit head cannot be
+     moved or deactivated; deactivate position only without current/future assignments; same user cannot hold
+     the same position in overlapping periods; End: after start, before the current end (shortening only);
+     Transfer = end at EffectiveAt + new open-ended assignment from EffectiveAt. Unspecified DateTime = UTC.
+   - Migration `ChartStamps`; schema/drop scripts updated.
+   - Tests: tests/OrgChart.Tests/Chart (snapshot), tests/OrgChart.Tests/Integration (`OrgChartServices` = real DI +
+     SQLite + manual clock + recording listener; `CreateServer()` simulates a second server on the same DB).
+4. NEXT: Stage 3 — `OrgChart.Acl` bridge (needs Acl.Core: project reference via git submodule, or the Acl NuGet
+   package from the internal feed — ask the user), then `OrgChart.AspNetCore`, `OrgChart.Razor` (MX UI),
+   sample host, NuGet.

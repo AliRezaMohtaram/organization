@@ -313,6 +313,41 @@ BEGIN
     VALUES (N'20261008100654_InitialCreate', N'9.0.20');
 END;
 
+IF NOT EXISTS (
+    SELECT * FROM [org].[__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261008103136_ChartStamps'
+)
+BEGIN
+    CREATE TABLE [org].[ChartStamps] (
+        [Id] int NOT NULL,
+        [Stamp] uniqueidentifier NOT NULL,
+        [UpdatedAt] datetime2 NOT NULL,
+        CONSTRAINT [PK_ChartStamps] PRIMARY KEY ([Id])
+    );
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [org].[__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261008103136_ChartStamps'
+)
+BEGIN
+    IF EXISTS (SELECT * FROM [sys].[identity_columns] WHERE [name] IN (N'Id', N'Stamp', N'UpdatedAt') AND [object_id] = OBJECT_ID(N'[org].[ChartStamps]'))
+        SET IDENTITY_INSERT [org].[ChartStamps] ON;
+    EXEC(N'INSERT INTO [org].[ChartStamps] ([Id], [Stamp], [UpdatedAt])
+    VALUES (1, ''5d0f3c9e-2f6b-4b8e-9a51-0c7f6e1d2a10'', ''2026-01-01T00:00:00.0000000Z'')');
+    IF EXISTS (SELECT * FROM [sys].[identity_columns] WHERE [name] IN (N'Id', N'Stamp', N'UpdatedAt') AND [object_id] = OBJECT_ID(N'[org].[ChartStamps]'))
+        SET IDENTITY_INSERT [org].[ChartStamps] OFF;
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [org].[__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261008103136_ChartStamps'
+)
+BEGIN
+    INSERT INTO [org].[__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20261008103136_ChartStamps', N'9.0.20');
+END;
+
 COMMIT;
 GO
 
