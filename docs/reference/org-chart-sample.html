@@ -1,0 +1,2604 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ساختار سازمانی | سامانه ERP</title>
+
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+    <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css"
+    />
+
+    <style>
+        /* ============================================================
+           Design Tokens
+           ============================================================ */
+        :root {
+            --color-primary: #2563eb;
+            --color-primary-hover: #1d4ed8;
+            --color-primary-active: #1e40af;
+            --color-primary-soft: #eff6ff;
+            --color-primary-soft-2: #dbeafe;
+
+            --color-bg: #f5f7fa;
+            --color-bg-elevated: #ffffff;
+            --color-bg-side: #0f172a;
+            --color-bg-side-hover: #1e293b;
+            --color-bg-side-active: #1d4ed8;
+
+            --color-text: #0f172a;
+            --color-text-muted: #64748b;
+            --color-text-soft: #94a3b8;
+            --color-text-inverse: #f8fafc;
+
+            --color-border: #e2e8f0;
+            --color-border-soft: #f1f5f9;
+            --color-border-strong: #cbd5e1;
+
+            --color-danger: #dc2626;
+            --color-danger-soft: #fef2f2;
+            --color-success: #16a34a;
+            --color-success-soft: #f0fdf4;
+            --color-warning: #d97706;
+            --color-warning-soft: #fffbeb;
+            --color-info: #0891b2;
+            --color-info-soft: #ecfeff;
+
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 16px;
+
+            --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
+            --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
+            --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.08);
+            --shadow-lg: 0 20px 40px rgba(15, 23, 42, 0.12);
+
+            --font-family: 'Vazirmatn', system-ui, -apple-system,
+                'Segoe UI', Tahoma, sans-serif;
+
+            --transition: 150ms ease;
+
+            --sidebar-width: 264px;
+            --sidebar-collapsed-width: 72px;
+            --header-height: 64px;
+        }
+
+        /* ============================================================
+           Reset
+           ============================================================ */
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html, body {
+            height: 100%;
+        }
+
+        body {
+            font-family: var(--font-family);
+            font-size: 14px;
+            line-height: 1.6;
+            color: var(--color-text);
+            background-color: var(--color-bg);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            overflow-x: hidden;
+        }
+
+        button, input, select {
+            font-family: inherit;
+            font-size: inherit;
+            color: inherit;
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        ul { list-style: none; }
+
+        /* ============================================================
+           App Shell (same as Dashboard)
+           ============================================================ */
+        .app {
+            display: grid;
+            grid-template-columns: var(--sidebar-width) 1fr;
+            min-height: 100vh;
+            transition: grid-template-columns 200ms ease;
+        }
+
+        .app.is-collapsed {
+            grid-template-columns: var(--sidebar-collapsed-width) 1fr;
+        }
+
+        /* ---------- Sidebar ---------- */
+        .sidebar {
+            background-color: var(--color-bg-side);
+            color: var(--color-text-inverse);
+            display: flex;
+            flex-direction: column;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow: hidden;
+            z-index: 30;
+        }
+
+        .sidebar__brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 0 18px;
+            height: var(--header-height);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            flex-shrink: 0;
+        }
+
+        .sidebar__logo {
+            width: 36px;
+            height: 36px;
+            border-radius: var(--radius-md);
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            display: grid;
+            place-items: center;
+            font-weight: 700;
+            font-size: 13px;
+            color: #fff;
+            flex-shrink: 0;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+        }
+
+        .sidebar__brand-text {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.3;
+            white-space: nowrap;
+            opacity: 1;
+            transition: opacity 150ms ease;
+        }
+
+        .app.is-collapsed .sidebar__brand-text {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .sidebar__brand-name {
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .sidebar__brand-sub {
+            font-size: 11px;
+            color: rgba(248, 250, 252, 0.5);
+        }
+
+        .sidebar__nav {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px 10px 20px;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+        }
+
+        .sidebar__nav::-webkit-scrollbar { width: 6px; }
+        .sidebar__nav::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 3px;
+        }
+
+        .nav-group { margin-bottom: 4px; }
+
+        .nav-group__label {
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            color: rgba(248, 250, 252, 0.35);
+            padding: 14px 12px 6px;
+            text-transform: uppercase;
+            white-space: nowrap;
+            transition: opacity 150ms ease;
+        }
+
+        .app.is-collapsed .nav-group__label {
+            opacity: 0;
+            height: 0;
+            padding: 4px 0;
+            overflow: hidden;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 9px 12px;
+            border-radius: var(--radius-sm);
+            color: rgba(248, 250, 252, 0.75);
+            font-size: 13px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition:
+                background-color var(--transition),
+                color var(--transition);
+            position: relative;
+        }
+
+        .nav-item:hover {
+            background-color: var(--color-bg-side-hover);
+            color: #fff;
+        }
+
+        .nav-item.is-active {
+            background-color: var(--color-bg-side-active);
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(29, 78, 216, 0.4);
+        }
+
+        .nav-item__icon {
+            width: 18px;
+            height: 18px;
+            flex-shrink: 0;
+        }
+
+        .nav-item__label {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            transition: opacity 150ms ease;
+        }
+
+        .app.is-collapsed .nav-item__label {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .app.is-collapsed .nav-item {
+            justify-content: center;
+            padding: 9px;
+        }
+
+        .nav-item__badge {
+            font-size: 10px;
+            font-weight: 600;
+            background-color: rgba(255, 255, 255, 0.14);
+            color: #fff;
+            padding: 1px 7px;
+            border-radius: 999px;
+            min-width: 20px;
+            text-align: center;
+            transition: opacity 150ms ease;
+        }
+
+        .app.is-collapsed .nav-item__badge { display: none; }
+
+        .sidebar__footer {
+            flex-shrink: 0;
+            padding: 12px 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .sidebar__collapse {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            padding: 8px;
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-sm);
+            color: rgba(248, 250, 252, 0.7);
+            font-size: 12px;
+            cursor: pointer;
+            transition:
+                background-color var(--transition),
+                color var(--transition);
+        }
+
+        .sidebar__collapse:hover {
+            background-color: rgba(255, 255, 255, 0.06);
+            color: #fff;
+        }
+
+        .sidebar__collapse svg {
+            width: 16px;
+            height: 16px;
+            transition: transform 200ms ease;
+        }
+
+        .app.is-collapsed .sidebar__collapse svg { transform: rotate(180deg); }
+        .app.is-collapsed .sidebar__collapse-text { display: none; }
+
+        /* ---------- Main ---------- */
+        .main {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        /* ---------- Header ---------- */
+        .header {
+            height: var(--header-height);
+            background-color: var(--color-bg-elevated);
+            border-bottom: 1px solid var(--color-border);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 0 24px;
+            position: sticky;
+            top: 0;
+            z-index: 20;
+        }
+
+        .header__menu-btn {
+            display: none;
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: transparent;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            place-items: center;
+        }
+
+        .header__menu-btn svg { width: 20px; height: 20px; }
+
+        .header__breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: var(--color-text-muted);
+        }
+
+        .header__breadcrumb-current {
+            color: var(--color-text);
+            font-weight: 600;
+        }
+
+        .header__breadcrumb-sep { color: var(--color-text-soft); }
+
+        .header__search {
+            flex: 1;
+            max-width: 420px;
+            margin-inline-start: auto;
+            position: relative;
+        }
+
+        .header__search input {
+            width: 100%;
+            height: 38px;
+            padding: 0 38px 0 12px;
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-sm);
+            background-color: var(--color-bg);
+            font-size: 13px;
+            outline: none;
+            transition:
+                border-color var(--transition),
+                box-shadow var(--transition),
+                background-color var(--transition);
+        }
+
+        .header__search input:focus {
+            border-color: var(--color-primary);
+            background-color: #fff;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+        }
+
+        .header__search-icon {
+            position: absolute;
+            inset-inline-start: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 16px;
+            height: 16px;
+            color: var(--color-text-soft);
+            pointer-events: none;
+        }
+
+        .header__search kbd {
+            position: absolute;
+            inset-inline-end: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-family: monospace;
+            font-size: 10px;
+            padding: 2px 6px;
+            background-color: #fff;
+            border: 1px solid var(--color-border);
+            border-radius: 4px;
+            color: var(--color-text-muted);
+        }
+
+        .header__actions {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .icon-btn {
+            position: relative;
+            width: 38px;
+            height: 38px;
+            border: none;
+            background: transparent;
+            border-radius: var(--radius-sm);
+            color: var(--color-text-muted);
+            cursor: pointer;
+            display: grid;
+            place-items: center;
+            transition:
+                background-color var(--transition),
+                color var(--transition);
+        }
+
+        .icon-btn:hover {
+            background-color: var(--color-bg);
+            color: var(--color-text);
+        }
+
+        .icon-btn svg { width: 18px; height: 18px; }
+
+        .icon-btn__dot {
+            position: absolute;
+            top: 8px;
+            inset-inline-end: 8px;
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background-color: var(--color-danger);
+            border: 1.5px solid #fff;
+        }
+
+        .header__user {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 4px 4px 4px 12px;
+            border-radius: 999px;
+            cursor: pointer;
+            transition: background-color var(--transition);
+            margin-inline-start: 4px;
+        }
+
+        .header__user:hover { background-color: var(--color-bg); }
+
+        .header__user-info { text-align: right; line-height: 1.3; }
+        .header__user-name { font-size: 13px; font-weight: 600; }
+        .header__user-role { font-size: 11px; color: var(--color-text-muted); }
+
+        .header__avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #60a5fa, #2563eb);
+            color: #fff;
+            display: grid;
+            place-items: center;
+            font-size: 12px;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        /* ============================================================
+           Content
+           ============================================================ */
+        .content {
+            flex: 1;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* ---------- Page Header ---------- */
+        .page-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .page-header__title {
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            margin-bottom: 4px;
+        }
+
+        .page-header__subtitle {
+            font-size: 13px;
+            color: var(--color-text-muted);
+        }
+
+        .page-header__actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        /* ---------- Buttons ---------- */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            height: 38px;
+            padding: 0 14px;
+            border: 1px solid transparent;
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            white-space: nowrap;
+            transition:
+                background-color var(--transition),
+                border-color var(--transition),
+                color var(--transition),
+                transform var(--transition);
+        }
+
+        .btn svg { width: 16px; height: 16px; }
+
+        .btn--primary {
+            background-color: var(--color-primary);
+            color: #fff;
+            box-shadow: 0 1px 2px rgba(37, 99, 235, 0.3);
+        }
+
+        .btn--primary:hover {
+            background-color: var(--color-primary-hover);
+        }
+
+        .btn--ghost {
+            background-color: var(--color-bg-elevated);
+            color: var(--color-text);
+            border-color: var(--color-border);
+        }
+
+        .btn--ghost:hover {
+            background-color: var(--color-bg);
+            border-color: var(--color-border-strong);
+        }
+
+        .btn--icon {
+            width: 38px;
+            padding: 0;
+        }
+
+        /* ---------- Toolbar ---------- */
+        .toolbar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            padding: 12px 16px;
+            background-color: var(--color-bg-elevated);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+        }
+
+        .toolbar__search {
+            position: relative;
+            flex: 1;
+            min-width: 200px;
+            max-width: 320px;
+        }
+
+        .toolbar__search input {
+            width: 100%;
+            height: 36px;
+            padding: 0 36px 0 12px;
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-sm);
+            background-color: var(--color-bg);
+            font-size: 13px;
+            outline: none;
+            transition:
+                border-color var(--transition),
+                box-shadow var(--transition),
+                background-color var(--transition);
+        }
+
+        .toolbar__search input:focus {
+            border-color: var(--color-primary);
+            background-color: #fff;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+        }
+
+        .toolbar__search-icon {
+            position: absolute;
+            inset-inline-start: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 15px;
+            height: 15px;
+            color: var(--color-text-soft);
+            pointer-events: none;
+        }
+
+        .toolbar__select {
+            height: 36px;
+            padding: 0 30px 0 12px;
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-sm);
+            background-color: var(--color-bg);
+            font-size: 13px;
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: left 10px center;
+            outline: none;
+            transition: border-color var(--transition);
+        }
+
+        .toolbar__select:hover { border-color: var(--color-border-strong); }
+
+        .toolbar__spacer { flex: 1; }
+
+        .toolbar__toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: var(--color-text-muted);
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .toolbar__toggle input { accent-color: var(--color-primary); }
+
+        /* ---------- Layout: Tree + Detail ---------- */
+        .org-layout {
+            display: grid;
+            grid-template-columns: 380px 1fr;
+            gap: 16px;
+            align-items: start;
+        }
+
+        /* ---------- Tree Panel ---------- */
+        .tree-panel {
+            background-color: var(--color-bg-elevated);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            max-height: calc(100vh - var(--header-height) - 200px);
+            position: sticky;
+            top: calc(var(--header-height) + 24px);
+        }
+
+        .tree-panel__head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--color-border-soft);
+            gap: 10px;
+        }
+
+        .tree-panel__title {
+            font-size: 14px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tree-panel__title svg {
+            width: 16px;
+            height: 16px;
+            color: var(--color-primary);
+        }
+
+        .tree-panel__count {
+            font-size: 11px;
+            color: var(--color-text-muted);
+            font-weight: 400;
+        }
+
+        .tree-panel__actions {
+            display: flex;
+            gap: 2px;
+        }
+
+        .tree-panel__actions button {
+            width: 28px;
+            height: 28px;
+            border: none;
+            background: transparent;
+            color: var(--color-text-muted);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            display: grid;
+            place-items: center;
+            transition:
+                background-color var(--transition),
+                color var(--transition);
+        }
+
+        .tree-panel__actions button:hover {
+            background-color: var(--color-bg);
+            color: var(--color-text);
+        }
+
+        .tree-panel__actions svg { width: 15px; height: 15px; }
+
+        .tree-panel__body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px;
+            scrollbar-width: thin;
+        }
+
+        .tree-panel__body::-webkit-scrollbar { width: 6px; }
+        .tree-panel__body::-webkit-scrollbar-thumb {
+            background: var(--color-border-strong);
+            border-radius: 3px;
+        }
+
+        /* ---------- Tree ---------- */
+        .tree {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .tree-node {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .tree-node__row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 8px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            position: relative;
+            transition:
+                background-color var(--transition),
+                color var(--transition);
+            user-select: none;
+        }
+
+        .tree-node__row:hover { background-color: var(--color-bg); }
+
+        .tree-node__row.is-selected {
+            background-color: var(--color-primary-soft);
+            color: var(--color-primary-active);
+            font-weight: 500;
+        }
+
+        .tree-node__row.is-selected .tree-node__label { color: var(--color-primary-active); }
+
+        .tree-node__toggle {
+            width: 18px;
+            height: 18px;
+            border: none;
+            background: transparent;
+            color: var(--color-text-soft);
+            cursor: pointer;
+            display: grid;
+            place-items: center;
+            border-radius: 4px;
+            flex-shrink: 0;
+            transition: transform 150ms ease, background-color var(--transition);
+        }
+
+        .tree-node__toggle:hover { background-color: var(--color-border); }
+
+        .tree-node__toggle.is-expanded { transform: rotate(-90deg); }
+
+        .tree-node__toggle svg { width: 12px; height: 12px; }
+
+        .tree-node__toggle--empty {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .tree-node__icon {
+            width: 18px;
+            height: 18px;
+            flex-shrink: 0;
+            color: var(--color-text-muted);
+        }
+
+        .tree-node__row.is-selected .tree-node__icon { color: var(--color-primary); }
+
+        .tree-node__label {
+            flex: 1;
+            font-size: 13px;
+            color: var(--color-text);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .tree-node__code {
+            font-family: monospace;
+            font-size: 10px;
+            color: var(--color-text-soft);
+            background-color: var(--color-bg);
+            padding: 1px 5px;
+            border-radius: 3px;
+            flex-shrink: 0;
+        }
+
+        .tree-node__row.is-selected .tree-node__code {
+            background-color: rgba(37, 99, 235, 0.12);
+            color: var(--color-primary-active);
+        }
+
+        .tree-node__type-badge {
+            font-size: 9px;
+            font-weight: 600;
+            padding: 1px 6px;
+            border-radius: 999px;
+            background-color: var(--color-bg);
+            color: var(--color-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            flex-shrink: 0;
+        }
+
+        .tree-node__row.is-selected .tree-node__type-badge {
+            background-color: rgba(37, 99, 235, 0.12);
+            color: var(--color-primary-active);
+        }
+
+        .tree-node__children {
+            display: flex;
+            flex-direction: column;
+            padding-inline-start: 18px;
+            position: relative;
+        }
+
+        .tree-node__children::before {
+            content: '';
+            position: absolute;
+            inset-inline-start: 16px;
+            top: 0;
+            bottom: 8px;
+            width: 1px;
+            background-color: var(--color-border);
+        }
+
+        .tree-node__children[hidden] { display: none; }
+
+        /* ---------- Detail Panel ---------- */
+        .detail {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            min-width: 0;
+        }
+
+        .panel {
+            background-color: var(--color-bg-elevated);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+        }
+
+        .panel__head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 18px;
+            border-bottom: 1px solid var(--color-border-soft);
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .panel__title {
+            font-size: 14px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .panel__title svg {
+            width: 16px;
+            height: 16px;
+            color: var(--color-text-muted);
+        }
+
+        .panel__body { padding: 18px; }
+        .panel__body--flush { padding: 0; }
+
+        /* ---------- Unit Header Card ---------- */
+        .unit-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            padding: 20px;
+            border-bottom: 1px solid var(--color-border-soft);
+            position: relative;
+            background:
+                linear-gradient(135deg, rgba(37, 99, 235, 0.03), rgba(37, 99, 235, 0.08));
+        }
+
+        .unit-header__icon {
+            width: 56px;
+            height: 56px;
+            border-radius: var(--radius-md);
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: #fff;
+            display: grid;
+            place-items: center;
+            flex-shrink: 0;
+            box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
+        }
+
+        .unit-header__icon svg { width: 26px; height: 26px; }
+
+        .unit-header__content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .unit-header__eyebrow {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--color-primary);
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+
+        .unit-header__title {
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: -0.01em;
+            margin-bottom: 6px;
+        }
+
+        .unit-header__path {
+            font-size: 12px;
+            color: var(--color-text-muted);
+            font-family: monospace;
+            background-color: var(--color-bg);
+            padding: 3px 8px;
+            border-radius: 4px;
+            display: inline-block;
+            direction: ltr;
+            text-align: left;
+        }
+
+        .unit-header__actions {
+            display: flex;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+
+        /* ---------- Info Grid ---------- */
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 18px 24px;
+            padding: 20px;
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            min-width: 0;
+        }
+
+        .info-item__label {
+            font-size: 11px;
+            color: var(--color-text-muted);
+            font-weight: 500;
+        }
+
+        .info-item__value {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--color-text);
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .info-item__value--mono {
+            font-family: monospace;
+            font-size: 12px;
+        }
+
+        .info-item__value--muted {
+            color: var(--color-text-muted);
+            font-weight: 400;
+        }
+
+        /* ---------- Tabs ---------- */
+        .tabs {
+            display: flex;
+            gap: 2px;
+            padding: 0 18px;
+            border-bottom: 1px solid var(--color-border-soft);
+            background-color: var(--color-bg-elevated);
+            overflow-x: auto;
+        }
+
+        .tabs::-webkit-scrollbar { height: 0; }
+
+        .tab {
+            padding: 12px 14px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--color-text-muted);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -1px;
+            white-space: nowrap;
+            transition:
+                color var(--transition),
+                border-color var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: none;
+            border-top: none;
+            border-inline-start: none;
+            border-inline-end: none;
+        }
+
+        .tab:hover { color: var(--color-text); }
+
+        .tab.is-active {
+            color: var(--color-primary);
+            border-bottom-color: var(--color-primary);
+        }
+
+        .tab__count {
+            font-size: 10px;
+            font-weight: 600;
+            background-color: var(--color-bg);
+            color: var(--color-text-muted);
+            padding: 1px 6px;
+            border-radius: 999px;
+            min-width: 18px;
+            text-align: center;
+        }
+
+        .tab.is-active .tab__count {
+            background-color: var(--color-primary-soft);
+            color: var(--color-primary);
+        }
+
+        .tab-panel[hidden] { display: none; }
+
+        /* ---------- Data Table ---------- */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .data-table thead th {
+            text-align: right;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--color-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            padding: 10px 18px;
+            background-color: var(--color-bg);
+            border-bottom: 1px solid var(--color-border);
+            white-space: nowrap;
+        }
+
+        .data-table tbody td {
+            padding: 12px 18px;
+            border-bottom: 1px solid var(--color-border-soft);
+            vertical-align: middle;
+        }
+
+        .data-table tbody tr {
+            transition: background-color var(--transition);
+        }
+
+        .data-table tbody tr:hover { background-color: var(--color-bg); }
+        .data-table tbody tr:last-child td { border-bottom: none; }
+
+        .data-table__code {
+            font-family: monospace;
+            font-size: 12px;
+            color: var(--color-primary);
+            font-weight: 500;
+        }
+
+        .data-table__muted {
+            color: var(--color-text-muted);
+            font-size: 12px;
+        }
+
+        .data-table__person {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .data-table__avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #93c5fd, #3b82f6);
+            color: #fff;
+            display: grid;
+            place-items: center;
+            font-size: 11px;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        .data-table__person-info {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.3;
+            min-width: 0;
+        }
+
+        .data-table__person-name {
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .data-table__person-sub {
+            font-size: 11px;
+            color: var(--color-text-muted);
+            font-family: monospace;
+        }
+
+        /* ---------- Badges ---------- */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 3px 9px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .badge::before {
+            content: '';
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background-color: currentColor;
+        }
+
+        .badge--active   { background-color: var(--color-success-soft); color: var(--color-success); }
+        .badge--inactive { background-color: #f1f5f9; color: #475569; }
+        .badge--pending  { background-color: var(--color-warning-soft); color: var(--color-warning); }
+        .badge--primary  { background-color: var(--color-primary-soft); color: var(--color-primary); }
+        .badge--info     { background-color: var(--color-info-soft); color: var(--color-info); }
+
+        /* ---------- Empty State ---------- */
+        .empty-state {
+            padding: 48px 24px;
+            text-align: center;
+            color: var(--color-text-muted);
+        }
+
+        .empty-state__icon {
+            width: 56px;
+            height: 56px;
+            margin: 0 auto 16px;
+            border-radius: 50%;
+            background-color: var(--color-bg);
+            display: grid;
+            place-items: center;
+            color: var(--color-text-soft);
+        }
+
+        .empty-state__icon svg { width: 26px; height: 26px; }
+
+        .empty-state__title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--color-text);
+            margin-bottom: 6px;
+        }
+
+        .empty-state__desc {
+            font-size: 12px;
+            max-width: 320px;
+            margin: 0 auto;
+            line-height: 1.7;
+        }
+
+        /* ============================================================
+           Responsive
+           ============================================================ */
+        @media (max-width: 1200px) {
+            .org-layout {
+                grid-template-columns: 320px 1fr;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .app {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                position: fixed;
+                inset: 0 auto 0 0;
+                width: var(--sidebar-width);
+                transform: translateX(-100%);
+                transition: transform 250ms ease;
+            }
+
+            .app.is-mobile-open .sidebar { transform: translateX(0); }
+
+            .header__menu-btn { display: grid; }
+            .header__search { display: none; }
+            .header__user-info { display: none; }
+
+            .content { padding: 16px; }
+
+            .org-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .tree-panel {
+                position: static;
+                max-height: 400px;
+            }
+
+            .info-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .header { padding: 0 12px; }
+            .header__breadcrumb { display: none; }
+
+            .info-grid {
+                grid-template-columns: 1fr;
+                gap: 14px;
+            }
+
+            .page-header__title { font-size: 18px; }
+            .unit-header { flex-direction: column; }
+            .unit-header__actions { width: 100%; }
+        }
+
+        .visually-hidden {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app" id="app">
+
+        <!-- ============================================================
+             Sidebar
+             ============================================================ -->
+        <aside class="sidebar" aria-label="ناوبری اصلی">
+            <div class="sidebar__brand">
+                <div class="sidebar__logo">ERP</div>
+                <div class="sidebar__brand-text">
+                    <span class="sidebar__brand-name">سامانه یکپارچه</span>
+                    <span class="sidebar__brand-sub">Enterprise Suite</span>
+                </div>
+            </div>
+
+            <nav class="sidebar__nav">
+                <div class="nav-group">
+                    <div class="nav-group__label">نمای کلی</div>
+                    <a class="nav-item" href="#" data-nav="dashboard">
+                        <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <rect x="3" y="3" width="7" height="9" rx="1"/>
+                            <rect x="14" y="3" width="7" height="5" rx="1"/>
+                            <rect x="14" y="12" width="7" height="9" rx="1"/>
+                            <rect x="3" y="16" width="7" height="5" rx="1"/>
+                        </svg>
+                        <span class="nav-item__label">داشبورد</span>
+                    </a>
+                </div>
+
+                <div class="nav-group">
+                    <div class="nav-group__label">پایه سیستم</div>
+                    <a class="nav-item is-active" href="#" data-nav="organization">
+                        <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M3 21h18"/>
+                            <path d="M5 21V7l8-4v18"/>
+                            <path d="M19 21V11l-6-4"/>
+                        </svg>
+                        <span class="nav-item__label">ساختار سازمانی</span>
+                    </a>
+                    <a class="nav-item" href="#" data-nav="employees">
+                        <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                            <circle cx="9" cy="7" r="4"/>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                        </svg>
+                        <span class="nav-item__label">پرسنل</span>
+                    </a>
+                    <a class="nav-item" href="#" data-nav="positions">
+                        <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <rect x="2" y="7" width="20" height="14" rx="2"/>
+                            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+                        </svg>
+                        <span class="nav-item__label">سمت‌ها</span>
+                    </a>
+                    <a class="nav-item" href="#" data-nav="users">
+                        <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <circle cx="12" cy="8" r="4"/>
+                            <path d="M4 21v-2a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v2"/>
+                        </svg>
+                        <span class="nav-item__label">کاربران</span>
+                    </a>
+                    <a class="nav-item" href="#" data-nav="roles">
+                        <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                        </svg>
+                        <span class="nav-item__label">نقش‌ها و دسترسی</span>
+                    </a>
+                </div>
+
+                <div class="nav-group">
+                    <div class="nav-group__label">فرآیند</div>
+                    <a class="nav-item" href="#" data-nav="tasks">
+                        <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M9 11l3 3L22 4"/>
+                            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+                        </svg>
+                        <span class="nav-item__label">وظایف من</span>
+                        <span class="nav-item__badge">۱۲</span>
+                    </a>
+                    <a class="nav-item" href="#" data-nav="workflows">
+                        <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <circle cx="6" cy="6" r="3"/>
+                            <circle cx="6" cy="18" r="3"/>
+                            <circle cx="18" cy="12" r="3"/>
+                            <path d="M9 6h6a3 3 0 0 1 3 3v0"/>
+                            <path d="M9 18h6a3 3 0 0 0 3-3v0"/>
+                        </svg>
+                        <span class="nav-item__label">گردش کار</span>
+                    </a>
+                </div>
+
+                <div class="nav-group">
+                    <div class="nav-group__label">خرید و تأمین</div>
+                    <a class="nav-item" href="#" data-nav="purchase-requests">
+                        <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                            <line x1="9" y1="15" x2="15" y2="15"/>
+                        </svg>
+                        <span class="nav-item__label">درخواست خرید</span>
+                        <span class="nav-item__badge">۵</span>
+                    </a>
+                    <a class="nav-item" href="#" data-nav="purchase-orders">
+                        <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <circle cx="9" cy="21" r="1"/>
+                            <circle cx="20" cy="21" r="1"/>
+                            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+                        </svg>
+                        <span class="nav-item__label">سفارش خرید</span>
+                    </a>
+                    <a class="nav-item" href="#" data-nav="suppliers">
+                        <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                            <polyline points="9 22 9 12 15 12 15 22"/>
+                        </svg>
+                        <span class="nav-item__label">تأمین‌کنندگان</span>
+                    </a>
+                </div>
+
+                <div class="nav-group">
+                    <div class="nav-group__label">انبار</div>
+                    <a class="nav-item" href="#" data-nav="items">
+                        <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                            <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+                            <line x1="12" y1="22.08" x2="12" y2="12"/>
+                        </svg>
+                        <span class="nav-item__label">اقلام</span>
+                    </a>
+                    <a class="nav-item" href="#" data-nav="warehouses">
+                        <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M3 21h18"/>
+                            <path d="M3 10l9-7 9 7v11H3z"/>
+                            <path d="M9 21v-6h6v6"/>
+                        </svg>
+                        <span class="nav-item__label">انبارها</span>
+                    </a>
+                    <a class="nav-item" href="#" data-nav="inventory">
+                        <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <line x1="8" y1="6" x2="21" y2="6"/>
+                            <line x1="8" y1="12" x2="21" y2="12"/>
+                            <line x1="8" y1="18" x2="21" y2="18"/>
+                            <line x1="3" y1="6" x2="3.01" y2="6"/>
+                            <line x1="3" y1="12" x2="3.01" y2="12"/>
+                            <line x1="3" y1="18" x2="3.01" y2="18"/>
+                        </svg>
+                        <span class="nav-item__label">موجودی</span>
+                    </a>
+                </div>
+
+                <div class="nav-group">
+                    <div class="nav-group__label">تحلیل</div>
+                    <a class="nav-item" href="#" data-nav="reports">
+                        <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <line x1="18" y1="20" x2="18" y2="10"/>
+                            <line x1="12" y1="20" x2="12" y2="4"/>
+                            <line x1="6" y1="20" x2="6" y2="14"/>
+                        </svg>
+                        <span class="nav-item__label">گزارشات</span>
+                    </a>
+                    <a class="nav-item" href="#" data-nav="audit">
+                        <svg class="nav-item__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <circle cx="11" cy="11" r="8"/>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                        </svg>
+                        <span class="nav-item__label">حسابرسی</span>
+                    </a>
+                </div>
+            </nav>
+
+            <div class="sidebar__footer">
+                <button class="sidebar__collapse" id="collapseBtn" aria-label="جمع کردن ناوبری">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <polyline points="15 18 9 12 15 6"/>
+                    </svg>
+                    <span class="sidebar__collapse-text">جمع کردن</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- ============================================================
+             Main
+             ============================================================ -->
+        <div class="main">
+
+            <!-- Header -->
+            <header class="header">
+                <button class="header__menu-btn" id="menuBtn" aria-label="منو">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <line x1="3" y1="6" x2="21" y2="6"/>
+                        <line x1="3" y1="12" x2="21" y2="12"/>
+                        <line x1="3" y1="18" x2="21" y2="18"/>
+                    </svg>
+                </button>
+
+                <nav class="header__breadcrumb" aria-label="مسیر">
+                    <span>خانه</span>
+                    <span class="header__breadcrumb-sep">/</span>
+                    <span>پایه سیستم</span>
+                    <span class="header__breadcrumb-sep">/</span>
+                    <span class="header__breadcrumb-current">ساختار سازمانی</span>
+                </nav>
+
+                <div class="header__search">
+                    <svg class="header__search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <circle cx="11" cy="11" r="8"/>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    </svg>
+                    <input type="search" placeholder="جستجوی واحد سازمانی..." aria-label="جستجو" />
+                    <kbd>Ctrl K</kbd>
+                </div>
+
+                <div class="header__actions">
+                    <button class="icon-btn" aria-label="اعلان‌ها">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                        </svg>
+                        <span class="icon-btn__dot"></span>
+                    </button>
+
+                    <button class="icon-btn" aria-label="راهنما">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <circle cx="12" cy="12" r="10"/>
+                            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+                            <line x1="12" y1="17" x2="12.01" y2="17"/>
+                        </svg>
+                    </button>
+
+                    <div class="header__user" role="button" tabindex="0" aria-label="حساب کاربری">
+                        <div class="header__user-info">
+                            <div class="header__user-name">علی احمدی</div>
+                            <div class="header__user-role">مدیر خرید</div>
+                        </div>
+                        <div class="header__avatar">ع.ا</div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Content -->
+            <main class="content">
+
+                <!-- Page Header -->
+                <div class="page-header">
+                    <div>
+                        <h1 class="page-header__title">ساختار سازمانی</h1>
+                        <p class="page-header__subtitle">
+                            مدیریت واحدهای سازمانی، سمت‌ها و پرسنل — مبتنی بر org.vOrganizationTree
+                        </p>
+                    </div>
+                    <div class="page-header__actions">
+                        <button class="btn btn--ghost">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                <polyline points="7 10 12 15 17 10"/>
+                                <line x1="12" y1="15" x2="12" y2="3"/>
+                            </svg>
+                            خروجی
+                        </button>
+                        <button class="btn btn--primary">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <line x1="12" y1="5" x2="12" y2="19"/>
+                                <line x1="5" y1="12" x2="19" y2="12"/>
+                            </svg>
+                            واحد سازمانی جدید
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Toolbar -->
+                <div class="toolbar">
+                    <div class="toolbar__search">
+                        <svg class="toolbar__search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <circle cx="11" cy="11" r="8"/>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                        </svg>
+                        <input
+                            type="search"
+                            id="treeSearch"
+                            placeholder="جستجوی کد یا نام واحد..."
+                            aria-label="جستجو در درخت"
+                        />
+                    </div>
+
+                    <select class="toolbar__select" aria-label="فیلتر نوع">
+                        <option value="">همه انواع</option>
+                        <option value="COMPANY">شرکت</option>
+                        <option value="BRANCH">شعبه</option>
+                        <option value="DIVISION">معاونت</option>
+                        <option value="DEPARTMENT">اداره</option>
+                        <option value="SECTION">بخش</option>
+                        <option value="TEAM">تیم</option>
+                    </select>
+
+                    <select class="toolbar__select" aria-label="فیلتر شرکت">
+                        <option value="">همه شرکت‌ها</option>
+                        <option value="1">شرکت الف</option>
+                        <option value="2">شرکت ب</option>
+                    </select>
+
+                    <div class="toolbar__spacer"></div>
+
+                    <label class="toolbar__toggle">
+                        <input type="checkbox" id="showInactive" />
+                        نمایش واحدهای غیرفعال
+                    </label>
+                </div>
+
+                <!-- Layout: Tree + Detail -->
+                <div class="org-layout">
+
+                    <!-- ============================================================
+                         Tree Panel
+                         ============================================================ -->
+                    <aside class="tree-panel">
+                        <div class="tree-panel__head">
+                            <div class="tree-panel__title">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M3 21h18"/>
+                                    <path d="M5 21V7l8-4v18"/>
+                                    <path d="M19 21V11l-6-4"/>
+                                </svg>
+                                درخت سازمانی
+                                <span class="tree-panel__count" id="treeCount">۰ واحد</span>
+                            </div>
+                            <div class="tree-panel__actions">
+                                <button type="button" id="expandAll" aria-label="باز کردن همه">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                        <polyline points="7 13 12 18 17 13"/>
+                                        <polyline points="7 6 12 11 17 6"/>
+                                    </svg>
+                                </button>
+                                <button type="button" id="collapseAll" aria-label="بستن همه">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                        <polyline points="17 11 12 6 7 11"/>
+                                        <polyline points="17 18 12 13 7 18"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="tree-panel__body">
+                            <div class="tree" id="orgTree" role="tree" aria-label="درخت سازمانی">
+                                <!-- JS renders here -->
+                            </div>
+                        </div>
+                    </aside>
+
+                    <!-- ============================================================
+                         Detail Panel
+                         ============================================================ -->
+                    <section class="detail" id="detailPanel" aria-live="polite">
+
+                        <!-- Unit Header -->
+                        <div class="panel">
+                            <div class="unit-header">
+                                <div class="unit-header__icon" id="unitIcon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                        <path d="M3 21h18"/>
+                                        <path d="M5 21V7l8-4v18"/>
+                                        <path d="M19 21V11l-6-4"/>
+                                    </svg>
+                                </div>
+                                <div class="unit-header__content">
+                                    <div class="unit-header__eyebrow" id="unitType">واحد سازمانی</div>
+                                    <h2 class="unit-header__title" id="unitName">—</h2>
+                                    <div class="unit-header__path" id="unitPath">—</div>
+                                </div>
+                                <div class="unit-header__actions">
+                                    <button class="btn btn--ghost btn--icon" aria-label="ویرایش">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                                        </svg>
+                                    </button>
+                                    <button class="btn btn--ghost btn--icon" aria-label="بیشتر">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                            <circle cx="12" cy="12" r="1"/>
+                                            <circle cx="12" cy="5" r="1"/>
+                                            <circle cx="12" cy="19" r="1"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Info Grid -->
+                            <div class="info-grid">
+                                <div class="info-item">
+                                    <span class="info-item__label">کد واحد</span>
+                                    <span class="info-item__value info-item__value--mono" id="infoCode">—</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-item__label">نوع واحد</span>
+                                    <span class="info-item__value" id="infoType">—</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-item__label">وضعیت</span>
+                                    <span class="info-item__value" id="infoStatus">—</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-item__label">شرکت</span>
+                                    <span class="info-item__value" id="infoCompany">—</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-item__label">شعبه</span>
+                                    <span class="info-item__value info-item__value--muted" id="infoBranch">—</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-item__label">سطح درخت</span>
+                                    <span class="info-item__value" id="infoLevel">—</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-item__label">تعداد سمت‌ها</span>
+                                    <span class="info-item__value" id="infoPositions">—</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-item__label">تعداد پرسنل</span>
+                                    <span class="info-item__value" id="infoEmployees">—</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-item__label">تاریخ اعتبار</span>
+                                    <span class="info-item__value info-item__value--muted" id="infoEffective">—</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tabs Panel -->
+                        <div class="panel">
+                            <div class="tabs" role="tablist">
+                                <button class="tab is-active" role="tab" data-tab="positions" aria-selected="true">
+                                    سمت‌ها
+                                    <span class="tab__count" id="tabCountPositions">۰</span>
+                                </button>
+                                <button class="tab" role="tab" data-tab="employees" aria-selected="false">
+                                    پرسنل
+                                    <span class="tab__count" id="tabCountEmployees">۰</span>
+                                </button>
+                                <button class="tab" role="tab" data-tab="children" aria-selected="false">
+                                    زیرمجموعه‌ها
+                                    <span class="tab__count" id="tabCountChildren">۰</span>
+                                </button>
+                                <button class="tab" role="tab" data-tab="relations" aria-selected="false">
+                                    روابط
+                                    <span class="tab__count" id="tabCountRelations">۰</span>
+                                </button>
+                            </div>
+
+                            <!-- Tab: Positions -->
+                            <div class="tab-panel" data-panel="positions">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>کد سمت</th>
+                                            <th>عنوان سمت</th>
+                                            <th>نوع</th>
+                                            <th>مدیریتی</th>
+                                            <th>تصدی فعلی</th>
+                                            <th>وضعیت</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="positionsBody">
+                                        <!-- JS renders here -->
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- Tab: Employees -->
+                            <div class="tab-panel" data-panel="employees" hidden>
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>پرسنل</th>
+                                            <th>شماره پرسنلی</th>
+                                            <th>سمت</th>
+                                            <th>نوع تصدی</th>
+                                            <th>از تاریخ</th>
+                                            <th>وضعیت</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="employeesBody">
+                                        <!-- JS renders here -->
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- Tab: Children -->
+                            <div class="tab-panel" data-panel="children" hidden>
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>کد</th>
+                                            <th>نام واحد</th>
+                                            <th>نوع</th>
+                                            <th>سطح</th>
+                                            <th>وضعیت</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="childrenBody">
+                                        <!-- JS renders here -->
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- Tab: Relations -->
+                            <div class="tab-panel" data-panel="relations" hidden>
+                                <div class="empty-state">
+                                    <div class="empty-state__icon">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                            <circle cx="6" cy="6" r="3"/>
+                                            <circle cx="6" cy="18" r="3"/>
+                                            <circle cx="18" cy="12" r="3"/>
+                                            <path d="M9 6h6a3 3 0 0 1 3 3v0"/>
+                                            <path d="M9 18h6a3 3 0 0 0 3-3v0"/>
+                                        </svg>
+                                    </div>
+                                    <div class="empty-state__title">روابط سازمانی</div>
+                                    <div class="empty-state__desc">
+                                        روابط بین واحدها (گزارش‌دهی، همکاری، جانشینی) در این بخش نمایش داده می‌شود.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </section>
+                </div>
+
+            </main>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            'use strict';
+
+            // ============================================================
+            // App Shell Behaviors
+            // ============================================================
+            const app = document.getElementById('app');
+            const collapseBtn = document.getElementById('collapseBtn');
+            const menuBtn = document.getElementById('menuBtn');
+            const COLLAPSE_KEY = 'erp.sidebar.collapsed';
+
+            try {
+                if (localStorage.getItem(COLLAPSE_KEY) === '1') {
+                    app.classList.add('is-collapsed');
+                }
+            } catch (e) {}
+
+            collapseBtn.addEventListener('click', function () {
+                app.classList.toggle('is-collapsed');
+                try {
+                    localStorage.setItem(
+                        COLLAPSE_KEY,
+                        app.classList.contains('is-collapsed') ? '1' : '0'
+                    );
+                } catch (e) {}
+            });
+
+            menuBtn.addEventListener('click', function () {
+                app.classList.toggle('is-mobile-open');
+            });
+
+            document.addEventListener('click', function (event) {
+                if (
+                    app.classList.contains('is-mobile-open') &&
+                    !event.target.closest('.sidebar') &&
+                    !event.target.closest('#menuBtn')
+                ) {
+                    app.classList.remove('is-mobile-open');
+                }
+            });
+
+            document.querySelectorAll('.nav-item').forEach(function (item) {
+                item.addEventListener('click', function (event) {
+                    event.preventDefault();
+                    document.querySelectorAll('.nav-item').forEach(function (el) {
+                        el.classList.remove('is-active');
+                    });
+                    item.classList.add('is-active');
+                    if (window.innerWidth <= 900) {
+                        app.classList.remove('is-mobile-open');
+                    }
+                });
+            });
+
+            document.addEventListener('keydown', function (event) {
+                if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
+                    event.preventDefault();
+                    const input = document.getElementById('treeSearch');
+                    if (input) input.focus();
+                }
+            });
+
+            // ============================================================
+            // Mock Data (شبیه‌سازی org.vOrganizationTree)
+            // ============================================================
+            const orgTree = [
+                {
+                    id: 1,
+                    code: 'C-001',
+                    name: 'شرکت الف',
+                    type: 'COMPANY',
+                    typeName: 'شرکت',
+                    status: 'ACTIVE',
+                    companyName: 'شرکت الف',
+                    branchName: null,
+                    level: 0,
+                    path: '/C-001',
+                    effectiveFrom: '1400/01/01',
+                    effectiveTo: null,
+                    children: [
+                        {
+                            id: 2,
+                            code: 'BR-001',
+                            name: 'شعبه تهران',
+                            type: 'BRANCH',
+                            typeName: 'شعبه',
+                            status: 'ACTIVE',
+                            companyName: 'شرکت الف',
+                            branchName: 'شعبه تهران',
+                            level: 1,
+                            path: '/C-001/BR-001',
+                            effectiveFrom: '1400/01/01',
+                            effectiveTo: null,
+                            children: [
+                                {
+                                    id: 3,
+                                    code: 'DV-FIN',
+                                    name: 'معاونت مالی',
+                                    type: 'DIVISION',
+                                    typeName: 'معاونت',
+                                    status: 'ACTIVE',
+                                    companyName: 'شرکت الف',
+                                    branchName: 'شعبه تهران',
+                                    level: 2,
+                                    path: '/C-001/BR-001/DV-FIN',
+                                    effectiveFrom: '1400/01/01',
+                                    effectiveTo: null,
+                                    children: [
+                                        {
+                                            id: 4,
+                                            code: 'DP-ACC',
+                                            name: 'اداره حسابداری',
+                                            type: 'DEPARTMENT',
+                                            typeName: 'اداره',
+                                            status: 'ACTIVE',
+                                            companyName: 'شرکت الف',
+                                            branchName: 'شعبه تهران',
+                                            level: 3,
+                                            path: '/C-001/BR-001/DV-FIN/DP-ACC',
+                                            effectiveFrom: '1400/01/01',
+                                            effectiveTo: null,
+                                            children: [],
+                                        },
+                                        {
+                                            id: 5,
+                                            code: 'DP-TRE',
+                                            name: 'اداره خزانه',
+                                            type: 'DEPARTMENT',
+                                            typeName: 'اداره',
+                                            status: 'ACTIVE',
+                                            companyName: 'شرکت الف',
+                                            branchName: 'شعبه تهران',
+                                            level: 3,
+                                            path: '/C-001/BR-001/DV-FIN/DP-TRE',
+                                            effectiveFrom: '1400/01/01',
+                                            effectiveTo: null,
+                                            children: [],
+                                        },
+                                    ],
+                                },
+                                {
+                                    id: 6,
+                                    code: 'DV-PUR',
+                                    name: 'معاونت بازرگانی',
+                                    type: 'DIVISION',
+                                    typeName: 'معاونت',
+                                    status: 'ACTIVE',
+                                    companyName: 'شرکت الف',
+                                    branchName: 'شعبه تهران',
+                                    level: 2,
+                                    path: '/C-001/BR-001/DV-PUR',
+                                    effectiveFrom: '1400/01/01',
+                                    effectiveTo: null,
+                                    children: [
+                                        {
+                                            id: 7,
+                                            code: 'DP-PUR',
+                                            name: 'اداره خرید',
+                                            type: 'DEPARTMENT',
+                                            typeName: 'اداره',
+                                            status: 'ACTIVE',
+                                            companyName: 'شرکت الف',
+                                            branchName: 'شعبه تهران',
+                                            level: 3,
+                                            path: '/C-001/BR-001/DV-PUR/DP-PUR',
+                                            effectiveFrom: '1400/01/01',
+                                            effectiveTo: null,
+                                            children: [
+                                                {
+                                                    id: 8,
+                                                    code: 'SC-LOC',
+                                                    name: 'بخش خرید داخلی',
+                                                    type: 'SECTION',
+                                                    typeName: 'بخش',
+                                                    status: 'ACTIVE',
+                                                    companyName: 'شرکت الف',
+                                                    branchName: 'شعبه تهران',
+                                                    level: 4,
+                                                    path: '/C-001/BR-001/DV-PUR/DP-PUR/SC-LOC',
+                                                    effectiveFrom: '1400/01/01',
+                                                    effectiveTo: null,
+                                                    children: [],
+                                                },
+                                                {
+                                                    id: 9,
+                                                    code: 'SC-FRG',
+                                                    name: 'بخش خرید خارجی',
+                                                    type: 'SECTION',
+                                                    typeName: 'بخش',
+                                                    status: 'ACTIVE',
+                                                    companyName: 'شرکت الف',
+                                                    branchName: 'شعبه تهران',
+                                                    level: 4,
+                                                    path: '/C-001/BR-001/DV-PUR/DP-PUR/SC-FRG',
+                                                    effectiveFrom: '1400/01/01',
+                                                    effectiveTo: null,
+                                                    children: [],
+                                                },
+                                            ],
+                                        },
+                                        {
+                                            id: 10,
+                                            code: 'DP-SAL',
+                                            name: 'اداره فروش',
+                                            type: 'DEPARTMENT',
+                                            typeName: 'اداره',
+                                            status: 'ACTIVE',
+                                            companyName: 'شرکت الف',
+                                            branchName: 'شعبه تهران',
+                                            level: 3,
+                                            path: '/C-001/BR-001/DV-PUR/DP-SAL',
+                                            effectiveFrom: '1400/01/01',
+                                            effectiveTo: null,
+                                            children: [],
+                                        },
+                                    ],
+                                },
+                                {
+                                    id: 11,
+                                    code: 'DV-OPS',
+                                    name: 'معاونت عملیات',
+                                    type: 'DIVISION',
+                                    typeName: 'معاونت',
+                                    status: 'ACTIVE',
+                                    companyName: 'شرکت الف',
+                                    branchName: 'شعبه تهران',
+                                    level: 2,
+                                    path: '/C-001/BR-001/DV-OPS',
+                                    effectiveFrom: '1400/01/01',
+                                    effectiveTo: null,
+                                    children: [
+                                        {
+                                            id: 12,
+                                            code: 'DP-WHS',
+                                            name: 'اداره انبار',
+                                            type: 'DEPARTMENT',
+                                            typeName: 'اداره',
+                                            status: 'ACTIVE',
+                                            companyName: 'شرکت الف',
+                                            branchName: 'شعبه تهران',
+                                            level: 3,
+                                            path: '/C-001/BR-001/DV-OPS/DP-WHS',
+                                            effectiveFrom: '1400/01/01',
+                                            effectiveTo: null,
+                                            children: [],
+                                        },
+                                        {
+                                            id: 13,
+                                            code: 'DP-PRD',
+                                            name: 'اداره تولید',
+                                            type: 'DEPARTMENT',
+                                            typeName: 'اداره',
+                                            status: 'ACTIVE',
+                                            companyName: 'شرکت الف',
+                                            branchName: 'شعبه تهران',
+                                            level: 3,
+                                            path: '/C-001/BR-001/DV-OPS/DP-PRD',
+                                            effectiveFrom: '1400/01/01',
+                                            effectiveTo: null,
+                                            children: [],
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                        {
+                            id: 14,
+                            code: 'BR-002',
+                            name: 'شعبه اصفهان',
+                            type: 'BRANCH',
+                            typeName: 'شعبه',
+                            status: 'ACTIVE',
+                            companyName: 'شرکت الف',
+                            branchName: 'شعبه اصفهان',
+                            level: 1,
+                            path: '/C-001/BR-002',
+                            effectiveFrom: '1401/01/01',
+                            effectiveTo: null,
+                            children: [
+                                {
+                                    id: 15,
+                                    code: 'DP-PRD2',
+                                    name: 'اداره تولید اصفهان',
+                                    type: 'DEPARTMENT',
+                                    typeName: 'اداره',
+                                    status: 'ACTIVE',
+                                    companyName: 'شرکت الف',
+                                    branchName: 'شعبه اصفهان',
+                                    level: 2,
+                                    path: '/C-001/BR-002/DP-PRD2',
+                                    effectiveFrom: '1401/01/01',
+                                    effectiveTo: null,
+                                    children: [],
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ];
+
+            // Mock positions per unit id
+            const positionsByUnit = {
+                7: [
+                    { code: 'POS-PUR-MGR', name: 'مدیر خرید', type: 'مدیریتی', isMgmt: true, currentHolder: 'علی احمدی', status: 'ACTIVE' },
+                    { code: 'POS-PUR-EXP1', name: 'کارشناس خرید ارشد', type: 'کارشناسی', isMgmt: false, currentHolder: 'مریم رضایی', status: 'ACTIVE' },
+                    { code: 'POS-PUR-EXP2', name: 'کارشناس خرید', type: 'کارشناسی', isMgmt: false, currentHolder: '—', status: 'ACTIVE' },
+                    { code: 'POS-PUR-ADM', name: 'کارشناس اداری', type: 'اداری', isMgmt: false, currentHolder: 'سارا نوری', status: 'ACTIVE' },
+                ],
+                8: [
+                    { code: 'POS-LOC-MGR', name: 'سرپرست خرید داخلی', type: 'سرپرستی', isMgmt: false, currentHolder: 'حسن کریمی', status: 'ACTIVE' },
+                    { code: 'POS-LOC-EXP', name: 'کارشناس خرید داخلی', type: 'کارشناسی', isMgmt: false, currentHolder: '—', status: 'ACTIVE' },
+                ],
+                9: [
+                    { code: 'POS-FRG-MGR', name: 'سرپرست خرید خارجی', type: 'سرپرستی', isMgmt: false, currentHolder: 'رضا محمدی', status: 'ACTIVE' },
+                ],
+            };
+
+            // Mock employees per unit id
+            const employeesByUnit = {
+                7: [
+                    { name: 'علی احمدی', personnelNo: 'EMP-00125', initials: 'ع.ا', position: 'مدیر خرید', type: 'اصلی', from: '1403/01/01', status: 'ACTIVE' },
+                    { name: 'مریم رضایی', personnelNo: 'EMP-00142', initials: 'م.ر', position: 'کارشناس خرید ارشد', type: 'اصلی', from: '1403/06/15', status: 'ACTIVE' },
+                    { name: 'سارا نوری', personnelNo: 'EMP-00158', initials: 'س.ن', position: 'کارشناس اداری', type: 'اصلی', from: '1404/02/01', status: 'ACTIVE' },
+                ],
+                8: [
+                    { name: 'حسن کریمی', personnelNo: 'EMP-00131', initials: 'ح.ک', position: 'سرپرست خرید داخلی', type: 'اصلی', from: '1402/09/01', status: 'ACTIVE' },
+                ],
+                9: [
+                    { name: 'رضا محمدی', personnelNo: 'EMP-00117', initials: 'ر.م', position: 'سرپرست خرید خارجی', type: 'اصلی', from: '1401/04/01', status: 'ACTIVE' },
+                ],
+            };
+
+            // ============================================================
+            // Tree Rendering
+            // ============================================================
+            const treeEl = document.getElementById('orgTree');
+            const treeCountEl = document.getElementById('treeCount');
+            let selectedUnitId = 7; // پیش‌فرض
+            let unitIndex = {}; // برای جستجو
+
+            function indexUnits(nodes, parentPath) {
+                nodes.forEach(function (node) {
+                    unitIndex[node.id] = node;
+                    if (node.children && node.children.length) {
+                        indexUnits(node.children, node.id);
+                    }
+                });
+            }
+            indexUnits(orgTree);
+
+            function renderTree(nodes, container) {
+                nodes.forEach(function (node) {
+                    const hasChildren = node.children && node.children.length > 0;
+                    const nodeWrapper = document.createElement('div');
+                    nodeWrapper.className = 'tree-node';
+                    nodeWrapper.dataset.unitId = node.id;
+
+                    const row = document.createElement('div');
+                    row.className = 'tree-node__row';
+                    row.setAttribute('role', 'treeitem');
+                    row.setAttribute('aria-selected', 'false');
+                    row.tabIndex = 0;
+
+                    if (node.id === selectedUnitId) {
+                        row.classList.add('is-selected');
+                        row.setAttribute('aria-selected', 'true');
+                    }
+
+                    // Toggle button
+                    const toggle = document.createElement('button');
+                    toggle.type = 'button';
+                    toggle.className = 'tree-node__toggle' + (hasChildren ? '' : ' tree-node__toggle--empty');
+                    toggle.setAttribute('aria-label', hasChildren ? 'باز/بستن' : '');
+                    toggle.innerHTML = `
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <polyline points="15 18 9 12 15 6"/>
+                        </svg>
+                    `;
+
+                    // Icon
+                    const icon = document.createElement('span');
+                    icon.className = 'tree-node__icon';
+                    icon.innerHTML = getTypeIcon(node.type);
+
+                    // Label
+                    const label = document.createElement('span');
+                    label.className = 'tree-node__label';
+                    label.textContent = node.name;
+                    label.title = node.name;
+
+                    // Type badge
+                    const badge = document.createElement('span');
+                    badge.className = 'tree-node__type-badge';
+                    badge.textContent = node.typeName;
+
+                    row.appendChild(toggle);
+                    row.appendChild(icon);
+                    row.appendChild(label);
+                    row.appendChild(badge);
+
+                    nodeWrapper.appendChild(row);
+
+                    // Children container
+                    if (hasChildren) {
+                        const childrenContainer = document.createElement('div');
+                        childrenContainer.className = 'tree-node__children';
+                        childrenContainer.setAttribute('role', 'group');
+                        childrenContainer.hidden = true; // پیش‌فرض: بسته
+                        renderTree(node.children, childrenContainer);
+                        nodeWrapper.appendChild(childrenContainer);
+
+                        toggle.addEventListener('click', function (e) {
+                            e.stopPropagation();
+                            const isHidden = childrenContainer.hidden;
+                            childrenContainer.hidden = !isHidden;
+                            toggle.classList.toggle('is-expanded', !isHidden ? false : true);
+                        });
+                    }
+
+                    // Row click → select
+                    row.addEventListener('click', function () {
+                        selectUnit(node.id);
+                    });
+
+                    row.addEventListener('keydown', function (e) {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            selectUnit(node.id);
+                        }
+                    });
+
+                    container.appendChild(nodeWrapper);
+                });
+            }
+
+            function getTypeIcon(type) {
+                const icons = {
+                    COMPANY: '<path d="M3 21h18"/><path d="M5 21V7l8-4v18"/><path d="M19 21V11l-6-4"/>',
+                    BRANCH: '<path d="M3 21h18"/><path d="M3 10l9-7 9 7v11H3z"/><path d="M9 21v-6h6v6"/>',
+                    DIVISION: '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
+                    DEPARTMENT: '<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>',
+                    SECTION: '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',
+                    TEAM: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>',
+                };
+                return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+                    (icons[type] || icons.COMPANY) +
+                    '</svg>';
+            }
+
+            function countNodes(nodes) {
+                let count = 0;
+                nodes.forEach(function (n) {
+                    count++;
+                    if (n.children && n.children.length) {
+                        count += countNodes(n.children);
+                    }
+                });
+                return count;
+            }
+
+            // ============================================================
+            // Selection & Detail Rendering
+            // ============================================================
+            function selectUnit(id) {
+                selectedUnitId = id;
+
+                // Update tree selection
+                document.querySelectorAll('.tree-node__row').forEach(function (row) {
+                    row.classList.remove('is-selected');
+                    row.setAttribute('aria-selected', 'false');
+                });
+                const selectedRow = document.querySelector(
+                    `.tree-node[data-unit-id="${id}"] > .tree-node__row`
+                );
+                if (selectedRow) {
+                    selectedRow.classList.add('is-selected');
+                    selectedRow.setAttribute('aria-selected', 'true');
+                }
+
+                renderDetail(unitIndex[id]);
+            }
+
+            function renderDetail(unit) {
+                if (!unit) return;
+
+                // Header
+                document.getElementById('unitType').textContent = unit.typeName;
+                document.getElementById('unitName').textContent = unit.name;
+                document.getElementById('unitPath').textContent = unit.path;
+
+                // Info
+                document.getElementById('infoCode').textContent = unit.code;
+                document.getElementById('infoType').textContent = unit.typeName;
+                document.getElementById('infoStatus').innerHTML =
+                    '<span class="badge badge--active">فعال</span>';
+                document.getElementById('infoCompany').textContent = unit.companyName || '—';
+                document.getElementById('infoBranch').textContent = unit.branchName || '—';
+                document.getElementById('infoLevel').textContent = unit.level + 1;
+                document.getElementById('infoPositions').textContent =
+                    (positionsByUnit[unit.id] || []).length;
+                document.getElementById('infoEmployees').textContent =
+                    (employeesByUnit[unit.id] || []).length;
+                document.getElementById('infoEffective').textContent =
+                    unit.effectiveFrom + ' تا ' + (unit.effectiveTo || 'اکنون');
+
+                // Tab counts
+                const posCount = (positionsByUnit[unit.id] || []).length;
+                const empCount = (employeesByUnit[unit.id] || []).length;
+                const childCount = (unit.children || []).length;
+                document.getElementById('tabCountPositions').textContent = posCount;
+                document.getElementById('tabCountEmployees').textContent = empCount;
+                document.getElementById('tabCountChildren').textContent = childCount;
+                document.getElementById('tabCountRelations').textContent = 0;
+
+                // Positions
+                renderPositions(unit.id);
+                // Employees
+                renderEmployees(unit.id);
+                // Children
+                renderChildren(unit);
+            }
+
+            function renderPositions(unitId) {
+                const tbody = document.getElementById('positionsBody');
+                const list = positionsByUnit[unitId] || [];
+
+                if (!list.length) {
+                    tbody.innerHTML = `
+                        <tr><td colspan="6">
+                            <div class="empty-state" style="padding: 32px 16px;">
+                                <div class="empty-state__title">سمتی ثبت نشده است</div>
+                                <div class="empty-state__desc">برای این واحد سازمانی هنوز سمتی تعریف نشده است.</div>
+                            </div>
+                        </td></tr>
+                    `;
+                    return;
+                }
+
+                tbody.innerHTML = list.map(function (p) {
+                    return `
+                        <tr>
+                            <td><span class="data-table__code">${p.code}</span></td>
+                            <td>${p.name}</td>
+                            <td>${p.type}</td>
+                            <td>${p.isMgmt ? '<span class="badge badge--primary">بله</span>' : '<span class="data-table__muted">خیر</span>'}</td>
+                            <td>${p.currentHolder}</td>
+                            <td><span class="badge badge--active">فعال</span></td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
+            function renderEmployees(unitId) {
+                const tbody = document.getElementById('employeesBody');
+                const list = employeesByUnit[unitId] || [];
+
+                if (!list.length) {
+                    tbody.innerHTML = `
+                        <tr><td colspan="6">
+                            <div class="empty-state" style="padding: 32px 16px;">
+                                <div class="empty-state__title">پرسنلی ثبت نشده است</div>
+                                <div class="empty-state__desc">برای این واحد سازمانی هنوز تصدی فعالی ثبت نشده است.</div>
+                            </div>
+                        </td></tr>
+                    `;
+                    return;
+                }
+
+                tbody.innerHTML = list.map(function (e) {
+                    return `
+                        <tr>
+                            <td>
+                                <div class="data-table__person">
+                                    <div class="data-table__avatar">${e.initials}</div>
+                                    <div class="data-table__person-info">
+                                        <span class="data-table__person-name">${e.name}</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><span class="data-table__code">${e.personnelNo}</span></td>
+                            <td>${e.position}</td>
+                            <td>${e.type}</td>
+                            <td class="data-table__muted">${e.from}</td>
+                            <td><span class="badge badge--active">فعال</span></td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
+            function renderChildren(unit) {
+                const tbody = document.getElementById('childrenBody');
+                const list = unit.children || [];
+
+                if (!list.length) {
+                    tbody.innerHTML = `
+                        <tr><td colspan="5">
+                            <div class="empty-state" style="padding: 32px 16px;">
+                                <div class="empty-state__title">زیرمجموعه‌ای ندارد</div>
+                                <div class="empty-state__desc">این واحد در پایین‌ترین سطح درخت سازمانی قرار دارد.</div>
+                            </div>
+                        </td></tr>
+                    `;
+                    return;
+                }
+
+                tbody.innerHTML = list.map(function (c) {
+                    return `
+                        <tr style="cursor: pointer;" onclick="window.__selectUnit(${c.id})">
+                            <td><span class="data-table__code">${c.code}</span></td>
+                            <td>${c.name}</td>
+                            <td>${c.typeName}</td>
+                            <td>${c.level + 1}</td>
+                            <td><span class="badge badge--active">فعال</span></td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
+            // expose for inline onclick
+            window.__selectUnit = function (id) {
+                selectUnit(id);
+                // ensure visible in tree (expand ancestors)
+                expandAncestors(id);
+            };
+
+            function expandAncestors(targetId) {
+                // پیدا کردن مسیر و باز کردن
+                function findPath(nodes, targetId, path) {
+                    for (const node of nodes) {
+                        const newPath = path.concat(node.id);
+                        if (node.id === targetId) return newPath;
+                        if (node.children && node.children.length) {
+                            const result = findPath(node.children, targetId, newPath);
+                            if (result) return result;
+                        }
+                    }
+                    return null;
+                }
+                const path = findPath(orgTree, targetId, []);
+                if (!path) return;
+
+                // باز کردن همه والدها
+                path.slice(0, -1).forEach(function (parentId) {
+                    const wrapper = document.querySelector(`.tree-node[data-unit-id="${parentId}"]`);
+                    if (!wrapper) return;
+                    const children = wrapper.querySelector(':scope > .tree-node__children');
+                    if (children) children.hidden = false;
+                    const toggle = wrapper.querySelector(':scope > .tree-node__row > .tree-node__toggle');
+                    if (toggle) toggle.classList.add('is-expanded');
+                });
+            }
+
+            // ============================================================
+            // Tabs
+            // ============================================================
+            document.querySelectorAll('.tab').forEach(function (tab) {
+                tab.addEventListener('click', function () {
+                    document.querySelectorAll('.tab').forEach(function (t) {
+                        t.classList.remove('is-active');
+                        t.setAttribute('aria-selected', 'false');
+                    });
+                    tab.classList.add('is-active');
+                    tab.setAttribute('aria-selected', 'true');
+
+                    const target = tab.dataset.tab;
+                    document.querySelectorAll('.tab-panel').forEach(function (panel) {
+                        panel.hidden = panel.dataset.panel !== target;
+                    });
+                });
+            });
+
+            // ============================================================
+            // Tree Actions
+            // ============================================================
+            document.getElementById('expandAll').addEventListener('click', function () {
+                document.querySelectorAll('.tree-node__children').forEach(function (el) {
+                    el.hidden = false;
+                });
+                document.querySelectorAll('.tree-node__toggle').forEach(function (el) {
+                    if (!el.classList.contains('tree-node__toggle--empty')) {
+                        el.classList.add('is-expanded');
+                    }
+                });
+            });
+
+            document.getElementById('collapseAll').addEventListener('click', function () {
+                document.querySelectorAll('.tree-node__children').forEach(function (el) {
+                    el.hidden = true;
+                });
+                document.querySelectorAll('.tree-node__toggle').forEach(function (el) {
+                    el.classList.remove('is-expanded');
+                });
+            });
+
+            // ============================================================
+            // Search Filter
+            // ============================================================
+            const searchInput = document.getElementById('treeSearch');
+            searchInput.addEventListener('input', function () {
+                const query = searchInput.value.trim().toLowerCase();
+                filterTree(query);
+            });
+
+            function filterTree(query) {
+                document.querySelectorAll('.tree-node').forEach(function (node) {
+                    const id = Number(node.dataset.unitId);
+                    const unit = unitIndex[id];
+                    if (!unit) return;
+
+                    const match = !query ||
+                        unit.name.toLowerCase().includes(query) ||
+                        unit.code.toLowerCase().includes(query);
+
+                    node.style.display = match ? '' : 'none';
+
+                    // اگر والد مخفی است، فرزند هم مخفی می‌ماند (CSS)
+                    // ولی اگر فرزندی match شد، والد باید نمایش داده شود
+                    if (query) {
+                        let hasMatchingDescendant = false;
+                        const descendants = node.querySelectorAll('.tree-node');
+                        descendants.forEach(function (d) {
+                            const dId = Number(d.dataset.unitId);
+                            const dUnit = unitIndex[dId];
+                            if (dUnit && (
+                                dUnit.name.toLowerCase().includes(query) ||
+                                dUnit.code.toLowerCase().includes(query)
+                            )) {
+                                hasMatchingDescendant = true;
+                            }
+                        });
+                        if (hasMatchingDescendant) {
+                            node.style.display = '';
+                        }
+                    }
+                });
+
+                // باز کردن مسیر برای نتایج
+                if (query) {
+                    document.querySelectorAll('.tree-node__children').forEach(function (el) {
+                        el.hidden = false;
+                    });
+                    document.querySelectorAll('.tree-node__toggle').forEach(function (el) {
+                        if (!el.classList.contains('tree-node__toggle--empty')) {
+                            el.classList.add('is-expanded');
+                        }
+                    });
+                }
+            }
+
+            // ============================================================
+            // Init
+            // ============================================================
+            renderTree(orgTree, treeEl);
+            treeCountEl.textContent = countNodes(orgTree) + ' واحد';
+
+            // انتخاب پیش‌فرض + باز کردن مسیر
+            expandAncestors(7);
+            selectUnit(7);
+
+            // باز کردن والدها برای نمایش پیش‌فرض
+            setTimeout(function () {
+                expandAncestors(7);
+                selectUnit(7);
+            }, 50);
+
+        })();
+    </script>
+</body>
+</html>

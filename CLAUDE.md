@@ -108,7 +108,18 @@ All UI must follow the **MX design system** from https://github.com/AliRezaMohta
   `.mx-drawer`, `.toast`, `.toolbar`, `.empty`, `.tl*` (timeline), `.tone-*`.
 - Behaviours from `js/mx.js` via declarative hooks (`data-open`, `data-close`, `data-dd`, `data-tabs`, …);
   Jalali dates via `js/jalali-picker.js`.
-- The user will provide a sample org-chart page as a **pattern only**; where it deviates from MX, MX wins.
+- Sample org-chart page: `docs/reference/org-chart-sample.html` — a **pattern only** (layout and
+  features), not a style source. It has its own tokens, BEM classes and a CDN font; none of that is
+  used. Re-express everything with MX tokens/classes; where it deviates from MX, MX wins.
+  What to take from it:
+  - Page: header with actions → toolbar (search, filters, "show inactive" toggle) → two columns:
+    tree panel (count, expand/collapse all, type badge per node, keyboard selectable, search expands
+    ancestors) and detail panel (unit header with icon/type/path, info grid, tabs: positions,
+    people, sub-units, relations).
+  - Data ideas: unit type (company, branch, division, department, section, team), unit code,
+    level and path, unit validity dates, position type and "managerial" flag, current holder,
+    assignment type (primary/acting) with start date.
+  - Not taken: personnel number and other HR data (out of scope; `IUserDirectory.Detail` can show it).
 
 ## Open questions (to be answered by the user)
 
@@ -117,7 +128,10 @@ All UI must follow the **MX design system** from https://github.com/AliRezaMohta
 3. Structure history: needed ("what did the chart look like on date X"), or is assignment history enough?
 4. Graphical chart view needed, or is a tree list enough? (UI must use MX — see above.)
 7. MX assets: does `OrgChart.Razor` ship its own copy of `mx.css`/`mx.js`/icons, or rely on the host layout already loading them?
-8. Sample org-chart page mentioned by the user — not yet received.
+8. Unit types: fixed enum, or an admin-editable lookup table (better for reuse across projects)?
+9. Multiple companies: just root units of type "company" (proposed), or a separate entity?
+10. Unit relations (reporting, collaboration, succession — "روابط" tab in the sample): needed in v1?
+11. Position categories (managerial, supervisory, expert, administrative): lookup table + `IsManagerial` flag?
 5. Project/package names: `OrgChart.*` or something else?
 6. Bridge package `OrgChart.Acl` (implements `IOrgStructure`): built in this repo, or written per host app?
 
