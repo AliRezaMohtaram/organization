@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\OrgChart.Core\OrgChart.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.20" />
+    <!-- Design-time only (dotnet ef); does not flow to consumers. -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.20" PrivateAssets="all" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <Description>OrgChart store on EF Core and SQL Server: OrgChartDbContext (schema "org") and migrations. Includes the SQL Server DDL scripts under sql/.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\db\*.sql" Pack="true" PackagePath="sql" Visible="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="OrgChart.Tests" />
+  </ItemGroup>
+
+</Project>

@@ -121,22 +121,73 @@ All UI must follow the **MX design system** from https://github.com/AliRezaMohta
     assignment type (primary/acting) with start date.
   - Not taken: personnel number and other HR data (out of scope; `IUserDirectory.Detail` can show it).
 
-## Open questions (to be answered by the user)
+## Decisions (answered by the user)
 
-1. Data source: edited only in this module, or sometimes synced from another system (HR / existing DB)?
-2. Reporting line: is a "manager" of a unit/position needed (workflows, approvals)?
-3. Structure history: needed ("what did the chart look like on date X"), or is assignment history enough?
-4. Graphical chart view needed, or is a tree list enough? (UI must use MX — see above.)
-7. MX assets: does `OrgChart.Razor` ship its own copy of `mx.css`/`mx.js`/icons, or rely on the host layout already loading them?
-8. Unit types: fixed enum, or an admin-editable lookup table (better for reuse across projects)?
-9. Multiple companies: just root units of type "company" (proposed), or a separate entity?
-10. Unit relations (reporting, collaboration, succession — "روابط" tab in the sample): needed in v1?
-11. Position categories (managerial, supervisory, expert, administrative): lookup table + `IsManagerial` flag?
-5. Project/package names: `OrgChart.*` or something else?
-6. Bridge package `OrgChart.Acl` (implements `IOrgStructure`): built in this repo, or written per host app?
+1. Data source: edited only in this module; a key-based import service may come later for syncing.
+2. Reporting line: positions have an `IsManagerial` flag; each unit may name one position as its manager
+   (`OrgUnit.ManagerPositionId`).
+3. No structure versioning. Units and positions have `ValidFrom`/`ValidTo`; history comes from
+   assignments and the audit log.
+4. UI: tree + detail page first (see the sample); graphical chart later.
+5. Names: `OrgChart.*`.
+6. Bridge `OrgChart.Acl` lives in this repo as a separate project; only it references Acl.
+7. MX assets: admin pages render inside the host's layout by default (host loads MX); an optional
+   standalone layout with the module's own copy of MX for hosts without it, chosen in `AddOrgChart`.
+8. Unit types: admin-editable lookup table (`OrgUnitType`).
+9. Companies: root units whose type is "company"; no separate entity.
+10. Unit relations (reporting, collaboration, succession): not in v1.
+11. Position categories: admin-editable lookup (`PositionType`) plus the `IsManagerial` flag.
+
+## Domain model (src/OrgChart.Core/Model, namespace OrgChart.Core.Model)
+
+- `AuditableEntity` base: CreatedAt/By, UpdatedAt/By (UTC).
+- `KeyedEntity` base (for the four entities below): Id, `Key`, `NormalizedKey`, Title, SortOrder, IsActive.
+  - `Key` keeps its original spelling; setting it also sets `NormalizedKey` (`OrgKey.Normalize` =
+    upper-invariant), which carries the unique index → keys are unique ignoring case on every database.
+  - `Key`/`NormalizedKey` have `PropertySaveBehavior.Throw` after save: EF refuses to change a saved key.
+  - Key format (`OrgKey.IsValid`): ASCII letters, digits, `.`, `-`, `_`; starts with letter/digit; ≤ 256.
+  - `IsActive = false` is the soft delete. Nothing cascades; FKs are all Restrict.
+- `OrgUnitType`, `PositionType`: lookup tables.
+- `OrgUnit`: Code? (editable, unique when set), TypeId, ParentId?, ManagerPositionId? (unique when set),
+  ValidFrom?, ValidTo?.
+- `Position`: Code? (editable, unique when set), OrgUnitId, TypeId?, IsManagerial, ValidFrom?, ValidTo?.
+- `Assignment`: Id, PositionId, UserId (string, 450), Kind (`AssignmentKind`: Primary = 1, Acting = 2 —
+  persisted as int, never renumber), ValidFrom?, ValidTo?, Note?. Several concurrent assignments per user;
+  future-dated rows are planned moves; ending one sets ValidTo (rows are history).
+- `AuditLog`: Id (long), At, ActorUserId, Operation, EntityType, EntityId, ChangeJson.
+- Validity everywhere: ValidFrom inclusive, ValidTo exclusive, UTC, null = unbounded;
+  CHECK `ValidFrom <= ValidTo` on OrgUnits, Positions, Assignments.
+- Not enforceable in the database (service layer, stage 2): no cycles in the unit tree; the manager
+  position belongs to its unit; keys valid per `OrgKey.IsValid`.
+- No materialized path: the whole tree is small (target ≤ a few thousand units) and is loaded and
+  cached in memory for descendant/ancestor queries.
+
+## Commands
+
+- Build: `dotnet build`. Test: `dotnet test`.
+- Packages: `dotnet pack OrgChart.sln -c Release` → `artifacts/packages` (git-ignored).
+- `dotnet-ef` 9.x is a local tool: `dotnet tool restore` first.
+- Migration: `dotnet ef migrations add <Name> -p src/OrgChart.EFCore -s src/OrgChart.EFCore`
+  (design-time factory `OrgChartDbContextDesignTimeFactory`, LocalDB; never used at runtime).
+- After every migration regenerate `db/orgchart-schema.sql`:
+  `dotnet ef migrations script -p src/OrgChart.EFCore -s src/OrgChart.EFCore --idempotent`
+  and keep the SET-options header (filtered indexes need QUOTED_IDENTIFIER ON).
+- Environment note: in the cloud container only the .NET 10 SDK is available. It builds the `net9.0`
+  projects fine; run tests and `dotnet ef` with `DOTNET_ROLL_FORWARD=Major` (no 9.0 runtime there).
+  Projects stay on `net9.0` and 9.x packages.
 
 ## Status / next steps
 
-- [x] Handoff received; CLAUDE.md written.
-- [ ] Answer open questions above.
-- [ ] Stage 1: data model (`OrgChart.Core` entities + `OrgChart.EFCore` mapping + DDL in `db/`).
+1. DONE: Handoff, decisions, CLAUDE.md.
+2. DONE: Stage 1 — data model.
+   - `OrgChart.Core` model, `OrgChart.EFCore` (`OrgChartDbContext`, schema `org`, history table
+     `org.__EFMigrationsHistory`, UTC converter), migration `InitialCreate`, `db/orgchart-schema.sql`,
+     `db/orgchart-drop.sql` (drops the OrgUnits↔Positions FK first).
+   - Tests: `tests/OrgChart.Tests/EFCore` (SQLite in-memory via `SqliteOrgChartDb`).
+3. NEXT: Stage 2 — Core abstractions and services:
+   - `IOrgChartReader` (tree, descendants/ancestors, user positions incl. past/future), cached snapshot.
+   - Admin services (create/move/rename/deactivate units and positions, assign/end/plan assignments)
+     with validation (key format, no cycles, manager position in its unit) and audit log.
+   - `IOrgChartChangeListener` hook: user-assignment changes vs. structural changes.
+   - `IUserDirectory` (same shape as Acl's).
+4. Later: `OrgChart.AspNetCore` (`AddOrgChart`), `OrgChart.Razor` (MX UI), `OrgChart.Acl` bridge, sample host, NuGet.
