@@ -26,6 +26,14 @@ public sealed class OrgChartBuilder(IServiceCollection services)
         return this;
     }
 
+    /// <summary>What can be delegated from a position (default: nothing, so only full delegations).</summary>
+    public OrgChartBuilder AddAuthorityCatalog<TCatalog>()
+        where TCatalog : class, IAuthorityCatalog
+    {
+        Services.Replace(ServiceDescriptor.Scoped<IAuthorityCatalog, TCatalog>());
+        return this;
+    }
+
     /// <summary>Who makes changes, for the audit log (default: nobody).</summary>
     public OrgChartBuilder AddCurrentUser<TCurrentUser>()
         where TCurrentUser : class, ICurrentUser

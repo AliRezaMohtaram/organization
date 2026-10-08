@@ -13,6 +13,8 @@ IF OBJECT_ID(N'[org].[FK_OrgUnits_Positions_ManagerPositionId]', N'F') IS NOT NU
     ALTER TABLE [org].[OrgUnits] DROP CONSTRAINT [FK_OrgUnits_Positions_ManagerPositionId];
 
 -- Children first so foreign keys never block a drop.
+DROP TABLE IF EXISTS [org].[DelegationScopes];
+DROP TABLE IF EXISTS [org].[Delegations];
 DROP TABLE IF EXISTS [org].[Assignments];
 DROP TABLE IF EXISTS [org].[Positions];
 DROP TABLE IF EXISTS [org].[OrgUnits];

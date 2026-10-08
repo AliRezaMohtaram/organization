@@ -29,47 +29,188 @@ internal sealed class EfOrgChartReader(OrgChartDbContext db, SnapshotCache cache
     {
         ArgumentNullException.ThrowIfNull(userId);
 
-        var rows = await db.Assignments.AsNoTracking()
+        // 1. Own assignments.
+        List<HeldRow> own = await db.Assignments.AsNoTracking()
             .Where(a => a.UserId == userId && a.Position.IsActive && a.Position.OrgUnit.IsActive)
             .OrderBy(a => a.ValidFrom).ThenBy(a => a.Id)
-            .Select(a => new
-            {
-                a.Id,
-                a.Kind,
-                a.ValidFrom,
-                a.ValidTo,
-                PositionKey = a.Position.Key,
-                PositionTitle = a.Position.Title,
-                PositionFrom = a.Position.ValidFrom,
-                PositionTo = a.Position.ValidTo,
-                UnitKey = a.Position.OrgUnit.Key,
-                UnitTitle = a.Position.OrgUnit.Title,
-                UnitFrom = a.Position.OrgUnit.ValidFrom,
-                UnitTo = a.Position.OrgUnit.ValidTo,
-            })
+            .Select(a => new HeldRow(a.Id, a.PositionId, a.Kind, a.ValidFrom, a.ValidTo))
             .ToListAsync(cancellationToken);
 
-        if (rows.Count == 0)
+        // 2. Delegations to the user, valid only while the delegator holds the position.
+        List<DelegationRow> delegated = await DelegationRows(db.Delegations.Where(d => d.Kind == DelegationKind.ToUser && d.ToUserId == userId))
+            .ToListAsync(cancellationToken);
+        List<int> delegatedPositions = delegated.Select(d => d.PositionId).Distinct().ToList();
+        List<string> delegators = delegated.Select(d => d.FromUserId!).Distinct().ToList();
+        List<HolderRow> delegatorAssignments = delegated.Count == 0 ? [] : await db.Assignments.AsNoTracking()
+            .Where(a => delegatedPositions.Contains(a.PositionId) && delegators.Contains(a.UserId))
+            .Select(a => new HolderRow(a.Id, a.PositionId, a.UserId, a.ValidFrom, a.ValidTo))
+            .ToListAsync(cancellationToken);
+
+        // 3. Deputies of the positions the user holds, valid only while the deputized position has a holder.
+        List<int> heldPositions = own.Select(a => a.PositionId).Distinct().ToList();
+        List<DelegationRow> deputies = heldPositions.Count == 0 ? [] : await DelegationRows(db.Delegations
+                .Where(d => d.Kind == DelegationKind.ToPosition && heldPositions.Contains(d.ToPositionId!.Value)))
+            .ToListAsync(cancellationToken);
+        List<int> deputized = deputies.Select(d => d.PositionId).Distinct().ToList();
+        List<HolderRow> deputizedHolders = deputies.Count == 0 ? [] : await db.Assignments.AsNoTracking()
+            .Where(a => deputized.Contains(a.PositionId))
+            .Select(a => new HolderRow(a.Id, a.PositionId, a.UserId, a.ValidFrom, a.ValidTo))
+            .ToListAsync(cancellationToken);
+
+        if (own.Count == 0 && delegated.Count == 0)
         {
             return [];
         }
 
+        List<int> positionIds = [.. heldPositions, .. delegatedPositions, .. deputized];
+        Dictionary<int, PositionRow> positions = await db.Positions.AsNoTracking()
+            .Where(p => positionIds.Contains(p.Id) && p.IsActive && p.OrgUnit.IsActive)
+            .Select(p => new PositionRow(
+                p.Id, p.Key, p.Title, p.OrgUnit.Key, p.OrgUnit.Title,
+                Period.MaxFrom(p.ValidFrom, p.OrgUnit.ValidFrom), Period.MinTo(p.ValidTo, p.OrgUnit.ValidTo)))
+            .ToDictionaryAsync(p => p.Id, cancellationToken);
+
         OrgChartSnapshot snapshot = await GetSnapshotAsync(cancellationToken);
-        List<UserPosition> positions = [];
-        foreach (var row in rows)
+        List<UserPosition> result = [];
+        void Add(int assignmentId, int positionId, AssignmentKind kind, DateTime? from, DateTime? to, DelegationRow? delegation = null)
         {
-            DateTime? from = Period.MaxFrom(Period.MaxFrom(row.ValidFrom, row.PositionFrom), row.UnitFrom);
-            DateTime? to = Period.MinTo(Period.MinTo(row.ValidTo, row.PositionTo), row.UnitTo);
+            if (!positions.TryGetValue(positionId, out PositionRow? position))
+            {
+                return;
+            }
+
+            from = Period.MaxFrom(from, position.From);
+            to = Period.MinTo(to, position.To);
             if (!Period.IsEmpty(from, to))
             {
-                positions.Add(new UserPosition(
-                    row.Id, row.PositionKey, row.PositionTitle, row.UnitKey, row.UnitTitle,
-                    snapshot.GetAncestorKeys(row.UnitKey), row.Kind, from, to));
+                result.Add(new UserPosition(
+                    assignmentId, position.Key, position.Title, position.UnitKey, position.UnitTitle,
+                    snapshot.GetAncestorKeys(position.UnitKey), kind, from, to,
+                    delegation is { IsFullScope: false } ? delegation.Keys : null, delegation?.Id));
             }
         }
 
-        return positions;
+        foreach (HeldRow a in own)
+        {
+            Add(a.Id, a.PositionId, a.Kind, a.ValidFrom, a.ValidTo);
+        }
+
+        foreach (DelegationRow d in delegated)
+        {
+            foreach (HolderRow a in delegatorAssignments.Where(a => a.PositionId == d.PositionId && a.UserId == d.FromUserId))
+            {
+                Add(a.Id, d.PositionId, AssignmentKind.Delegated,
+                    Period.MaxFrom(d.ValidFrom, a.ValidFrom), Period.MinTo(d.ValidTo, a.ValidTo), d);
+            }
+        }
+
+        foreach (DelegationRow d in deputies)
+        {
+            List<(DateTime? From, DateTime? To)> held = MergePeriods(deputizedHolders
+                .Where(h => h.PositionId == d.PositionId && h.UserId != userId)
+                .Select(h => (h.ValidFrom, h.ValidTo)));
+            foreach (HeldRow mine in own.Where(a => a.PositionId == d.ToPositionId))
+            {
+                foreach ((DateTime? from, DateTime? to) in held)
+                {
+                    Add(mine.Id, d.PositionId, AssignmentKind.Deputy,
+                        Period.MaxFrom(Period.MaxFrom(d.ValidFrom, mine.ValidFrom), from),
+                        Period.MinTo(Period.MinTo(d.ValidTo, mine.ValidTo), to), d);
+                }
+            }
+        }
+
+        return result;
     }
+
+    public async Task<IReadOnlyList<DelegationInfo>> GetDelegationsAsync(DelegationQuery query, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(query);
+
+        IQueryable<Delegation> delegations = db.Delegations.AsNoTracking();
+        if (query.PositionKeys is { } positionKeys)
+        {
+            List<string> keys = positionKeys.Select(OrgKey.Normalize).ToList();
+            delegations = delegations.Where(d => keys.Contains(d.Position.NormalizedKey));
+        }
+
+        if (query.ToPositionKeys is { } toPositionKeys)
+        {
+            List<string> keys = toPositionKeys.Select(OrgKey.Normalize).ToList();
+            delegations = delegations.Where(d => d.ToPosition != null && keys.Contains(d.ToPosition.NormalizedKey));
+        }
+
+        if (query.FromUserId is { } from)
+        {
+            delegations = delegations.Where(d => d.FromUserId == from);
+        }
+
+        if (query.ToUserId is { } to)
+        {
+            delegations = delegations.Where(d => d.ToUserId == to);
+        }
+
+        if (query.Kind is { } kind)
+        {
+            delegations = delegations.Where(d => d.Kind == kind);
+        }
+
+        if (query.ActiveAt is { } at)
+        {
+            delegations = delegations.Where(d => (d.ValidFrom == null || d.ValidFrom <= at) && (d.ValidTo == null || at < d.ValidTo));
+        }
+
+        return await ProjectDelegations(delegations).ToListAsync(cancellationToken);
+    }
+
+    public Task<DelegationInfo?> GetDelegationAsync(int delegationId, CancellationToken cancellationToken = default) =>
+        ProjectDelegations(db.Delegations.AsNoTracking().Where(d => d.Id == delegationId)).SingleOrDefaultAsync(cancellationToken);
+
+    private static IQueryable<DelegationInfo> ProjectDelegations(IQueryable<Delegation> delegations) =>
+        delegations
+            .OrderBy(d => d.Kind).ThenBy(d => d.Position.Title).ThenBy(d => d.Priority).ThenBy(d => d.ValidFrom).ThenBy(d => d.Id)
+            .Select(d => new DelegationInfo(
+                d.Id, d.Kind, d.Position.Key, d.FromUserId, d.ToUserId,
+                d.ToPosition == null ? null : d.ToPosition.Key,
+                d.Priority,
+                d.IsFullScope ? null : d.Scopes.Select(s => s.AuthorityKey).OrderBy(k => k).ToList(),
+                d.ValidFrom, d.ValidTo, d.Note));
+
+    private IQueryable<DelegationRow> DelegationRows(IQueryable<Delegation> delegations) =>
+        delegations.AsNoTracking().Select(d => new DelegationRow(
+            d.Id, d.PositionId, d.FromUserId, d.ToPositionId, d.IsFullScope,
+            d.Scopes.Select(s => s.AuthorityKey).OrderBy(k => k).ToList(), d.ValidFrom, d.ValidTo));
+
+    /// <summary>The union of [from, to) periods as non-overlapping periods (touching ones joined).</summary>
+    internal static List<(DateTime? From, DateTime? To)> MergePeriods(IEnumerable<(DateTime? From, DateTime? To)> periods)
+    {
+        List<(DateTime? From, DateTime? To)> merged = [];
+        foreach ((DateTime? from, DateTime? to) in periods
+                     .Where(p => !Period.IsEmpty(p.From, p.To))
+                     .OrderBy(p => p.From ?? DateTime.MinValue))
+        {
+            if (merged.Count > 0 && (merged[^1].To is null || from is null || from <= merged[^1].To))
+            {
+                (DateTime? lastFrom, DateTime? lastTo) = merged[^1];
+                merged[^1] = (lastFrom, lastTo is null || to is null ? null : (to > lastTo ? to : lastTo));
+            }
+            else
+            {
+                merged.Add((from, to));
+            }
+        }
+
+        return merged;
+    }
+
+    private sealed record HeldRow(int Id, int PositionId, AssignmentKind Kind, DateTime? ValidFrom, DateTime? ValidTo);
+
+    private sealed record HolderRow(int Id, int PositionId, string UserId, DateTime? ValidFrom, DateTime? ValidTo);
+
+    private sealed record PositionRow(int Id, string Key, string Title, string UnitKey, string UnitTitle, DateTime? From, DateTime? To);
+
+    private sealed record DelegationRow(
+        int Id, int PositionId, string? FromUserId, int? ToPositionId, bool IsFullScope, List<string> Keys, DateTime? ValidFrom, DateTime? ValidTo);
 
     public async Task<IReadOnlyList<AssignmentInfo>> GetUnitAssignmentsAsync(
         string unitKey,

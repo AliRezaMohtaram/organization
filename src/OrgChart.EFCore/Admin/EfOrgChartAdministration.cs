@@ -10,12 +10,13 @@ using OrgChart.EFCore.Services;
 
 namespace OrgChart.EFCore.Admin;
 
-internal sealed class EfOrgChartAdministration(
+internal sealed partial class EfOrgChartAdministration(
     OrgChartDbContext db,
     AuditWriter audit,
     SnapshotCache cache,
     TimeProvider timeProvider,
-    IEnumerable<IOrgChartChangeListener> listeners) : IOrgChartAdministration
+    IEnumerable<IOrgChartChangeListener> listeners,
+    IAuthorityCatalog authorities) : IOrgChartAdministration
 {
     // ---------------------------------------------------------------- types
 
@@ -513,6 +514,7 @@ internal sealed class EfOrgChartAdministration(
 
             audit.Write("AssignmentCreated", nameof(Assignment), assignment.Id, new { after = AssignmentState(assignment) });
             change.Assignments(assignment.UserId);
+            await AddDependentUsersAsync(change, assignment.PositionId, cancellationToken);
             return assignment.Id;
         }, cancellationToken);
     }
@@ -535,6 +537,7 @@ internal sealed class EfOrgChartAdministration(
                 await EnsureNoOverlapAsync(assignment, cancellationToken);
                 audit.Write("AssignmentUpdated", nameof(Assignment), assignment.Id, new { before, after });
                 change.Assignments(assignment.UserId);
+                await AddDependentUsersAsync(change, assignment.PositionId, cancellationToken);
             }
         }, cancellationToken);
     }
@@ -548,6 +551,7 @@ internal sealed class EfOrgChartAdministration(
 
             audit.Write("AssignmentEnded", nameof(Assignment), assignment.Id, new { before, after = AssignmentState(assignment) });
             change.Assignments(assignment.UserId);
+            await AddDependentUsersAsync(change, assignment.PositionId, cancellationToken);
         }, cancellationToken);
 
     public Task<int> TransferAsync(int assignmentId, TransferInput input, CancellationToken cancellationToken = default)
@@ -577,6 +581,8 @@ internal sealed class EfOrgChartAdministration(
             audit.Write("AssignmentTransferred", nameof(Assignment), current.Id,
                 new { before, after = AssignmentState(current), next = new { next.Id, State = AssignmentState(next) } });
             change.Assignments(current.UserId);
+            await AddDependentUsersAsync(change, current.PositionId, cancellationToken);
+            await AddDependentUsersAsync(change, next.PositionId, cancellationToken);
             return next.Id;
         }, cancellationToken);
     }
@@ -588,6 +594,7 @@ internal sealed class EfOrgChartAdministration(
             audit.Write("AssignmentRemoved", nameof(Assignment), assignment.Id, new { before = AssignmentState(assignment) });
             db.Assignments.Remove(assignment);
             change.Assignments(assignment.UserId);
+            await AddDependentUsersAsync(change, assignment.PositionId, cancellationToken);
         }, cancellationToken);
 
     // ---------------------------------------------------------------- unit of work
@@ -938,8 +945,11 @@ internal sealed class EfOrgChartAdministration(
             : throw Error(OrgChartErrors.UserIdTooLong, $"User id is longer than {ColumnLengths.UserId} characters.");
     }
 
+    /// <summary>Only primary and acting assignments are stored; delegated and deputy authority comes from delegations.</summary>
     private static AssignmentKind RequireKind(AssignmentKind kind) =>
-        Enum.IsDefined(kind) ? kind : throw Error(OrgChartErrors.InvalidKind, $"Assignment kind '{kind}' is not valid.");
+        kind is AssignmentKind.Primary or AssignmentKind.Acting
+            ? kind
+            : throw Error(OrgChartErrors.InvalidKind, $"Assignment kind '{kind}' is not valid for an assignment.");
 
     private static (DateTime? From, DateTime? To) RequirePeriod(DateTime? from, DateTime? to)
     {

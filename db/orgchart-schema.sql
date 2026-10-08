@@ -405,6 +405,81 @@ BEGIN
     VALUES (N'20261008120251_PositionHierarchyAndTypeLevels', N'9.0.20');
 END;
 
+IF NOT EXISTS (
+    SELECT * FROM [org].[__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261008141036_Delegations'
+)
+BEGIN
+    CREATE TABLE [org].[Delegations] (
+        [Id] int NOT NULL IDENTITY,
+        [Kind] int NOT NULL,
+        [PositionId] int NOT NULL,
+        [FromUserId] nvarchar(450) NULL,
+        [ToUserId] nvarchar(450) NULL,
+        [ToPositionId] int NULL,
+        [Priority] int NOT NULL,
+        [IsFullScope] bit NOT NULL,
+        [ValidFrom] datetime2 NULL,
+        [ValidTo] datetime2 NULL,
+        [Note] nvarchar(1000) NULL,
+        [CreatedAt] datetime2 NOT NULL,
+        [CreatedBy] nvarchar(450) NULL,
+        [UpdatedAt] datetime2 NULL,
+        [UpdatedBy] nvarchar(450) NULL,
+        CONSTRAINT [PK_Delegations] PRIMARY KEY ([Id]),
+        CONSTRAINT [CK_Delegations_Target] CHECK (([Kind] = 1 AND [FromUserId] IS NOT NULL AND [ToUserId] IS NOT NULL AND [ToPositionId] IS NULL AND [ValidTo] IS NOT NULL) OR ([Kind] = 2 AND [FromUserId] IS NULL AND [ToUserId] IS NULL AND [ToPositionId] IS NOT NULL)),
+        CONSTRAINT [CK_Delegations_ValidRange] CHECK ([ValidFrom] IS NULL OR [ValidTo] IS NULL OR [ValidFrom] <= [ValidTo]),
+        CONSTRAINT [FK_Delegations_Positions_PositionId] FOREIGN KEY ([PositionId]) REFERENCES [org].[Positions] ([Id]) ON DELETE NO ACTION,
+        CONSTRAINT [FK_Delegations_Positions_ToPositionId] FOREIGN KEY ([ToPositionId]) REFERENCES [org].[Positions] ([Id]) ON DELETE NO ACTION
+    );
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [org].[__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261008141036_Delegations'
+)
+BEGIN
+    CREATE TABLE [org].[DelegationScopes] (
+        [DelegationId] int NOT NULL,
+        [AuthorityKey] nvarchar(256) NOT NULL,
+        CONSTRAINT [PK_DelegationScopes] PRIMARY KEY ([DelegationId], [AuthorityKey]),
+        CONSTRAINT [FK_DelegationScopes_Delegations_DelegationId] FOREIGN KEY ([DelegationId]) REFERENCES [org].[Delegations] ([Id]) ON DELETE CASCADE
+    );
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [org].[__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261008141036_Delegations'
+)
+BEGIN
+    CREATE INDEX [IX_Delegations_PositionId] ON [org].[Delegations] ([PositionId]);
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [org].[__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261008141036_Delegations'
+)
+BEGIN
+    CREATE INDEX [IX_Delegations_ToPositionId] ON [org].[Delegations] ([ToPositionId]);
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [org].[__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261008141036_Delegations'
+)
+BEGIN
+    CREATE INDEX [IX_Delegations_ToUserId] ON [org].[Delegations] ([ToUserId]);
+END;
+
+IF NOT EXISTS (
+    SELECT * FROM [org].[__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261008141036_Delegations'
+)
+BEGIN
+    INSERT INTO [org].[__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20261008141036_Delegations', N'9.0.20');
+END;
+
 COMMIT;
 GO
 

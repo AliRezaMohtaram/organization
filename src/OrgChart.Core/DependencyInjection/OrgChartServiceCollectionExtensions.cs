@@ -24,6 +24,7 @@ public static class OrgChartServiceCollectionExtensions
         services.TryAddSingleton(TimeProvider.System);
         services.TryAddScoped<ICurrentUser, NullCurrentUser>();
         services.TryAddScoped<IUserDirectory, NullUserDirectory>();
+        services.TryAddScoped<IAuthorityCatalog, NullAuthorityCatalog>();
         return new OrgChartBuilder(services);
     }
 }

@@ -105,7 +105,8 @@ public sealed class OrgChartServices : IDisposable
         OrgChartBuilder builder = services.AddOrgChart()
             .AddEntityFrameworkStore(options => options.UseSqlite(_connection))
             .AddCurrentUser<TestCurrentUserAccessor>()
-            .AddChangeListener<RecordingListener>();
+            .AddChangeListener<RecordingListener>()
+            .AddAuthorityCatalog<TestAuthorityCatalog>();
         configure?.Invoke(builder);
 
         ServiceProvider provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true, ValidateOnBuild = true });
@@ -172,4 +173,11 @@ internal sealed class RecordingListener(ChangeLog log) : IOrgChartChangeListener
         log.Add(change);
         return Task.CompletedTask;
     }
+}
+
+/// <summary>Every position offers the authorities R1, R2 and R3.</summary>
+internal sealed class TestAuthorityCatalog : IAuthorityCatalog
+{
+    public Task<IReadOnlyList<AuthorityInfo>> GetAuthoritiesAsync(string positionKey, CancellationToken cancellationToken = default) =>
+        Task.FromResult<IReadOnlyList<AuthorityInfo>>([new("R1", "Role 1"), new("R2", "Role 2"), new("R3", "Role 3")]);
 }

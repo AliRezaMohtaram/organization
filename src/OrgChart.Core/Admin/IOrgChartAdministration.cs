@@ -70,4 +70,21 @@ public interface IOrgChartAdministration
 
     /// <summary>Deletes an assignment entered by mistake. To end a real one use <see cref="EndAssignmentAsync"/>.</summary>
     Task RemoveAssignmentAsync(int assignmentId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Records a delegation from a holder to a person. The delegator keeps their own authority. Returns the id.
+    /// Several delegations of one position may run at once (e.g. different parts to different people).
+    /// </summary>
+    Task<int> DelegateAsync(DelegationInput input, CancellationToken cancellationToken = default);
+
+    /// <summary>Names a deputy position for a position. Returns the id.</summary>
+    Task<int> AddDeputyAsync(DeputyInput input, CancellationToken cancellationToken = default);
+
+    Task UpdateDelegationAsync(int delegationId, DelegationUpdate update, CancellationToken cancellationToken = default);
+
+    /// <summary>Ends a delegation or deputy at <paramref name="endAtUtc"/> (exclusive); the row stays as history.</summary>
+    Task EndDelegationAsync(int delegationId, DateTime endAtUtc, CancellationToken cancellationToken = default);
+
+    /// <summary>Deletes a delegation or deputy entered by mistake.</summary>
+    Task RemoveDelegationAsync(int delegationId, CancellationToken cancellationToken = default);
 }

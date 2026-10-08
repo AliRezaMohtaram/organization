@@ -48,4 +48,14 @@ public static class OrgChartErrors
     public const string TypeLevelNotAllowed = "TypeLevelNotAllowed";
     public const string TypeCannotBeRoot = "TypeCannotBeRoot";
     public const string TypeLevelConflict = "TypeLevelConflict";
+    public const string DelegationNotFound = "DelegationNotFound";
+    public const string DelegatorNotHolder = "DelegatorNotHolder";
+    public const string DelegateIsSelf = "DelegateIsSelf";
+    public const string DelegationOverlap = "DelegationOverlap";
+    public const string EndDateRequired = "EndDateRequired";
+    public const string ScopeNotAvailable = "ScopeNotAvailable";
+    public const string UnknownAuthority = "UnknownAuthority";
+    public const string ScopeEmpty = "ScopeEmpty";
+    public const string DelegationAlreadyEnded = "DelegationAlreadyEnded";
+    public const string InvalidPriority = "InvalidPriority";
 }

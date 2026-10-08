@@ -16,6 +16,7 @@ public class OrgChartDbContext(DbContextOptions<OrgChartDbContext> options) : Db
     public DbSet<OrgUnit> OrgUnits => Set<OrgUnit>();
     public DbSet<Position> Positions => Set<Position>();
     public DbSet<Assignment> Assignments => Set<Assignment>();
+    public DbSet<Delegation> Delegations => Set<Delegation>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
     internal DbSet<ChartStamp> ChartStamps => Set<ChartStamp>();
 

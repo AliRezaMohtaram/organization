@@ -312,4 +312,22 @@
   <data name="Field_NewSuperior" xml:space="preserve"><value>سمت بالادست جدید</value></data>
   <data name="Position_UnitTop" xml:space="preserve"><value>— سطح بالای «{0}» (این واحد رئیس ندارد) —</value></data>
   <data name="Position_MoveKeysKept" xml:space="preserve"><value>کلید سمت‌ها تغییر نمی‌کند؛ دسترسی‌های وابسته به این سمت‌ها حفظ می‌شوند.</value></data>
+  <data name="Kind_Delegated" xml:space="preserve"><value>تفویض</value></data>
+  <data name="Kind_Deputy" xml:space="preserve"><value>جانشینی</value></data>
+  <data name="Error_DelegationNotFound" xml:space="preserve"><value>تفویض یا جانشینی پیدا نشد.</value></data>
+  <data name="Error_DelegatorNotHolder" xml:space="preserve"><value>تفویض‌کننده در این دوره متصدی این سمت نیست. فقط متصدی سمت می‌تواند اختیاراتش را تفویض کند.</value></data>
+  <data name="Error_DelegateIsSelf" xml:space="preserve"><value>نمی‌شود به خود تفویض کرد یا سمتی را جانشین خودش کرد.</value></data>
+  <data name="Error_DelegationOverlap" xml:space="preserve"><value>همین تفویض یا جانشینی در دورهٔ هم‌پوشان ثبت شده است.</value></data>
+  <data name="Error_EndDateRequired" xml:space="preserve"><value>تفویض به فرد باید تاریخ پایان داشته باشد.</value></data>
+  <data name="Error_ScopeNotAvailable" xml:space="preserve"><value>برای این سمت فهرست اختیارات تعریف نشده است؛ فقط تفویض کامل ممکن است.</value></data>
+  <data name="Error_UnknownAuthority" xml:space="preserve"><value>یکی از اختیارات انتخاب‌شده برای این سمت تعریف نشده است.</value></data>
+  <data name="Error_ScopeEmpty" xml:space="preserve"><value>دست‌کم یک مورد از اختیارات را انتخاب کنید، یا تفویض کامل را انتخاب کنید.</value></data>
+  <data name="Error_DelegationAlreadyEnded" xml:space="preserve"><value>این تفویض زودتر از این تاریخ تمام می‌شود.</value></data>
+  <data name="Error_InvalidPriority" xml:space="preserve"><value>اولویت باید عدد ۱ یا بزرگ‌تر باشد.</value></data>
+  <data name="Op_DelegationCreated" xml:space="preserve"><value>تفویض اختیار</value></data>
+  <data name="Op_DeputyAdded" xml:space="preserve"><value>تعیین جانشین</value></data>
+  <data name="Op_DelegationUpdated" xml:space="preserve"><value>ویرایش تفویض/جانشینی</value></data>
+  <data name="Op_DelegationEnded" xml:space="preserve"><value>پایان تفویض/جانشینی</value></data>
+  <data name="Op_DelegationRemoved" xml:space="preserve"><value>حذف تفویض/جانشینی</value></data>
+  <data name="Entity_Delegation" xml:space="preserve"><value>تفویض/جانشینی</value></data>
 </root>
