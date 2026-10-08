@@ -195,6 +195,71 @@ public sealed class OrgChartSnapshot
     public IReadOnlyList<PositionNode> GetChildPositions(string positionKey) =>
         _positionChildren.TryGetValue(positionKey, out List<PositionNode>? children) ? children : [];
 
+    /// <summary>
+    /// Top of a unit's position tree for display: its head when it has one (every other top position reports to
+    /// the head), else its top positions.
+    /// </summary>
+    public IReadOnlyList<PositionNode> GetUnitTopPositions(string unitKey)
+    {
+        if (UnitHead(unitKey) is { } head)
+        {
+            return [head];
+        }
+
+        return GetPositions(unitKey).Where(p => !_positionParents.ContainsKey(p.Key)).ToList();
+    }
+
+    /// <summary>
+    /// Positions shown directly below a position: its explicit subordinates and, for the head of a unit, the unit's
+    /// other top positions (they report to the head).
+    /// </summary>
+    public IReadOnlyList<PositionNode> GetReportingChildren(string positionKey)
+    {
+        IReadOnlyList<PositionNode> children = GetChildPositions(positionKey);
+        if (FindPosition(positionKey) is not { } position || UnitHead(position.UnitKey) is not { } head
+            || !OrgKey.AreEqual(head.Key, position.Key))
+        {
+            return children;
+        }
+
+        return GetPositions(position.UnitKey)
+            .Where(p => !_positionParents.ContainsKey(p.Key) && !OrgKey.AreEqual(p.Key, head.Key))
+            .Concat(children)
+            .ToList();
+    }
+
+    /// <summary>The unit's positions in display order (see <see cref="GetUnitTopPositions"/>) with their display depth.</summary>
+    public IReadOnlyList<(PositionNode Position, int Depth)> GetPositionOutline(string unitKey)
+    {
+        List<(PositionNode, int)> outline = [];
+        HashSet<string> seen = new(OrgKey.Comparer);
+        Stack<(PositionNode Position, int Depth)> stack = new(GetUnitTopPositions(unitKey).Reverse().Select(p => (p, 0)));
+        while (stack.TryPop(out var item))
+        {
+            if (!seen.Add(item.Position.Key))
+            {
+                continue;
+            }
+
+            outline.Add(item);
+            foreach (PositionNode child in GetReportingChildren(item.Position.Key).Reverse())
+            {
+                stack.Push((child, item.Depth + 1));
+            }
+        }
+
+        // Anything not reached (should not happen) is listed at the end, so nothing disappears.
+        outline.AddRange(GetPositions(unitKey).Where(p => !seen.Contains(p.Key)).Select(p => (p, 0)));
+        return outline;
+    }
+
+    /// <summary>The head of the unit when it is one of the unit's positions without an explicit parent.</summary>
+    private PositionNode? UnitHead(string unitKey) =>
+        FindUnit(unitKey) is { } unit && FindPosition(unit.ManagerPositionKey) is { } head
+            && OrgKey.AreEqual(head.UnitKey, unit.Key) && !_positionParents.ContainsKey(head.Key)
+            ? head
+            : null;
+
     /// <summary>The explicit parent position (same unit), or null for a top position.</summary>
     public string? GetParentPositionKey(string positionKey) => _positionParents.GetValueOrDefault(positionKey);
 

@@ -124,7 +124,7 @@
   <data name="Field_UserIdHint" xml:space="preserve"><value>کاربر را جستجو کنید یا شناسه‌اش را مستقیم بنویسید.</value></data>
   <data name="Field_UserIdHintNoDirectory" xml:space="preserve"><value>شناسهٔ کاربر در برنامهٔ اصلی (مثلاً Id جدول کاربران).</value></data>
   <data name="Field_LastDay" xml:space="preserve"><value>آخرین روز در سمت</value></data>
-  <data name="Field_LastDayHint" xml:space="preserve"><value>فرد تا پایان این روز در سمت است.</value></data>
+  <data name="Field_LastDayHint" xml:space="preserve"><value>فقط برای «در تاریخ مشخص»: فرد تا پایان این روز در سمت است و از روز بعد سمت بلاتصدی می‌شود.</value></data>
   <data name="Field_NewPosition" xml:space="preserve"><value>سمت جدید</value></data>
   <data name="Field_FirstDay" xml:space="preserve"><value>اولین روز در سمت جدید</value></data>
   <data name="Field_FirstDayHint" xml:space="preserve"><value>انتصاب فعلی روز قبل از آن تمام می‌شود.</value></data>
@@ -304,4 +304,9 @@
   <data name="Types_NoLevel" xml:space="preserve"><value>بدون محدودیت</value></data>
   <data name="Unit_NoTypeForParent" xml:space="preserve"><value>برای این والد نوع واحد مجازی تعریف نشده است. سطح انواع واحد را در «انواع واحد و سمت» بررسی کنید.</value></data>
   <data name="Position_NewSubordinate" xml:space="preserve"><value>سمت زیرمجموعه</value></data>
+  <data name="Field_EndWhen" xml:space="preserve"><value>زمان پایان</value></data>
+  <data name="End_Now" xml:space="preserve"><value>همین حالا</value></data>
+  <data name="End_OnDate" xml:space="preserve"><value>در تاریخ مشخص</value></data>
+  <data name="End_NowHint" xml:space="preserve"><value>«همین حالا»: سمت از همین لحظه بلاتصدی می‌شود. «در تاریخ مشخص»: فرد تا پایان «آخرین روز» در سمت می‌ماند.</value></data>
+  <data name="Holder_Until" xml:space="preserve"><value>تا {0}</value></data>
 </root>

@@ -14,9 +14,16 @@ public sealed class EndModel(IOrgChartReader reader, IUserDirectory users, IOrgC
 {
     public const string FormPath = "/Areas/OrgChart/Pages/Assignments/_EndForm.cshtml";
 
-    /// <summary>Last day in the position (inclusive), Jalali.</summary>
+    /// <summary>"now" ends the assignment at once (the position becomes vacant); "date" ends it after <see cref="LastDay"/>.</summary>
+    [BindProperty]
+    public string When { get; set; } = WhenNow;
+
+    /// <summary>Last day in the position (inclusive), Jalali; used when <see cref="When"/> is "date".</summary>
     [BindProperty]
     public string? LastDay { get; set; }
+
+    public const string WhenNow = "now";
+    public const string WhenDate = "date";
 
     public async Task<IActionResult> OnGetAsync(CancellationToken cancellationToken)
     {
@@ -36,7 +43,9 @@ public sealed class EndModel(IOrgChartReader reader, IUserDirectory users, IOrgC
             return NotFound();
         }
 
-        if (string.IsNullOrWhiteSpace(LastDay) || !Dates.TryParse(LastDay, inclusiveEnd: true, out DateTime? end) || end is null)
+        DateTime? end = UtcNow;
+        if (When == WhenDate
+            && (string.IsNullOrWhiteSpace(LastDay) || !Dates.TryParse(LastDay, inclusiveEnd: true, out end) || end is null))
         {
             AddError("Error_InvalidDate");
             return Form(FormPath);

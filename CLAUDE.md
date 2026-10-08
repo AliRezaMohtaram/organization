@@ -291,5 +291,9 @@ All UI must follow the **MX design system** from https://github.com/AliRezaMohta
      (MX component `oc-unit-form`), move form only allowed parents (`OrgOptions.ParentsFor/Fits/PositionParents`).
    - Sample seed: type levels 1–6 (only companies are roots) and the oil-accounting example under DP-ACC.
      Delete `orgchart-sample.db` to reseed.
+   - Fixes after the user's test: display nests every top position under the unit head
+     (`GetUnitTopPositions`, `GetReportingChildren`, `GetPositionOutline` — display only, data unchanged; a moved
+     position therefore appears under the head of its new unit). Ending an assignment offers "now" (default; the
+     position is vacant at once) or "on a date" (last day inclusive); holders with an end date show "until …".
 6. NEXT: succession and delegation (decision 14) — design to be agreed with the user first.
    Later: `Users` module + unified admin panel; `OrgChart.Acl` bridge; graphical chart; NuGet packaging.

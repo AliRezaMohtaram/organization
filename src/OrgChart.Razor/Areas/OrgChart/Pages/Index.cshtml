@@ -19,7 +19,7 @@
     void PositionLeaf(UnitNode unit, PositionNode position)
     {
         IReadOnlyList<AssignmentInfo> holders = Model.HoldersOf(position.Key);
-        IReadOnlyList<PositionNode> subordinates = Model.Chart.GetChildPositions(position.Key);
+        IReadOnlyList<PositionNode> subordinates = Model.Chart.GetReportingChildren(position.Key);
         string names = string.Join("، ", holders.Select(h => Model.UserName(h.UserId)));
         bool head = OrgKey.AreEqual(position.Key, unit.ManagerPositionKey);
         string href = Url.Page("/Index", new { area = "OrgChart", unit = unit.Key, tab = IndexModel.TabPositions }) + "#pos-" + position.Key;
@@ -82,7 +82,7 @@
             @if (hasItems)
             {
                 <ul role="group" hidden="@(!expanded)">
-                    @foreach (PositionNode position in positions.Where(p => Model.Chart.GetParentPositionKey(p.Key) is null))
+                    @foreach (PositionNode position in Model.Chart.GetUnitTopPositions(node.Key))
                     {
                         PositionLeaf(node, position);
                     }
@@ -288,13 +288,13 @@
                             <table class="tbl">
                                 <thead><tr><th>@OrgText.Get("Col_Position")</th><th>@OrgText.Get("Col_ReportsTo")</th><th>@OrgText.Get("Col_Type")</th><th>@OrgText.Get("Col_Holders")</th><th>@OrgText.Get("Col_Status")</th><th></th></tr></thead>
                                 <tbody>
-                                    @foreach (PositionNode position in positions)
+                                    @foreach ((PositionNode position, int depth) in chart.GetPositionOutline(unit.Key))
                                     {
                                         IReadOnlyList<AssignmentInfo> holders = Model.HoldersOf(position.Key);
                                         bool isHead = OrgKey.AreEqual(position.Key, unit.ManagerPositionKey);
                                         PositionNode? superior = chart.FindPosition(chart.GetSuperiorKey(position.Key));
                                         <tr id="pos-@position.Key" class="@(position.IsActive ? "" : "oc-inactive")">
-                                            <td class="oc-pos-cell" style="--oc-depth:@chart.GetPositionDepth(position.Key)">
+                                            <td class="oc-pos-cell" style="--oc-depth:@depth">
                                                 <div class="cell-main">
                                                     @position.Title
                                                     @if (isHead)
@@ -334,6 +334,10 @@
                                                 {
                                                     <div class="oc-holder">
                                                         <svg class="ico"><use href="#oc-user" /></svg>@Model.UserName(holder.UserId)
+                                                        @if (holder.ValidTo is not null)
+                                                        {
+                                                            <span class="cell-sub">@OrgText.Format("Holder_Until", Model.Dates.FormatEnd(holder.ValidTo))</span>
+                                                        }
                                                         @if (holder.Kind == AssignmentKind.Acting)
                                                         {
                                                             <span class="tag tg-manual">@OrgText.Kind(holder.Kind)</span>

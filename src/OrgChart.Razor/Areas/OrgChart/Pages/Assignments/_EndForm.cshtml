@@ -12,8 +12,16 @@
         <partial name="/Areas/OrgChart/Pages/Shared/_FormErrors.cshtml" />
         <partial name="/Areas/OrgChart/Pages/Assignments/_AssignmentSummary.cshtml" model="Model" />
         <div class="field" style="margin-top:1rem">
-            <label class="label" for="LastDay">@OrgText.Get("Field_LastDay")<span class="req">*</span></label>
-            <input class="input ltr" asp-for="LastDay" autocomplete="off" placeholder="1405/07/30" inputmode="numeric" required autofocus />
+            <span class="label">@OrgText.Get("Field_EndWhen")</span>
+            <div class="seg oc-radio-seg" role="radiogroup" aria-label="@OrgText.Get("Field_EndWhen")">
+                <label><input type="radio" name="When" value="@OrgChart.Razor.Admin.Pages.Assignments.EndModel.WhenNow" checked="@(Model.When != OrgChart.Razor.Admin.Pages.Assignments.EndModel.WhenDate)" autofocus /><span>@OrgText.Get("End_Now")</span></label>
+                <label><input type="radio" name="When" value="@OrgChart.Razor.Admin.Pages.Assignments.EndModel.WhenDate" checked="@(Model.When == OrgChart.Razor.Admin.Pages.Assignments.EndModel.WhenDate)" /><span>@OrgText.Get("End_OnDate")</span></label>
+            </div>
+            <span class="hint">@OrgText.Get("End_NowHint")</span>
+        </div>
+        <div class="field" style="margin-top:1rem">
+            <label class="label" for="LastDay">@OrgText.Get("Field_LastDay")</label>
+            <input class="input ltr" asp-for="LastDay" autocomplete="off" placeholder="1405/07/30" inputmode="numeric" />
             <span class="hint">@OrgText.Get("Field_LastDayHint")</span>
         </div>
     </div>

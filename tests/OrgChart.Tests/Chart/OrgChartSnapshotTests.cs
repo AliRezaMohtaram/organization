@@ -149,4 +149,24 @@ public sealed class OrgChartSnapshotTests
         Assert.Equal(["A"], chart.GetManagerChain("B"));
         Assert.Empty(chart.GetManagerChain("A"));
     }
+
+    [Fact]
+    public void Top_positions_are_shown_under_the_unit_head()
+    {
+        OrgChartSnapshot chart = Snapshot(
+            [Unit("DIV", manager: "VP"), Unit("FREE")],
+            [
+                Position("VP", "DIV", sort: 1),
+                Position("MOVED-IN", "DIV", sort: 2),   // e.g. moved here: no parent, reports to the head
+                Position("ASSIST", "DIV", sort: 3, parent: "MOVED-IN"),
+                Position("A", "FREE"), Position("B", "FREE"),
+            ]);
+
+        Assert.Equal(["VP"], chart.GetUnitTopPositions("DIV").Select(p => p.Key));
+        Assert.Equal(["MOVED-IN"], chart.GetReportingChildren("VP").Select(p => p.Key));
+        Assert.Equal([("VP", 0), ("MOVED-IN", 1), ("ASSIST", 2)], chart.GetPositionOutline("DIV").Select(o => (o.Position.Key, o.Depth)));
+
+        // Without a head the top positions stay at the top.
+        Assert.Equal(["A", "B"], chart.GetUnitTopPositions("FREE").Select(p => p.Key));
+    }
 }

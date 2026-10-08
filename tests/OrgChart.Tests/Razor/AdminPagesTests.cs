@@ -167,12 +167,32 @@ public sealed class AdminPagesTests : IAsyncLifetime
         HttpClient client = _host.Client("editor");
         int id = (await ScopeAsync(sp => sp.GetRequiredService<IOrgChartReader>().GetUnitAssignmentsAsync("FIN")))[0].Id;
 
-        HttpResponseMessage response = await AdminUiHost.SubmitAsync(client, $"/OrgChart/Assignments/End?id={id}", [new("LastDay", "1405/12/29")]);
+        HttpResponseMessage response = await AdminUiHost.SubmitAsync(client, $"/OrgChart/Assignments/End?id={id}", [new("When", "date"), new("LastDay", "1499/12/29")]);
 
         Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
         Assert.Contains("tab=people", response.Headers.Location!.ToString());
         AssignmentInfo ended = (await ScopeAsync(sp => sp.GetRequiredService<IOrgChartReader>().GetAssignmentAsync(id)))!;
         Assert.NotNull(ended.ValidTo);
+    }
+
+    [Fact]
+    public async Task Ending_now_makes_the_position_vacant_and_a_date_keeps_the_holder_until_then()
+    {
+        HttpClient client = _host.Client("editor");
+        int id = (await ScopeAsync(sp => sp.GetRequiredService<IOrgChartReader>().GetUnitAssignmentsAsync("FIN")))[0].Id;
+
+        HttpResponseMessage response = await AdminUiHost.SubmitAsync(client, $"/OrgChart/Assignments/End?id={id}", [new("When", "now")]);
+
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        IReadOnlyDictionary<string, IReadOnlyList<AssignmentInfo>> holders =
+            await ScopeAsync(sp => sp.GetRequiredService<IOrgChartReader>().GetHoldersAsync(["POS-ACC"], DateTime.UtcNow));
+        Assert.Empty(holders);
+
+        await AdminAsync(a => a.AssignAsync(new AssignmentInput("POS-ACC", "u2", ValidFrom: DateTime.UtcNow.AddDays(-1))));
+        int second = (await ScopeAsync(sp => sp.GetRequiredService<IOrgChartReader>().GetUnitAssignmentsAsync("FIN"))).Single(a => a.UserId == "u2").Id;
+        await AdminUiHost.SubmitAsync(client, $"/OrgChart/Assignments/End?id={second}", [new("When", "date"), new("LastDay", "1499/12/29")]);
+
+        Assert.Single((await ScopeAsync(sp => sp.GetRequiredService<IOrgChartReader>().GetHoldersAsync(["POS-ACC"], DateTime.UtcNow)))["POS-ACC"]);
     }
 
     [Fact]
