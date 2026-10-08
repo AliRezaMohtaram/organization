@@ -33,7 +33,7 @@ public sealed class IndexModel(IOrgChartReader reader, IUserDirectory users) : O
     /// <summary>Assignments to the unit's positions (current and future; with <see cref="History"/> all).</summary>
     public IReadOnlyList<AssignmentInfo> Assignments { get; private set; } = [];
 
-    /// <summary>Current holders per position key, for the unit's positions and its manager.</summary>
+    /// <summary>Current holders per position key, for every active position (the tree shows them).</summary>
     public IReadOnlyDictionary<string, IReadOnlyList<AssignmentInfo>> Holders { get; private set; } =
         new Dictionary<string, IReadOnlyList<AssignmentInfo>>();
 
@@ -54,13 +54,8 @@ public sealed class IndexModel(IOrgChartReader reader, IUserDirectory users) : O
             return Page();
         }
 
-        List<string> positionKeys = Chart.GetPositions(Unit.Key).Select(p => p.Key).ToList();
-        if (Unit.ManagerPositionKey is { } manager)
-        {
-            positionKeys.Add(manager);
-        }
-
-        Holders = await reader.GetHoldersAsync(positionKeys, Now, cancellationToken);
+        // One query for the whole chart: the tree shows the holder of every position.
+        Holders = await reader.GetHoldersAsync(Chart.Positions.Where(p => p.IsActive).Select(p => p.Key).ToList(), Now, cancellationToken);
         Assignments = (await reader.GetUnitAssignmentsAsync(Unit.Key, cancellationToken: cancellationToken))
             .Where(a => History || a.ValidTo is null || a.ValidTo > Now)
             .ToList();

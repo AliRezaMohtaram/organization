@@ -66,6 +66,15 @@
 .oc-tree.show-inactive .oc-node.is-inactive { display:block; }
 .oc-node.is-inactive > .oc-row .oc-label { color:var(--faint); text-decoration:line-through; text-decoration-color:var(--line-strong); }
 .oc-tree .oc-node.is-filtered-out { display:none; }
+
+/* Positions as leaves of their unit */
+.oc-tree:not(.show-positions) .oc-pos { display:none; }
+.oc-tree:not(.show-positions) .only-positions > .oc-row .oc-toggle { visibility:hidden; }
+.oc-pos .oc-link { font-size:.8rem; color:var(--muted); padding-block:.22rem; }
+.oc-pos .oc-link .ico { width:.9rem; height:.9rem; color:var(--faint); }
+.oc-pos-holder { flex:none; max-width:45%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:.74rem; color:var(--text); }
+.oc-pos-holder.is-vacant { color:var(--faint); }
+.tbl tr:target td { background:var(--primary-soft); }
 .oc-node.is-match > .oc-row .oc-label { color:var(--text-strong); font-weight:700; }
 
 /* ── Unit header ────────────────────────────────────────────── */

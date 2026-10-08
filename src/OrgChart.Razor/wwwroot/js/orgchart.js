@@ -36,9 +36,11 @@
         const search = $("[data-oc-search]", panel);
         const type = $("[data-oc-type]", panel);
         const inactive = $("[data-oc-inactive]", panel);
+        const positions = $("[data-oc-positions]", panel);
         const empty = $("[data-oc-tree-empty]", panel);
         const count = $("[data-oc-count]", panel);
         const INACTIVE_KEY = "orgchart-show-inactive";
+        const POSITIONS_KEY = "orgchart-show-positions";
 
         const groupOf = node => $(":scope > ul", node);
         const setOpen = (node, open) => {
@@ -65,16 +67,29 @@
             root.classList.toggle("show-inactive", inactive.checked);
         }
 
+        // Positions under their unit: on by default, remembered per browser.
+        if (positions) {
+            if (store.get(POSITIONS_KEY) === "0") positions.checked = false;
+            const applyPositions = () => { root.classList.toggle("show-positions", positions.checked); filter(); };
+            positions.addEventListener("change", () => { store.set(POSITIONS_KEY, positions.checked ? "1" : "0"); applyPositions(); });
+            root.classList.toggle("show-positions", positions.checked);
+        }
+
         // Search and type filter: a node stays when it matches or has a matching descendant; ancestors open up.
         function filter() {
             const q = norm(search?.value);
             const t = type?.value || "";
             const showInactive = root.classList.contains("show-inactive");
+            const showPositions = root.classList.contains("show-positions");
             let visible = 0;
 
             const visit = node => {
-                const self = (!q || norm(node.dataset.search).includes(q)) && (!t || node.dataset.type === t)
-                    && (showInactive || !node.classList.contains("is-inactive"));
+                const isPosition = node.classList.contains("oc-pos");
+                // A position follows its unit's type for the type filter.
+                const self = (!q || norm(node.dataset.search).includes(q))
+                    && (!t || (isPosition ? node.dataset.unitType : node.dataset.type) === t)
+                    && (showInactive || !node.classList.contains("is-inactive"))
+                    && (showPositions || !isPosition);
                 const group = groupOf(node);
                 let childMatch = false;
                 if (group) $$(":scope > .oc-node", group).forEach(c => { if (visit(c)) childMatch = true; });
@@ -82,7 +97,7 @@
                 node.classList.toggle("is-filtered-out", !keep);
                 node.classList.toggle("is-match", (q !== "" || t !== "") && self);
                 if ((q || t) && childMatch) setOpen(node, true);
-                if (self) visible++;
+                if (self && !isPosition) visible++;
                 return keep;
             };
             $$(":scope > .oc-node", root).forEach(visit);

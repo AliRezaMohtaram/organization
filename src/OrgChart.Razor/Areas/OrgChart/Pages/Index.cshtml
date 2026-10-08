@@ -19,13 +19,16 @@
     async Task Node(UnitNode node, UnitNode? selected, HashSet<string> open)
     {
         IReadOnlyList<UnitNode> children = Model.Chart.GetChildren(node.Key);
-        bool expanded = children.Count > 0 && open.Contains(node.Key);
+        IReadOnlyList<PositionNode> positions = Model.Chart.GetPositions(node.Key);
+        bool hasItems = children.Count > 0 || positions.Count > 0;
+        bool expanded = hasItems && open.Contains(node.Key);
         bool isSelected = selected is not null && OrgKey.AreEqual(selected.Key, node.Key);
         string search = $"{node.Title} {node.Key} {node.Code}";
-        <li class="oc-node@(node.IsActive ? "" : " is-inactive")" role="treeitem" aria-expanded="@(children.Count > 0 ? expanded.ToString().ToLowerInvariant() : null)"
+        string css = "oc-node" + (node.IsActive ? "" : " is-inactive") + (children.Count == 0 && positions.Count > 0 ? " only-positions" : "");
+        <li class="@css" role="treeitem" aria-expanded="@(hasItems ? expanded.ToString().ToLowerInvariant() : null)"
             aria-selected="@(isSelected ? "true" : null)" data-key="@node.Key" data-type="@node.TypeKey" data-search="@search">
             <div class="oc-row@(isSelected ? " is-selected" : "")">
-                @if (children.Count > 0)
+                @if (hasItems)
                 {
                     <button type="button" class="oc-toggle" tabindex="-1" aria-label="@OrgText.Get("Tree_Toggle")"><svg class="ico"><use href="#oc-chev" /></svg></button>
                 }
@@ -39,9 +42,26 @@
                 </a>
                 <span class="tag oc-type">@Model.TypeTitle(node.TypeKey)</span>
             </div>
-            @if (children.Count > 0)
+            @if (hasItems)
             {
                 <ul role="group" hidden="@(!expanded)">
+                    @foreach (PositionNode position in positions)
+                    {
+                        IReadOnlyList<AssignmentInfo> holders = Model.HoldersOf(position.Key);
+                        string names = string.Join("، ", holders.Select(h => Model.UserName(h.UserId)));
+                        bool head = OrgKey.AreEqual(position.Key, node.ManagerPositionKey);
+                        <li class="oc-node oc-pos@(position.IsActive ? "" : " is-inactive")" role="treeitem" data-key="@position.Key"
+                            data-unit-type="@node.TypeKey" data-search="@position.Title @position.Key @names">
+                            <div class="oc-row">
+                                <span class="oc-toggle is-leaf" aria-hidden="true"></span>
+                                <a class="oc-link" href="@(Url.Page("/Index", new { area = "OrgChart", unit = node.Key, tab = IndexModel.TabPositions }) + "#pos-" + position.Key)" tabindex="-1">
+                                    <svg class="ico"><use href="#@(head ? "oc-star" : "oc-position")" /></svg>
+                                    <span class="oc-label">@position.Title</span>
+                                </a>
+                                <span class="oc-pos-holder@(holders.Count == 0 ? " is-vacant" : "")" title="@names">@(holders.Count == 0 ? OrgText.Get("Position_Vacant") : names)</span>
+                            </div>
+                        </li>
+                    }
                     @foreach (UnitNode child in children)
                     {
                         await Node(child, selected, open);
@@ -102,13 +122,18 @@
                 }
             </select>
             <label class="toggle oc-inactive-toggle">
+                <input type="checkbox" data-oc-positions checked />
+                <span class="toggle-track"></span>
+                <span>@OrgText.Get("Tree_ShowPositions")</span>
+            </label>
+            <label class="toggle oc-inactive-toggle">
                 <input type="checkbox" data-oc-inactive checked="@(unit is { IsActive: false })" />
                 <span class="toggle-track"></span>
                 <span>@OrgText.Get("Tree_ShowInactive")</span>
             </label>
         </div>
         <div class="oc-tree-body">
-            <ul class="oc-tree@(unit is { IsActive: false } ? " show-inactive" : "")" role="tree" aria-label="@OrgText.Get("Tree_Title")" data-oc-tree>
+            <ul class="oc-tree show-positions@(unit is { IsActive: false } ? " show-inactive" : "")" role="tree" aria-label="@OrgText.Get("Tree_Title")" data-oc-tree>
                 @foreach (UnitNode root in chart.Roots)
                 {
                     await Node(root, unit, open);
@@ -243,7 +268,7 @@
                                     {
                                         IReadOnlyList<AssignmentInfo> holders = Model.HoldersOf(position.Key);
                                         bool isHead = OrgKey.AreEqual(position.Key, unit.ManagerPositionKey);
-                                        <tr class="@(position.IsActive ? "" : "oc-inactive")">
+                                        <tr id="pos-@position.Key" class="@(position.IsActive ? "" : "oc-inactive")">
                                             <td>
                                                 <div class="cell-main">
                                                     @position.Title

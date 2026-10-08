@@ -60,7 +60,7 @@
   <data name="Tree_Count" xml:space="preserve"><value>{0} واحد</value></data>
   <data name="Tree_ExpandAll" xml:space="preserve"><value>باز کردن همه</value></data>
   <data name="Tree_CollapseAll" xml:space="preserve"><value>بستن همه</value></data>
-  <data name="Tree_Search" xml:space="preserve"><value>جستجوی نام، کلید یا کد واحد…</value></data>
+  <data name="Tree_Search" xml:space="preserve"><value>جستجوی واحد، سمت یا نام فرد…</value></data>
   <data name="Tree_TypeFilter" xml:space="preserve"><value>فیلتر نوع واحد</value></data>
   <data name="Tree_AllTypes" xml:space="preserve"><value>همهٔ انواع</value></data>
   <data name="Tree_ShowInactive" xml:space="preserve"><value>نمایش غیرفعال‌ها</value></data>
@@ -279,4 +279,5 @@
   <data name="Entity_Assignment" xml:space="preserve"><value>انتصاب</value></data>
   <data name="Entity_OrgUnitType" xml:space="preserve"><value>نوع واحد</value></data>
   <data name="Entity_PositionType" xml:space="preserve"><value>نوع سمت</value></data>
+  <data name="Tree_ShowPositions" xml:space="preserve"><value>نمایش سمت‌ها</value></data>
 </root>
