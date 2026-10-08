@@ -9,6 +9,25 @@ namespace OrgChart.Sample.Web.Data;
 /// <summary>Creates the database and, when it is empty, a small chart like the reference sample.</summary>
 public static class DemoSeed
 {
+    /// <summary>
+    /// Keeps a hash of the EF model next to the SQLite file and deletes the database when it no longer matches,
+    /// so a demo database from an older version does not fail with "no such column".
+    /// </summary>
+    private static async Task RecreateWhenModelChangedAsync(OrgChartDbContext db)
+    {
+        string? file = new Microsoft.Data.Sqlite.SqliteConnectionStringBuilder(db.Database.GetConnectionString()).DataSource;
+        string modelHash = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(
+            System.Text.Encoding.UTF8.GetBytes(db.Model.ToDebugString())));
+        string hashFile = file + ".model";
+        if (File.Exists(file) && (!File.Exists(hashFile) || await File.ReadAllTextAsync(hashFile) != modelHash))
+        {
+            await db.Database.EnsureDeletedAsync();
+        }
+
+        await db.Database.EnsureCreatedAsync();
+        await File.WriteAllTextAsync(hashFile, modelHash);
+    }
+
     public static async Task RunAsync(IServiceProvider services, string provider)
     {
         await using AsyncServiceScope scope = services.CreateAsyncScope();
@@ -19,8 +38,9 @@ public static class DemoSeed
         }
         else
         {
-            // Migrations are written for SQL Server; SQLite gets the schema straight from the model.
-            await db.Database.EnsureCreatedAsync();
+            // Migrations are written for SQL Server; SQLite gets the schema straight from the model. EnsureCreated
+            // never alters an existing file, so when the model has changed the demo database is rebuilt.
+            await RecreateWhenModelChangedAsync(db);
         }
 
         if (await db.OrgUnitTypes.AnyAsync())
