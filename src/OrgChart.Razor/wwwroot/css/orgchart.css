@@ -131,6 +131,15 @@
 .oc-user-picked { display:flex; align-items:center; gap:.4rem; font-size:.84rem; font-weight:700; color:var(--primary); }
 .oc-user-picked .ico { width:1rem; height:1rem; }
 
+.oc-scope-list { display:grid; gap:.35rem; margin-top:.5rem; padding:.6rem .75rem; border:1px solid var(--line); border-radius:var(--radius); background:rgb(var(--line-rgb) / .02); }
+.oc-check { display:flex; align-items:flex-start; gap:.5rem; font-size:.84rem; color:var(--text); cursor:pointer; }
+.oc-check input { margin-top:.3rem; accent-color:var(--primary); }
+.oc-check small { display:block; font-size:.72rem; }
+.oc-deleg { display:flex; align-items:center; gap:.3rem; margin-top:.15rem; font-size:.74rem; color:var(--muted); }
+.oc-deleg .ico { width:.85rem; height:.85rem; color:var(--faint); }
+
+.oc-my { display:grid; gap:1rem; }
+
 /* ── Types, audit ───────────────────────────────────────────── */
 .oc-types { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:1rem; align-items:start; }
 .oc-types .card-head { justify-content:space-between; }

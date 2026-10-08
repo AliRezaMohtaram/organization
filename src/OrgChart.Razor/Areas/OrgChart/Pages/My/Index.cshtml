@@ -1,0 +1,108 @@
+@page
+@model OrgChart.Razor.Admin.Pages.My.IndexModel
+<partial name="/Areas/OrgChart/Pages/Shared/_OrgPage.cshtml" model="Model" />
+
+<div class="oc-my">
+    <article class="card">
+        <header class="card-head">
+            <div class="card-title">
+                <span class="card-ico"><svg class="ico"><use href="#oc-position" /></svg></span>
+                <div>@OrgText.Get("My_Positions")<div class="card-sub">@OrgText.Get("My_PositionsHint")</div></div>
+            </div>
+        </header>
+        @if (Model.Positions.Count == 0)
+        {
+            <div class="empty">@OrgText.Get("My_NoPositions")</div>
+        }
+        else
+        {
+            <div class="tbl-wrap">
+                <table class="tbl">
+                    <thead><tr><th>@OrgText.Get("Col_Position")</th><th>@OrgText.Get("Col_Kind")</th><th>@OrgText.Get("Col_Scope")</th><th>@OrgText.Get("Col_Period")</th><th></th></tr></thead>
+                    <tbody>
+                        @foreach (UserPosition p in Model.Positions)
+                        {
+                            <tr>
+                                <td><div class="cell-main">@p.PositionTitle</div><div class="cell-sub">@p.OrgUnitTitle</div></td>
+                                <td><span class="tag @(Model.IsOwn(p) ? "tg-auto" : "tg-manual")">@OrgText.Kind(p.Kind)</span></td>
+                                <td class="cell-sub">@(p.AuthorityKeys is null ? OrgText.Get("Scope_Full") : OrgText.Format("Scope_Count", OrgFormat.Number(p.AuthorityKeys.Count)))</td>
+                                <td class="cell-sub">@Model.Dates.Period(p.ValidFrom, p.ValidTo)</td>
+                                <td>
+                                    @if (Model.IsOwn(p))
+                                    {
+                                        <a class="btn btn-soft btn-sm" asp-area="OrgChart" asp-page="/My/Delegate" asp-route-position="@p.PositionKey" data-modal><svg class="ico"><use href="#oc-swap" /></svg>@OrgText.Get("Delegation_New")</a>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </article>
+
+    <article class="card">
+        <header class="card-head">
+            <div class="card-title">
+                <span class="card-ico"><svg class="ico"><use href="#oc-swap" /></svg></span>
+                <div>@OrgText.Get("My_Given")<div class="card-sub">@OrgText.Get("My_GivenHint")</div></div>
+            </div>
+        </header>
+        @if (Model.Given.Count == 0)
+        {
+            <div class="empty">@OrgText.Get("My_NoGiven")</div>
+        }
+        else
+        {
+            <div class="tbl-wrap">
+                <table class="tbl">
+                    <thead><tr><th>@OrgText.Get("Col_Position")</th><th>@OrgText.Get("Col_To")</th><th>@OrgText.Get("Col_Scope")</th><th>@OrgText.Get("Col_Period")</th><th></th></tr></thead>
+                    <tbody>
+                        @foreach (DelegationInfo d in Model.Given)
+                        {
+                            <tr>
+                                <td class="cell-main">@(Model.Chart.FindPosition(d.PositionKey)?.Title ?? d.PositionKey)</td>
+                                <td>@Model.Name(d.ToUserId)</td>
+                                <td class="cell-sub">@(d.AuthorityKeys is null ? OrgText.Get("Scope_Full") : OrgText.Format("Scope_Count", OrgFormat.Number(d.AuthorityKeys.Count)))</td>
+                                <td class="cell-sub">@Model.Dates.Period(d.ValidFrom, d.ValidTo)</td>
+                                <td><a class="btn btn-quiet btn-sm" asp-area="OrgChart" asp-page="/My/End" asp-route-id="@d.Id" data-modal><svg class="ico"><use href="#oc-end" /></svg>@OrgText.Get("Delegation_End")</a></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </article>
+
+    <article class="card">
+        <header class="card-head">
+            <div class="card-title">
+                <span class="card-ico"><svg class="ico"><use href="#oc-user" /></svg></span>
+                <div>@OrgText.Get("My_Received")</div>
+            </div>
+        </header>
+        @if (Model.Received.Count == 0)
+        {
+            <div class="empty">@OrgText.Get("My_NoReceived")</div>
+        }
+        else
+        {
+            <div class="tbl-wrap">
+                <table class="tbl">
+                    <thead><tr><th>@OrgText.Get("Col_Position")</th><th>@OrgText.Get("Col_From")</th><th>@OrgText.Get("Col_Scope")</th><th>@OrgText.Get("Col_Period")</th></tr></thead>
+                    <tbody>
+                        @foreach (DelegationInfo d in Model.Received)
+                        {
+                            <tr>
+                                <td class="cell-main">@(Model.Chart.FindPosition(d.PositionKey)?.Title ?? d.PositionKey)</td>
+                                <td>@Model.Name(d.FromUserId)</td>
+                                <td class="cell-sub">@(d.AuthorityKeys is null ? OrgText.Get("Scope_Full") : OrgText.Format("Scope_Count", OrgFormat.Number(d.AuthorityKeys.Count)))</td>
+                                <td class="cell-sub">@Model.Dates.Period(d.ValidFrom, d.ValidTo)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </article>
+</div>

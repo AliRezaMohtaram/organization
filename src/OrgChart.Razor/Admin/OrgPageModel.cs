@@ -67,6 +67,24 @@ public abstract class OrgPageModel : PageModel
         return ok;
     }
 
+    /// <summary>The signed-in user's id (as the chart stores it).</summary>
+    protected string? CurrentUserId => Service<Core.Abstractions.ICurrentUser>().UserId;
+
+    /// <summary>JSON user search for the forms: <c>[{ id, name, detail }]</c>, at most 10, needs 2+ characters.</summary>
+    protected async Task<IActionResult> SearchUsersAsync(string? q, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(q) || q.Trim().Length < 2)
+        {
+            return new JsonResult(Array.Empty<object>());
+        }
+
+        IReadOnlyList<Core.Abstractions.UserInfo> found = await Service<Core.Abstractions.IUserDirectory>().SearchAsync(q.Trim(), 10, cancellationToken);
+        return new JsonResult(found.Select(u => new { id = u.UserId, name = u.DisplayName, detail = u.Detail }));
+    }
+
+    /// <summary>Scope from a form: null = full; otherwise the checked keys.</summary>
+    protected static IReadOnlyCollection<string>? ReadScope(bool full, IEnumerable<string>? keys) => full ? null : (keys ?? []).ToList();
+
     /// <summary>The chart page showing <paramref name="unitKey"/>, optionally on a tab.</summary>
     public string UnitUrl(string? unitKey, string? tab = null) =>
         Url.Page("/Index", new { area = "OrgChart", unit = unitKey, tab }) ?? "/OrgChart";

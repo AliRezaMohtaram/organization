@@ -1,0 +1,9 @@
+@page
+@model OrgChart.Razor.Admin.Pages.My.DelegateModel
+@{
+    ViewData["Title"] = OrgText.Get("Delegation_New");
+}
+<partial name="/Areas/OrgChart/Pages/Shared/_OrgPage.cshtml" model="Model" />
+<div class="modal-page">
+    <partial name="@OrgChart.Razor.Admin.Pages.My.DelegateModel.FormPath" model="Model" />
+</div>

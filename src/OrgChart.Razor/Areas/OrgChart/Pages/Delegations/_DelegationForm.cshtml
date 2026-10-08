@@ -1,0 +1,115 @@
+@model OrgChart.Razor.Admin.Pages.Delegations.EditModel
+@{
+    bool toUser = Model.Kind == DelegationKind.ToUser;
+    string searchUrl = Url.Page("/Delegations/Edit", "Users", new { area = "OrgChart" }) ?? "";
+}
+<form class="modal" method="post" asp-area="OrgChart" asp-page="/Delegations/Edit" asp-route-id="@Model.Id"
+      asp-route-position="@(Model.IsEdit ? null : Model.Subject.Key)" asp-route-kind="@(Model.IsEdit ? null : Model.Kind.ToString())"
+      data-mx-ajax data-mx-init="oc-delegation-form" novalidate>
+    <div class="modal-head">
+        <span class="modal-head-ico"><svg class="ico"><use href="#@(toUser ? "oc-swap" : "oc-users")" /></svg></span>
+        <div>
+            <div class="modal-title">@OrgText.Format(toUser ? "Delegation_Heading" : "Deputy_Heading", Model.Subject.Title)</div>
+            <div class="modal-sub">@OrgText.Get(toUser ? "Delegation_Hint" : "Deputy_Hint")</div>
+        </div>
+        <a class="icon-btn plain close" href="@Model.BackUrl" data-close aria-label="@OrgText.Get("Close")"><svg class="ico"><use href="#oc-x" /></svg></a>
+    </div>
+
+    <div class="modal-body">
+        <partial name="/Areas/OrgChart/Pages/Shared/_FormErrors.cshtml" />
+        <div class="form-grid">
+            @if (toUser)
+            {
+                <div class="field">
+                    <span class="label">@OrgText.Get("Field_Delegator")<span class="req">*</span></span>
+                    @if (Model.IsEdit)
+                    {
+                        <span><b>@Model.NameOf(Model.FromUserId)</b></span>
+                    }
+                    else if (Model.Holders.Count == 0)
+                    {
+                        <span class="hint">@OrgText.Get("Delegation_NoHolder")</span>
+                    }
+                    else
+                    {
+                        <select class="select" name="FromUserId" aria-label="@OrgText.Get("Field_Delegator")">
+                            @foreach ((string userId, string name) in Model.Holders)
+                            {
+                                <option value="@userId" selected="@(userId == Model.FromUserId)">@name</option>
+                            }
+                        </select>
+                    }
+                </div>
+                <div class="field">
+                    <label class="label" for="ToUserId">@OrgText.Get("Field_Delegate")<span class="req">*</span></label>
+                    @if (Model.IsEdit)
+                    {
+                        <span><b>@Model.NameOf(Model.ToUserId)</b></span>
+                    }
+                    else
+                    {
+                        @if (Model.HasDirectory)
+                        {
+                            <div class="dd oc-user-search" data-oc-user-search="@searchUrl" data-oc-user-target="ToUserId" data-empty="@OrgText.Get("Assignment_NoUserFound")">
+                                <div class="input-wrap">
+                                    <svg class="ico"><use href="#oc-search" /></svg>
+                                    <input class="input" type="search" data-oc-user-query placeholder="@OrgText.Get("Assignment_SearchUser")" autocomplete="off" aria-label="@OrgText.Get("Assignment_SearchUser")" />
+                                </div>
+                                <div class="dd-menu oc-user-results" data-oc-user-results role="listbox"></div>
+                            </div>
+                            <div class="oc-user-picked" data-oc-user-picked hidden>
+                                <svg class="ico"><use href="#oc-user" /></svg><span data-oc-user-name></span>
+                            </div>
+                        }
+                        <input class="input ltr" id="ToUserId" name="ToUserId" value="@Model.ToUserId" autocomplete="off" spellcheck="false" placeholder="@OrgText.Get("Field_UserIdPlaceholder")" required />
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="field">
+                    <label class="label" for="DeputyPositionKey">@OrgText.Get("Field_DeputyPosition")<span class="req">*</span></label>
+                    @if (Model.IsEdit)
+                    {
+                        <span><b>@(Model.Chart.FindPosition(Model.DeputyPositionKey)?.Title ?? Model.DeputyPositionKey)</b></span>
+                    }
+                    else
+                    {
+                        <select class="select" id="DeputyPositionKey" name="DeputyPositionKey" required>
+                            <option value="">@OrgText.Get("Choose")</option>
+                            @foreach (var item in OrgOptions.Positions(Model.Chart, Model.DeputyPositionKey).Where(i => !OrgKey.AreEqual(i.Value, Model.Subject.Key)))
+                            {
+                                <option value="@item.Value" selected="@item.Selected" data-group="@item.Group?.Name">@item.Text — @item.Group?.Name</option>
+                            }
+                        </select>
+                    }
+                </div>
+                <div class="field">
+                    <label class="label" for="Priority">@OrgText.Get("Field_Priority")</label>
+                    <input class="input ltr" id="Priority" name="Priority" type="number" min="1" value="@Model.Priority" />
+                    <span class="hint">@OrgText.Get("Field_PriorityHint")</span>
+                </div>
+            }
+            <div class="field">
+                <label class="label" for="ValidFrom">@OrgText.Get("Field_StartDate")</label>
+                <input class="input ltr" id="ValidFrom" name="ValidFrom" value="@Model.ValidFrom" autocomplete="off" placeholder="1405/01/01" inputmode="numeric" />
+            </div>
+            <div class="field">
+                <label class="label" for="ValidTo">@OrgText.Get("Field_EndDate")@if (toUser) {<span class="req">*</span>}</label>
+                <input class="input ltr" id="ValidTo" name="ValidTo" value="@Model.ValidTo" autocomplete="off" placeholder="1405/12/29" inputmode="numeric" required="@toUser" />
+                <span class="hint">@OrgText.Get(toUser ? "Field_DelegationEndHint" : "Field_ValidToHint")</span>
+            </div>
+            <partial name="/Areas/OrgChart/Pages/Shared/_ScopeFields.cshtml" model="Model.Scope" />
+            <div class="field span-2">
+                <label class="label" for="Note">@OrgText.Get("Field_Reason")</label>
+                <textarea class="textarea" id="Note" name="Note" rows="2">@Model.Note</textarea>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-foot">
+        <span class="spacer"></span>
+        <a class="btn btn-quiet" href="@Model.BackUrl" data-close>@OrgText.Get("Cancel")</a>
+        <button type="submit" class="btn btn-primary"><svg class="ico"><use href="#oc-check" /></svg>@OrgText.Get(Model.IsEdit ? "Save" : "Create")</button>
+    </div>
+</form>

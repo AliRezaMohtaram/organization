@@ -5,4 +5,7 @@ public static class OrgChartPolicies
 {
     public const string View = "OrgChart.View";
     public const string Edit = "OrgChart.Edit";
+
+    /// <summary>Own delegations ("my delegations").</summary>
+    public const string Self = "OrgChart.Self";
 }

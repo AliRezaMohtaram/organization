@@ -301,5 +301,27 @@ All UI must follow the **MX design system** from https://github.com/AliRezaMohta
      Rejected: target inside the branch (`ParentPositionCycle`), a unit head anywhere in the branch
      (`PositionIsUnitManager`). Move form lists positions by unit in outline order, plus "top of unit" for units
      without an active head. Audit row lists the moved branch.
-6. NEXT: succession and delegation (decision 14) — design to be agreed with the user first.
-   Later: `Users` module + unified admin panel; `OrgChart.Acl` bridge; graphical chart; NuGet packaging.
+6. DONE: Succession and delegation (decision 14). Migration `Delegations`. User answers: deputy authority is always
+   active within its scope; scope = Acl roles; both admin and the holder record delegations; no maximum duration.
+   The delegator/holder keeps their own authority; a vacant position's authority is granted by the system admin.
+   - Model: `Delegation` (Kind ToUser = person-to-person, needs From/To user and ValidTo; ToPosition = standing deputy
+     position with Priority), `DelegationScope` (AuthorityKey rows; none + `IsFullScope` = everything).
+     CHECK `CK_Delegations_Target`. `AssignmentKind.Delegated = 3`, `Deputy = 4` exist only in reader output.
+   - `IAuthorityCatalog` (`AddAuthorityCatalog<T>()`, default `NullAuthorityCatalog` = full scope only) lists what can be
+     delegated per position; the Acl bridge will list the position's roles (keys = Acl role ids).
+   - Admin: `DelegateAsync`, `AddDeputyAsync`, `UpdateDelegationAsync`, `EndDelegationAsync`, `RemoveDelegationAsync`.
+     Rules: delegator holds the position sometime in the period; not to self; no overlapping duplicate; scope keys
+     must be in the catalog and non-empty. Changes notify `Assignments` for the recipient / deputy-position holders;
+     assignment changes also notify users who receive the position's authority (`AddDependentUsersAsync`).
+   - Reader: `GetUserPositionsAsync` adds Delegated entries (delegation ∩ delegator's holding) and Deputy entries
+     (deputy's holding ∩ deputy period ∩ periods the position has a holder), with `AuthorityKeys` (null = full) and
+     `DelegationId`. `GetDelegationsAsync(DelegationQuery)`, `GetDelegationAsync(id)`.
+   - UI: unit page tab "delegations"; positions table shows deputies and current delegations with row actions;
+     `Delegations/{Edit,End}` (`End?mode=remove` deletes). Self-service `/OrgChart/My` (policy `OrgChart.Self`,
+     `ui.SelfPolicy`, default authenticated): my positions, given (end now; not-yet-started ones are deleted), received;
+     `My/Delegate?position=` only for positions the user holds now or later (else 404). Shared `_ScopeFields` partial.
+   - Sample: deputy and a 30-day delegation on POS-PUR-MGR; `DemoAuthorityCatalog` offers three demo authorities.
+7. NEXT: Acl contract change (approved: `PositionAssignment` gets Kind and the role scope; `RoleAssignmentResolver`
+   filters roles by scope) and the `OrgChart.Acl` bridge (`IOrgStructure`, change listener → stamps, `IAuthorityCatalog`
+   from PositionRoles). Ask the user before pushing to the Acl repo (branch).
+   Later: `Users` module + unified admin panel; graphical chart; NuGet packaging.

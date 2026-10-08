@@ -267,6 +267,9 @@
                         <button type="button" role="tab" class="@(Model.Tab == IndexModel.TabUnits ? "active" : "")" aria-selected="@(Model.Tab == IndexModel.TabUnits)" data-tab="ocPaneUnits">
                             <svg class="ico"><use href="#oc-unit" /></svg>@OrgText.Get("Tab_Units") <span class="tag">@OrgFormat.Number(children.Count)</span>
                         </button>
+                        <button type="button" role="tab" class="@(Model.Tab == IndexModel.TabDelegations ? "active" : "")" aria-selected="@(Model.Tab == IndexModel.TabDelegations)" data-tab="ocPaneDelegations">
+                            <svg class="ico"><use href="#oc-swap" /></svg>@OrgText.Get("Tab_Delegations") <span class="tag">@OrgFormat.Number(Model.Delegations.Count)</span>
+                        </button>
                     </div>
                 </div>
 
@@ -303,6 +306,10 @@
                                                     }
                                                 </div>
                                                 <div class="code">@position.Key</div>
+                                                @foreach (DelegationInfo deputy in Model.DeputiesOf(position.Key))
+                                                {
+                                                    <div class="oc-deleg"><svg class="ico"><use href="#oc-users" /></svg>@OrgText.Format("Position_DeputyLine", OrgFormat.Number(deputy.Priority), chart.FindPosition(deputy.ToPositionKey)?.Title ?? deputy.ToPositionKey)</div>
+                                                }
                                             </td>
                                             <td>
                                                 @if (superior is null)
@@ -329,6 +336,10 @@
                                                 @if (holders.Count == 0)
                                                 {
                                                     <span class="muted">@OrgText.Get("Position_Vacant")</span>
+                                                }
+                                                @foreach (DelegationInfo d in Model.ActiveDelegationsOf(position.Key))
+                                                {
+                                                    <div class="oc-deleg"><svg class="ico"><use href="#oc-swap" /></svg>@OrgText.Format("Holder_DelegatedTo", Model.UserName(d.ToUserId!), Model.Dates.FormatEnd(d.ValidTo))@(d.AuthorityKeys is null ? "" : " " + OrgText.Get("Scope_PartialTag"))</div>
                                                 }
                                                 @foreach (AssignmentInfo holder in holders)
                                                 {
@@ -359,6 +370,8 @@
                                                         @if (position.IsActive)
                                                         {
                                                             <a class="icon-btn sm primary" asp-area="OrgChart" asp-page="/Assignments/Edit" asp-route-position="@position.Key" data-modal title="@OrgText.Get("Assignment_New")" aria-label="@OrgText.Get("Assignment_New")"><svg class="ico"><use href="#oc-user" /></svg></a>
+                                                            <a class="icon-btn sm" asp-area="OrgChart" asp-page="/Delegations/Edit" asp-route-position="@position.Key" asp-route-kind="ToUser" data-modal title="@OrgText.Get("Delegation_New")" aria-label="@OrgText.Get("Delegation_New")"><svg class="ico"><use href="#oc-swap" /></svg></a>
+                                                            <a class="icon-btn sm" asp-area="OrgChart" asp-page="/Delegations/Edit" asp-route-position="@position.Key" asp-route-kind="ToPosition" data-modal title="@OrgText.Get("Deputy_New")" aria-label="@OrgText.Get("Deputy_New")"><svg class="ico"><use href="#oc-users" /></svg></a>
                                                             <a class="icon-btn sm" asp-area="OrgChart" asp-page="/Positions/Edit" asp-route-unit="@unit.Key" asp-route-parent="@position.Key" data-modal title="@OrgText.Get("Position_NewSubordinate")" aria-label="@OrgText.Get("Position_NewSubordinate")"><svg class="ico"><use href="#oc-plus" /></svg></a>
                                                         }
                                                         <a class="icon-btn sm" asp-area="OrgChart" asp-page="/Positions/Edit" asp-route-key="@position.Key" data-modal title="@OrgText.Get("Edit")" aria-label="@OrgText.Get("Edit")"><svg class="ico"><use href="#oc-edit" /></svg></a>
@@ -460,6 +473,57 @@
                                             <td class="cell-sub">@Model.TypeTitle(child.TypeKey)</td>
                                             <td class="nums">@OrgFormat.Number(chart.GetPositions(child.Key).Count(p => p.IsActive))</td>
                                             <td><span class="badge @(child.IsActive ? "st-active" : "st-inactive")">@OrgText.Get(child.IsActive ? "Status_Active" : "Status_Inactive")</span></td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+
+                @* Deputies and delegations *@
+                <div id="ocPaneDelegations" role="tabpanel" hidden="@(Model.Tab != IndexModel.TabDelegations)">
+                    <div class="toolbar">
+                        <a class="fchip@(Model.History ? "" : " active")" asp-area="OrgChart" asp-page="/Index" asp-route-unit="@unit.Key" asp-route-tab="delegations">@OrgText.Get("People_Current")</a>
+                        <a class="fchip@(Model.History ? " active" : "")" asp-area="OrgChart" asp-page="/Index" asp-route-unit="@unit.Key" asp-route-tab="delegations" asp-route-history="true">@OrgText.Get("People_All")</a>
+                        <span class="spacer"></span>
+                        <span class="hint">@OrgText.Get("Delegations_AddHint")</span>
+                    </div>
+                    @if (Model.Delegations.Count == 0)
+                    {
+                        <div class="empty">@OrgText.Get("Delegations_None")</div>
+                    }
+                    else
+                    {
+                        <div class="tbl-wrap">
+                            <table class="tbl">
+                                <thead><tr><th>@OrgText.Get("Col_Position")</th><th>@OrgText.Get("Col_Kind")</th><th>@OrgText.Get("Col_From")</th><th>@OrgText.Get("Col_To")</th><th>@OrgText.Get("Col_Scope")</th><th>@OrgText.Get("Col_Period")</th><th>@OrgText.Get("Col_Status")</th><th></th></tr></thead>
+                                <tbody>
+                                    @foreach (DelegationInfo d in Model.Delegations)
+                                    {
+                                        string state = Model.State(d.ValidFrom, d.ValidTo);
+                                        bool toUser = d.Kind == DelegationKind.ToUser;
+                                        <tr>
+                                            <td><span class="cell-main">@(chart.FindPosition(d.PositionKey)?.Title ?? d.PositionKey)</span></td>
+                                            <td><span class="tag @(toUser ? "tg-manual" : "tg-alias")">@OrgText.Get(toUser ? "Kind_Delegated" : "Kind_Deputy")</span>@if (!toUser) { <div class="cell-sub">@OrgText.Format("Priority_Short", OrgFormat.Number(d.Priority))</div> }</td>
+                                            <td>@(toUser ? Model.UserName(d.FromUserId!) : "—")</td>
+                                            <td>@(toUser ? Model.UserName(d.ToUserId!) : chart.FindPosition(d.ToPositionKey)?.Title ?? d.ToPositionKey)</td>
+                                            <td class="cell-sub">@(d.AuthorityKeys is null ? OrgText.Get("Scope_Full") : OrgText.Format("Scope_Count", OrgFormat.Number(d.AuthorityKeys.Count)))</td>
+                                            <td class="cell-sub">@Model.Dates.Period(d.ValidFrom, d.ValidTo)</td>
+                                            <td><span class="badge @(state switch { "Current" => "st-active", "Upcoming" => "st-uploaded", _ => "st-inactive" })">@OrgText.Get("State_" + state)</span></td>
+                                            <td>
+                                                @if (Model.CanEdit)
+                                                {
+                                                    <div class="row-actions">
+                                                        <a class="icon-btn sm" asp-area="OrgChart" asp-page="/Delegations/Edit" asp-route-id="@d.Id" data-modal title="@OrgText.Get("Edit")" aria-label="@OrgText.Get("Edit")"><svg class="ico"><use href="#oc-edit" /></svg></a>
+                                                        @if (state != "Ended")
+                                                        {
+                                                            <a class="icon-btn sm" asp-area="OrgChart" asp-page="/Delegations/End" asp-route-id="@d.Id" data-modal title="@OrgText.Get("Delegation_End")" aria-label="@OrgText.Get("Delegation_End")"><svg class="ico"><use href="#oc-end" /></svg></a>
+                                                        }
+                                                        <a class="icon-btn sm danger" asp-area="OrgChart" asp-page="/Delegations/End" asp-route-id="@d.Id" asp-route-mode="remove" data-modal title="@OrgText.Get("Delegation_Remove")" aria-label="@OrgText.Get("Delegation_Remove")"><svg class="ico"><use href="#oc-trash" /></svg></a>
+                                                    </div>
+                                                }
+                                            </td>
                                         </tr>
                                     }
                                 </tbody>

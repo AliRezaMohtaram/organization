@@ -28,6 +28,7 @@ else
 orgChart
     .AddHttpContextUser()
     .AddUserDirectory<DemoUserDirectory>()
+    .AddAuthorityCatalog<DemoAuthorityCatalog>()
     .AddAdminUi(ui =>
     {
         // "Host" renders the pages in this app's Pages/Shared/_Layout (which loads MX); "Standalone" uses the module's shell.

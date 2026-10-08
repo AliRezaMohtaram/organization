@@ -330,4 +330,56 @@
   <data name="Op_DelegationEnded" xml:space="preserve"><value>پایان تفویض/جانشینی</value></data>
   <data name="Op_DelegationRemoved" xml:space="preserve"><value>حذف تفویض/جانشینی</value></data>
   <data name="Entity_Delegation" xml:space="preserve"><value>تفویض/جانشینی</value></data>
+  <data name="Tab_Delegations" xml:space="preserve"><value>تفویض و جانشینی</value></data>
+  <data name="Col_From" xml:space="preserve"><value>تفویض‌کننده</value></data>
+  <data name="Col_To" xml:space="preserve"><value>گیرنده</value></data>
+  <data name="Col_Scope" xml:space="preserve"><value>دامنه</value></data>
+  <data name="Delegation_Title" xml:space="preserve"><value>تفویض اختیار</value></data>
+  <data name="Deputy_Title" xml:space="preserve"><value>تعیین جانشین</value></data>
+  <data name="Delegation_Heading" xml:space="preserve"><value>تفویض اختیار «{0}»</value></data>
+  <data name="Deputy_Heading" xml:space="preserve"><value>جانشین سمت «{0}»</value></data>
+  <data name="Delegation_Hint" xml:space="preserve"><value>متصدی سمت، همهٔ اختیارات یا بخشی از آن‌ها را برای یک دورهٔ مشخص به فرد دیگری می‌سپارد. اختیارات خود متصدی حفظ می‌شود.</value></data>
+  <data name="Deputy_Hint" xml:space="preserve"><value>متصدی سمت جانشین، در دامنهٔ تعیین‌شده همیشه اختیارات این سمت را دارد (تا وقتی این سمت متصدی دارد). اختیارات سمت بلاتصدی را مدیر سامانه واگذار می‌کند.</value></data>
+  <data name="Delegation_NoHolder" xml:space="preserve"><value>این سمت در حال حاضر یا آینده متصدی ندارد؛ تفویض فقط از طرف متصدی سمت ممکن است.</value></data>
+  <data name="Delegation_Summary" xml:space="preserve"><value>تفویض اختیار «{0}» از {1} به {2}</value></data>
+  <data name="Deputy_Summary" xml:space="preserve"><value>جانشینی سمت «{0}» توسط «{1}»</value></data>
+  <data name="Delegation_End" xml:space="preserve"><value>پایان تفویض</value></data>
+  <data name="Delegation_Remove" xml:space="preserve"><value>حذف تفویض/جانشینی</value></data>
+  <data name="Delegation_RemoveText" xml:space="preserve"><value>این رکورد کامل حذف می‌شود و در تاریخچه فقط در گزارش تغییرات می‌ماند. اگر تفویض اجرا شده است، به جای حذف آن را پایان دهید.</value></data>
+  <data name="Delegation_New" xml:space="preserve"><value>تفویض اختیار</value></data>
+  <data name="Deputy_New" xml:space="preserve"><value>تعیین جانشین</value></data>
+  <data name="Delegations_AddHint" xml:space="preserve"><value>برای تفویض یا تعیین جانشین، از دکمه‌های ردیف هر سمت در زبانهٔ سمت‌ها استفاده کنید.</value></data>
+  <data name="Delegations_None" xml:space="preserve"><value>تفویض یا جانشینی برای سمت‌های این واحد ثبت نشده است.</value></data>
+  <data name="Field_Delegator" xml:space="preserve"><value>تفویض‌کننده (متصدی سمت)</value></data>
+  <data name="Field_Delegate" xml:space="preserve"><value>گیرندهٔ تفویض</value></data>
+  <data name="Field_DeputyPosition" xml:space="preserve"><value>سمت جانشین</value></data>
+  <data name="Field_Priority" xml:space="preserve"><value>اولویت</value></data>
+  <data name="Field_PriorityHint" xml:space="preserve"><value>عدد کمتر یعنی جانشین اول.</value></data>
+  <data name="Field_DelegationEndHint" xml:space="preserve"><value>تفویض به فرد باید تاریخ پایان داشته باشد (آخرین روز، شامل).</value></data>
+  <data name="Field_Reason" xml:space="preserve"><value>علت / توضیح</value></data>
+  <data name="Field_Scope" xml:space="preserve"><value>دامنهٔ اختیارات</value></data>
+  <data name="Scope_Full" xml:space="preserve"><value>همهٔ اختیارات</value></data>
+  <data name="Scope_Partial" xml:space="preserve"><value>فقط اختیارات انتخاب‌شده</value></data>
+  <data name="Scope_NoCatalog" xml:space="preserve"><value>فهرست اختیارات این سمت در دسترس نیست؛ فقط تفویض کامل ممکن است.</value></data>
+  <data name="Scope_Hint" xml:space="preserve"><value>اختیارات از نقش‌های سمت در سامانهٔ دسترسی می‌آیند.</value></data>
+  <data name="Scope_Count" xml:space="preserve"><value>{0} اختیار</value></data>
+  <data name="Scope_PartialTag" xml:space="preserve"><value>(بخشی از اختیارات)</value></data>
+  <data name="Priority_Short" xml:space="preserve"><value>اولویت {0}</value></data>
+  <data name="Position_DeputyLine" xml:space="preserve"><value>جانشین {0}: {1}</value></data>
+  <data name="Holder_DelegatedTo" xml:space="preserve"><value>تفویض به {0} تا {1}</value></data>
+  <data name="Flash_DelegationSaved" xml:space="preserve"><value>تفویض اختیار «{0}» ذخیره شد.</value></data>
+  <data name="Flash_DeputySaved" xml:space="preserve"><value>جانشین «{0}» ذخیره شد.</value></data>
+  <data name="Flash_DelegationEnded" xml:space="preserve"><value>تفویض پایان یافت.</value></data>
+  <data name="Flash_DelegationRemoved" xml:space="preserve"><value>تفویض/جانشینی حذف شد.</value></data>
+  <data name="Nav_My" xml:space="preserve"><value>تفویض‌های من</value></data>
+  <data name="My_Subtitle" xml:space="preserve"><value>سمت‌های شما، اختیاراتی که تفویض کرده‌اید و اختیاراتی که به شما تفویض شده است</value></data>
+  <data name="My_Positions" xml:space="preserve"><value>سمت‌های من</value></data>
+  <data name="My_PositionsHint" xml:space="preserve"><value>سمت‌های فعلی و آینده، شامل تفویض و جانشینی</value></data>
+  <data name="My_NoPositions" xml:space="preserve"><value>سمتی برای شما ثبت نشده است.</value></data>
+  <data name="My_Given" xml:space="preserve"><value>تفویض‌های من</value></data>
+  <data name="My_GivenHint" xml:space="preserve"><value>اختیاراتی که به دیگران سپرده‌اید</value></data>
+  <data name="My_NoGiven" xml:space="preserve"><value>تفویض فعالی ندارید.</value></data>
+  <data name="My_Received" xml:space="preserve"><value>تفویض‌شده به من</value></data>
+  <data name="My_NoReceived" xml:space="preserve"><value>اختیاری به شما تفویض نشده است.</value></data>
+  <data name="My_EndText" xml:space="preserve"><value>تفویض اختیار «{0}» از همین حالا پایان می‌یابد (اگر هنوز شروع نشده باشد، حذف می‌شود).</value></data>
 </root>

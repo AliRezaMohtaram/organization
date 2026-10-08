@@ -32,6 +32,7 @@ public static class OrgChartUiExtensions
             {
                 authorization.AddPolicy(OrgChartPolicies.View, ui.Value.ViewPolicy);
                 authorization.AddPolicy(OrgChartPolicies.Edit, ui.Value.EditPolicy);
+                authorization.AddPolicy(OrgChartPolicies.Self, ui.Value.SelfPolicy);
             });
 
         // Hosts usually discover this library on their own; add it only when they did not, to avoid duplicate routes.

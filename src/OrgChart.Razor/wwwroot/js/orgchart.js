@@ -150,7 +150,7 @@
         if (!box) return;
         const query = $("[data-oc-user-query]", box);
         const results = $("[data-oc-user-results]", box);
-        const userId = $("[name='Input.UserId']", form);
+        const userId = $(`[name='${box.dataset.ocUserTarget || "Input.UserId"}']`, form);
         const picked = $("[data-oc-user-picked]", form);
         const pickedName = $("[data-oc-user-name]", form);
         let timer = 0, seq = 0;
@@ -225,15 +225,29 @@
         sync();
     }
 
+    /* ---------------- scope: the authority list only for a partial delegation ---------------- */
+    function scopeFields(root) {
+        $$("[data-oc-scope]", root).forEach(scope => {
+            const full = $("[data-oc-scope-full]", scope);
+            const list = $("[data-oc-scope-list]", scope);
+            if (!full || !list) return;
+            const sync = () => { list.hidden = full.checked; };
+            $$("input[name='FullScope']", scope).forEach(r => r.addEventListener("change", sync));
+            sync();
+        });
+    }
+
     function init() {
         flash();
         tree();
         if (window.MX?.component) {
             window.MX.component("oc-user-search", userSearch);
             window.MX.component("oc-unit-form", unitForm);
+            window.MX.component("oc-delegation-form", form => { userSearch(form); scopeFields(form); });
         } else {
             $$("[data-mx-init='oc-user-search']").forEach(userSearch);
             $$("[data-mx-init='oc-unit-form']").forEach(unitForm);
+            $$("[data-mx-init='oc-delegation-form']").forEach(form => { userSearch(form); scopeFields(form); });
         }
     }
 

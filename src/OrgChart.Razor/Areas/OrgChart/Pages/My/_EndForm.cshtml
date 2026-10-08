@@ -1,0 +1,17 @@
+@model OrgChart.Razor.Admin.Pages.My.EndModel
+<form class="modal modal-sm" method="post" asp-area="OrgChart" asp-page="/My/End" asp-route-id="@Model.Id" data-mx-ajax novalidate>
+    <div class="modal-head">
+        <span class="modal-head-ico tone-warning"><svg class="ico"><use href="#oc-end" /></svg></span>
+        <div><div class="modal-title">@OrgText.Get("Delegation_End")</div></div>
+        <a class="icon-btn plain close" href="@Model.BackUrl" data-close aria-label="@OrgText.Get("Close")"><svg class="ico"><use href="#oc-x" /></svg></a>
+    </div>
+    <div class="modal-body">
+        <partial name="/Areas/OrgChart/Pages/Shared/_FormErrors.cshtml" />
+        <p class="oc-confirm-text">@OrgText.Format("My_EndText", Model.PositionTitle)<br /><span class="cell-sub">@Model.Dates.Period(Model.Delegation.ValidFrom, Model.Delegation.ValidTo)</span></p>
+    </div>
+    <div class="modal-foot">
+        <span class="spacer"></span>
+        <a class="btn btn-quiet" href="@Model.BackUrl" data-close>@OrgText.Get("Cancel")</a>
+        <button type="submit" class="btn btn-primary" autofocus><svg class="ico"><use href="#oc-end" /></svg>@OrgText.Get("Delegation_End")</button>
+    </div>
+</form>

@@ -19,6 +19,9 @@ public sealed class OrgChartUiOptions
     /// <summary>Who may change the chart. Default: any signed-in user — narrow this in production.</summary>
     public Action<AuthorizationPolicyBuilder> EditPolicy { get; set; } = policy => policy.RequireAuthenticatedUser();
 
+    /// <summary>Who may open "my delegations" (delegate their own positions). Default: any signed-in user.</summary>
+    public Action<AuthorizationPolicyBuilder> SelfPolicy { get; set; } = policy => policy.RequireAuthenticatedUser();
+
     /// <summary>"Back to the application" link in the standalone layout; null hides it.</summary>
     public string? BackUrl { get; set; } = "~/";
 

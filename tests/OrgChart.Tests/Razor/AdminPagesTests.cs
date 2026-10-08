@@ -87,6 +87,8 @@ public sealed class AdminPagesTests : IAsyncLifetime
             "/OrgChart/Assignments/Edit?position=POS-ACC", $"/OrgChart/Assignments/Edit?id={assignmentId}",
             $"/OrgChart/Assignments/End?id={assignmentId}", $"/OrgChart/Assignments/Transfer?id={assignmentId}",
             $"/OrgChart/Assignments/Remove?id={assignmentId}", "/OrgChart/Types/Edit?kind=Unit", "/OrgChart/Types/Edit?kind=Position&key=X",
+            "/OrgChart/Delegations/Edit?position=POS-ACC&kind=ToUser", "/OrgChart/Delegations/Edit?position=POS-ACC&kind=ToPosition",
+            "/OrgChart?unit=FIN&tab=delegations", "/OrgChart/My",
         ];
         foreach (string page in pages)
         {
@@ -216,5 +218,57 @@ public sealed class AdminPagesTests : IAsyncLifetime
             new FormUrlEncodedContent([new("Input.Key", "X"), new("Input.Title", "X"), new("Input.TypeKey", "DEPARTMENT")]));
 
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Delegation_pages_render_and_end_and_remove_work()
+    {
+        await AdminAsync(async a =>
+        {
+            await a.CreatePositionAsync(new PositionInput("POS-DEP", "معاون", "FIN"));
+            await a.DelegateAsync(new DelegationInput("POS-ACC", "u1", "u2", null, DateTime.UtcNow.AddDays(10)));
+            await a.AddDeputyAsync(new DeputyInput("POS-ACC", "POS-DEP"));
+        });
+        IReadOnlyList<DelegationInfo> all = await ScopeAsync(sp => sp.GetRequiredService<IOrgChartReader>().GetDelegationsAsync(new DelegationQuery()));
+        DelegationInfo toUser = all.Single(d => d.Kind == DelegationKind.ToUser);
+        DelegationInfo deputy = all.Single(d => d.Kind == DelegationKind.ToPosition);
+        HttpClient client = _host.Client("editor");
+
+        string tab = await AdminUiHost.TextAsync(await client.GetAsync("/OrgChart?unit=FIN&tab=delegations"));
+        Assert.Contains("مریم رضایی", tab);
+        Assert.Contains("معاون", tab);
+        foreach (string page in new[] { $"/OrgChart/Delegations/Edit?id={toUser.Id}", $"/OrgChart/Delegations/Edit?id={deputy.Id}", $"/OrgChart/Delegations/End?id={toUser.Id}", $"/OrgChart/Delegations/End?id={deputy.Id}&mode=remove" })
+        {
+            Assert.Equal(HttpStatusCode.OK, (await client.GetAsync(page)).StatusCode);
+        }
+
+        HttpResponseMessage removed = await AdminUiHost.SubmitAsync(client, $"/OrgChart/Delegations/End?id={deputy.Id}&mode=remove", []);
+        Assert.Equal(HttpStatusCode.Redirect, removed.StatusCode);
+        Assert.Null(await ScopeAsync(sp => sp.GetRequiredService<IOrgChartReader>().GetDelegationAsync(deputy.Id)));
+    }
+
+    [Fact]
+    public async Task Holder_delegates_and_ends_from_the_self_service_page()
+    {
+        HttpClient u1 = _host.Client("u1");
+
+        string my = await AdminUiHost.TextAsync(await u1.GetAsync("/OrgChart/My"));
+        Assert.Contains("حسابدار", my);
+        Assert.Contains("/OrgChart/My/Delegate?position=POS-ACC", my);
+        Assert.Equal(HttpStatusCode.NotFound, (await _host.Client("u2").GetAsync("/OrgChart/My/Delegate?position=POS-ACC")).StatusCode);
+
+        HttpResponseMessage saved = await AdminUiHost.SubmitAsync(u1, "/OrgChart/My/Delegate?position=POS-ACC",
+            [new("ToUserId", "u2"), new("ValidTo", "1499/12/29"), new("FullScope", "true")]);
+        Assert.Equal(HttpStatusCode.Redirect, saved.StatusCode);
+        DelegationInfo given = Assert.Single(await ScopeAsync(sp => sp.GetRequiredService<IOrgChartReader>().GetDelegationsAsync(new DelegationQuery(FromUserId: "u1"))));
+
+        string received = await AdminUiHost.TextAsync(await _host.Client("u2").GetAsync("/OrgChart/My"));
+        Assert.Contains("علی احمدی", received);
+        Assert.Equal(HttpStatusCode.NotFound, (await _host.Client("u2").GetAsync($"/OrgChart/My/End?id={given.Id}")).StatusCode);
+
+        HttpResponseMessage ended = await AdminUiHost.SubmitAsync(u1, $"/OrgChart/My/End?id={given.Id}", []);
+        Assert.Equal(HttpStatusCode.Redirect, ended.StatusCode);
+        DelegationInfo? after = await ScopeAsync(sp => sp.GetRequiredService<IOrgChartReader>().GetDelegationAsync(given.Id));
+        Assert.True(after is null || after.ValidTo <= DateTime.UtcNow);
     }
 }

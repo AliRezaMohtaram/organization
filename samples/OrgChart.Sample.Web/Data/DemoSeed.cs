@@ -103,5 +103,11 @@ public static class DemoSeed
         await admin.AssignAsync(new AssignmentInput("POS-ACC-EXP", "u-006", ValidFrom: year.AddMonths(-30), ValidTo: year.AddMonths(2)));
         await admin.AssignAsync(new AssignmentInput("POS-ACC-MGR", "u-006", ValidFrom: year.AddMonths(2)));
         await admin.AssignAsync(new AssignmentInput("POS-ACC-OIL", "u-008", ValidFrom: year.AddMonths(4)));
+
+        // Succession and delegation: the senior purchasing expert deputizes for the purchasing manager,
+        // and the manager hands their authority to the local purchasing supervisor for the next month.
+        DateTime today = DateTime.UtcNow.Date;
+        await admin.AddDeputyAsync(new DeputyInput("POS-PUR-MGR", "POS-PUR-EXP1", Note: "جانشین مدیر خرید"));
+        await admin.DelegateAsync(new DelegationInput("POS-PUR-MGR", "u-001", "u-004", today, today.AddDays(30), Note: "مرخصی"));
     }
 }
