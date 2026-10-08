@@ -145,9 +145,9 @@
   <data name="Position_EditTitle" xml:space="preserve"><value>ویرایش سمت</value></data>
   <data name="Position_EditHeading" xml:space="preserve"><value>ویرایش «{0}»</value></data>
   <data name="Position_InUnit" xml:space="preserve"><value>در واحد «{0}»</value></data>
-  <data name="Position_Move" xml:space="preserve"><value>انتقال سمت به واحد دیگر</value></data>
+  <data name="Position_Move" xml:space="preserve"><value>جابه‌جایی سمت</value></data>
   <data name="Position_MoveHeading" xml:space="preserve"><value>انتقال «{0}»</value></data>
-  <data name="Position_MoveHint" xml:space="preserve"><value>سمت با متصدیانش به واحد دیگر می‌رود؛ کلید آن تغییر نمی‌کند.</value></data>
+  <data name="Position_MoveHint" xml:space="preserve"><value>سمت با متصدیان و همهٔ سمت‌های زیرمجموعه‌اش زیر سمت انتخاب‌شده می‌رود و واحدش همان واحدِ آن سمت می‌شود.</value></data>
   <data name="Position_Vacant" xml:space="preserve"><value>بلاتصدی</value></data>
   <data name="Position_Head" xml:space="preserve"><value>رئیس واحد</value></data>
   <data name="Position_IsHead" xml:space="preserve"><value>این سمت رئیس واحد است</value></data>
@@ -309,4 +309,7 @@
   <data name="End_OnDate" xml:space="preserve"><value>در تاریخ مشخص</value></data>
   <data name="End_NowHint" xml:space="preserve"><value>«همین حالا»: سمت از همین لحظه بلاتصدی می‌شود. «در تاریخ مشخص»: فرد تا پایان «آخرین روز» در سمت می‌ماند.</value></data>
   <data name="Holder_Until" xml:space="preserve"><value>تا {0}</value></data>
+  <data name="Field_NewSuperior" xml:space="preserve"><value>سمت بالادست جدید</value></data>
+  <data name="Position_UnitTop" xml:space="preserve"><value>— سطح بالای «{0}» (این واحد رئیس ندارد) —</value></data>
+  <data name="Position_MoveKeysKept" xml:space="preserve"><value>کلید سمت‌ها تغییر نمی‌کند؛ دسترسی‌های وابسته به این سمت‌ها حفظ می‌شوند.</value></data>
 </root>

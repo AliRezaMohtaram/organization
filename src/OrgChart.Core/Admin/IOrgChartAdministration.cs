@@ -36,8 +36,17 @@ public interface IOrgChartAdministration
 
     Task UpdatePositionAsync(string key, PositionUpdate update, CancellationToken cancellationToken = default);
 
-    /// <summary>Moves the position (with its holders) to another active unit.</summary>
+    /// <summary>
+    /// Moves the position, with its holders and every position below it, to the top of another active unit
+    /// (where it reports to that unit's head). Keys do not change.
+    /// </summary>
     Task MovePositionAsync(string key, string newUnitKey, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Puts the position, with its holders and every position below it, under <paramref name="newSuperiorKey"/>;
+    /// they move to that position's unit. Keys do not change. A unit head cannot be moved.
+    /// </summary>
+    Task MovePositionUnderAsync(string key, string newSuperiorKey, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Soft delete / restore. Deactivating needs the position to have no current or future assignments and not

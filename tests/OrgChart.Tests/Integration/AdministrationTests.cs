@@ -397,7 +397,6 @@ public sealed class AdministrationTests : IDisposable
         Assert.Equal(OrgChartErrors.ParentPositionCycle,
             await ExpectErrorAsync(a => a.UpdatePositionAsync("OIL-LEAD", new PositionUpdate("Oil lead", null, false, null, 0, null, null, "OIL-LEAD"))));
         Assert.Equal(OrgChartErrors.PositionHasSubordinates, await ExpectErrorAsync(a => a.SetPositionActiveAsync("OIL-LEAD", false)));
-        Assert.Equal(OrgChartErrors.PositionHasSubordinates, await ExpectErrorAsync(a => a.MovePositionAsync("OIL-LEAD", "FIN")));
 
         // A head cannot report to a position of its own unit, and a position with a parent cannot become head.
         Assert.Equal(OrgChartErrors.UnitHeadHasParent, await ExpectErrorAsync(a => a.SetUnitManagerAsync("ACC", "OIL-LEAD")));
@@ -405,6 +404,33 @@ public sealed class AdministrationTests : IDisposable
         await _s.AdminAsync(a => a.CreatePositionAsync(new PositionInput("ACC-2", "Second", "ACC")));
         Assert.Equal(OrgChartErrors.UnitHeadHasParent,
             await ExpectErrorAsync(a => a.UpdatePositionAsync("POS-CLERK", new PositionUpdate("Clerk", null, false, null, 0, null, null, "ACC-2"))));
+    }
+
+    [Fact]
+    public async Task Moving_under_a_position_takes_the_branch_to_its_unit()
+    {
+        await _s.SeedAsync();
+        await _s.AdminAsync(async a =>
+        {
+            await a.CreatePositionAsync(new PositionInput("OIL-LEAD", "Oil lead", "ACC"));
+            await a.CreatePositionAsync(new PositionInput("OIL-EXP", "Oil expert", "ACC", ParentPositionKey: "OIL-LEAD"));
+            await a.AssignAsync(new AssignmentInput("OIL-EXP", "u1"));
+        });
+
+        await _s.AdminAsync(a => a.MovePositionUnderAsync("OIL-LEAD", "pos-cfo"));
+
+        OrgChartSnapshot chart = await SnapshotAsync();
+        Assert.Equal(("FIN", "POS-CFO"), (chart.FindPosition("OIL-LEAD")!.UnitKey, chart.FindPosition("OIL-LEAD")!.ParentKey));
+        Assert.Equal(("FIN", "OIL-LEAD"), (chart.FindPosition("OIL-EXP")!.UnitKey, chart.FindPosition("OIL-EXP")!.ParentKey));
+        Assert.Equal("FIN", Assert.Single(await _s.ReadAsync(r => r.GetUserPositionsAsync("u1"))).OrgUnitKey);
+        Assert.Contains("OIL-EXP", (await _s.DbAsync(db => db.AuditLogs.OrderBy(l => l.Id).LastAsync())).ChangeJson);
+
+        // Within the same unit: re-parenting; under its own branch: rejected; a head cannot move.
+        await _s.AdminAsync(a => a.MovePositionUnderAsync("OIL-EXP", "POS-ACC"));
+        Assert.Equal("POS-ACC", (await SnapshotAsync()).FindPosition("OIL-EXP")!.ParentKey);
+        Assert.Equal(OrgChartErrors.ParentPositionCycle, await ExpectErrorAsync(a => a.MovePositionUnderAsync("POS-ACC", "OIL-EXP")));
+        Assert.Equal(OrgChartErrors.PositionIsUnitManager, await ExpectErrorAsync(a => a.MovePositionUnderAsync("POS-CFO", "POS-CLERK")));
+        Assert.Equal(OrgChartErrors.PositionNotFound, await ExpectErrorAsync(a => a.MovePositionUnderAsync("OIL-EXP", "NOPE")));
     }
 
     [Fact]

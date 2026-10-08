@@ -360,35 +360,88 @@ internal sealed class EfOrgChartAdministration(
         {
             Position position = await FindPositionAsync(key, cancellationToken);
             OrgUnit unit = await FindUnitAsync(newUnitKey, cancellationToken);
-            if (unit.Id == position.OrgUnitId)
+            if (unit.Id == position.OrgUnitId && position.ParentPositionId is null)
             {
                 return;
             }
 
-            if (!unit.IsActive)
-            {
-                throw Error(OrgChartErrors.UnitInactive, $"Unit '{unit.Key}' is inactive.");
-            }
-
-            if (await HeadsUnitAsync(position.Id, cancellationToken))
-            {
-                throw Error(OrgChartErrors.PositionIsUnitManager, $"Position '{position.Key}' heads its unit.");
-            }
-
-            if (await db.Positions.AnyAsync(p => p.ParentPositionId == position.Id, cancellationToken))
-            {
-                throw Error(OrgChartErrors.PositionHasSubordinates, $"Position '{position.Key}' has positions reporting to it.");
-            }
-
-            // The parent must be in the same unit, so a moved position starts at the top of its new unit.
-            string from = position.OrgUnit.Key;
-            string? fromParent = position.ParentPosition?.Key;
-            position.OrgUnit = unit;
-            position.ParentPosition = null;
-            audit.Write("PositionMoved", nameof(Position), position.Key,
-                new { before = new { Unit = from, Parent = fromParent }, after = new { Unit = unit.Key, Parent = (string?)null } });
-            change.Kind = OrgChartChangeKind.Structure;
+            await MoveSubtreeAsync(position, unit, null, change, cancellationToken);
         }, cancellationToken);
+
+    public Task MovePositionUnderAsync(string key, string newSuperiorKey, CancellationToken cancellationToken = default) =>
+        RunAsync(chart: true, async change =>
+        {
+            Position position = await FindPositionAsync(key, cancellationToken);
+            Position superior = await FindPositionAsync(newSuperiorKey, cancellationToken);
+            if (superior.Id == position.ParentPositionId)
+            {
+                return;
+            }
+
+            if (!superior.IsActive)
+            {
+                throw Error(OrgChartErrors.PositionInactive, $"Position '{superior.Key}' is inactive.");
+            }
+
+            await MoveSubtreeAsync(position, superior.OrgUnit, superior, change, cancellationToken);
+        }, cancellationToken);
+
+    /// <summary>
+    /// Moves <paramref name="position"/> and every position below it into <paramref name="unit"/>, under
+    /// <paramref name="superior"/> (null = top of the unit). Parent links inside the moved branch stay as they are.
+    /// </summary>
+    private async Task MoveSubtreeAsync(Position position, OrgUnit unit, Position? superior, Change change, CancellationToken cancellationToken)
+    {
+        if (!unit.IsActive)
+        {
+            throw Error(OrgChartErrors.UnitInactive, $"Unit '{unit.Key}' is inactive.");
+        }
+
+        Dictionary<int, int?> parents = await db.Positions.AsNoTracking()
+            .Where(p => p.OrgUnitId == position.OrgUnitId)
+            .ToDictionaryAsync(p => p.Id, p => p.ParentPositionId, cancellationToken);
+        HashSet<int> branch = [position.Id];
+        bool grew = true;
+        while (grew)
+        {
+            grew = false;
+            foreach ((int id, int? parentId) in parents)
+            {
+                if (parentId is { } p && branch.Contains(p) && branch.Add(id))
+                {
+                    grew = true;
+                }
+            }
+        }
+
+        if (superior is not null && branch.Contains(superior.Id))
+        {
+            throw Error(OrgChartErrors.ParentPositionCycle, $"Position '{superior.Key}' is '{position.Key}' or below it.");
+        }
+
+        if (await db.OrgUnits.AnyAsync(u => u.ManagerPositionId != null && branch.Contains(u.ManagerPositionId.Value), cancellationToken))
+        {
+            throw Error(OrgChartErrors.PositionIsUnitManager, $"Position '{position.Key}' or a position below it heads its unit.");
+        }
+
+        string fromUnit = position.OrgUnit.Key;
+        string? fromParent = position.ParentPosition?.Key;
+        List<Position> moved = await db.Positions.Where(p => branch.Contains(p.Id)).ToListAsync(cancellationToken);
+        foreach (Position p in moved)
+        {
+            p.OrgUnitId = unit.Id;
+        }
+
+        position.OrgUnit = unit;
+        position.ParentPosition = superior;
+        audit.Write("PositionMoved", nameof(Position), position.Key, new
+        {
+            before = new { Unit = fromUnit, Parent = fromParent },
+            after = new { Unit = unit.Key, Parent = superior?.Key },
+            Branch = moved.Select(p => p.Key).Order().ToList(),
+        });
+        change.Kind = OrgChartChangeKind.Structure;
+    }
 
     public Task SetPositionActiveAsync(string key, bool isActive, CancellationToken cancellationToken = default) =>
         RunAsync(chart: true, async change =>

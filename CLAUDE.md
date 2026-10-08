@@ -295,5 +295,11 @@ All UI must follow the **MX design system** from https://github.com/AliRezaMohta
      (`GetUnitTopPositions`, `GetReportingChildren`, `GetPositionOutline` — display only, data unchanged; a moved
      position therefore appears under the head of its new unit). Ending an assignment offers "now" (default; the
      position is vacant at once) or "on a date" (last day inclusive); holders with an end date show "until …".
+   - Moving a position means choosing its new superior position (user's request): `MovePositionUnderAsync(key,
+     superiorKey)` moves the position **with its whole branch** into the superior's unit (parent links inside the
+     branch kept); `MovePositionAsync(key, unitKey)` puts the branch at the top of a unit (for units without a head).
+     Rejected: target inside the branch (`ParentPositionCycle`), a unit head anywhere in the branch
+     (`PositionIsUnitManager`). Move form lists positions by unit in outline order, plus "top of unit" for units
+     without an active head. Audit row lists the moved branch.
 6. NEXT: succession and delegation (decision 14) — design to be agreed with the user first.
    Later: `Users` module + unified admin panel; `OrgChart.Acl` bridge; graphical chart; NuGet packaging.
