@@ -1,0 +1,62 @@
+@* The host application's own MX layout (as in DataMapper). The OrgChart pages render inside it by default.
+   This sample takes MX from the module's copy; a real host serves its own mx.css / mx.js. *@
+@{
+    string title = ViewData["Title"] as string ?? "سامانه نمونه";
+}
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@title - سامانه نمونه</title>
+    <script>
+        (function () {
+            try {
+                var t = JSON.parse(localStorage.getItem("app-theme") || "{}");
+                var r = document.documentElement;
+                r.dataset.theme  = t.mode   || "dark";
+                r.dataset.preset = t.preset || "ocean-dark";
+                r.dataset.accent = t.accent || "cyan";
+                r.dataset.size   = t.size   || "medium";
+                r.dataset.radius = t.radius || "medium";
+            } catch (e) { }
+        })();
+    </script>
+    <link rel="stylesheet" href="~/_content/OrgChart.Razor/mx/css/mx.css" asp-append-version="true" />
+</head>
+<body>
+    <partial name="/Areas/OrgChart/Pages/Shared/_MxIcons.cshtml" />
+    <div class="app">
+        <aside class="sidebar" aria-label="ناوبری اصلی">
+            <a class="sb-brand" href="~/">
+                <span class="sb-logo">S</span>
+                <span class="brand-text">
+                    <span class="brand-name">Sample</span>
+                    <span class="brand-sub">برنامهٔ میزبان نمونه</span>
+                </span>
+            </a>
+            <nav class="nav">
+                <div class="nav-section">سازمان</div>
+                <a class="nav-item active" href="~/OrgChart" aria-current="page"><svg class="ico"><use href="#i-layout" /></svg><span class="nav-label">چارت سازمانی</span></a>
+                <div class="nav-section">سیستم</div>
+                <button class="nav-item" type="button" data-action="theme-toggle"><svg class="ico"><use href="#i-moon" /></svg><span class="nav-label">روشن / تیره</span></button>
+            </nav>
+        </aside>
+        <div class="scrim"></div>
+        <div class="main">
+            <header class="topbar">
+                <button class="icon-btn plain menu-btn" type="button" data-sidebar-toggle aria-label="منو"><svg class="ico"><use href="#i-menu" /></svg></button>
+                <div class="topbar-title"><h1>سامانه نمونه</h1><p>میزبان ماژول چارت سازمانی</p></div>
+                <div class="topbar-actions">
+                    <button class="icon-btn" type="button" data-action="theme-toggle" aria-label="تغییر حالت روشن/تیره"><svg class="ico"><use href="#i-moon" /></svg></button>
+                </div>
+            </header>
+            <main class="page">
+                @RenderBody()
+            </main>
+        </div>
+    </div>
+    <script src="~/_content/OrgChart.Razor/mx/js/theme.js" asp-append-version="true"></script>
+    <script src="~/_content/OrgChart.Razor/mx/js/mx.js" asp-append-version="true"></script>
+</body>
+</html>

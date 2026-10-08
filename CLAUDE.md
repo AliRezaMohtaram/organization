@@ -8,7 +8,7 @@ modules (first consumer: the `Acl` access-control module) through interfaces onl
 
 - Talk to the user in **Persian**. Code, identifiers, comments, and commit messages in **English**.
 - Work in **stages**: data model first, then the rest. Ask before changing any architectural decision below.
-- **Commit only when the user asks.**
+- **Commit only when the user asks.** (Exception: the cloud session's stop hook requires pushing finished work.)
 - Keep the "Status / next steps" section at the bottom of this file updated after every stage.
 
 ## Architectural decisions (final — do not change without asking)
@@ -223,6 +223,44 @@ All UI must follow the **MX design system** from https://github.com/AliRezaMohta
    - Migration `ChartStamps`; schema/drop scripts updated.
    - Tests: tests/OrgChart.Tests/Chart (snapshot), tests/OrgChart.Tests/Integration (`OrgChartServices` = real DI +
      SQLite + manual clock + recording listener; `CreateServer()` simulates a second server on the same DB).
-4. NEXT: Stage 3 — `OrgChart.Acl` bridge (needs Acl.Core: project reference via git submodule, or the Acl NuGet
-   package from the internal feed — ask the user), then `OrgChart.AspNetCore`, `OrgChart.Razor` (MX UI),
-   sample host, NuGet.
+4. DONE: Stage 3 — admin UI (`OrgChart.AspNetCore`, `OrgChart.Razor`, sample host). The `OrgChart.Acl` bridge was
+   postponed by the user until the package distribution of Acl is decided (NuGet feed vs. submodule).
+   - `OrgChart.AspNetCore`: `AddHttpContextUser(o => o.UserIdClaimType = ...)` → `HttpContextCurrentUser` (NameIdentifier).
+   - `OrgChart.Razor`: `AddAdminUi(ui => ...)` adds the RCL as application part (if not discovered) and the policies
+     `OrgChart.View` / `OrgChart.Edit` from `OrgChartUiOptions.ViewPolicy/EditPolicy` (default: authenticated user).
+     `ui.Layout` default `"_Layout"` (host's, must load MX); `ui.UseStandaloneLayout()` = module's own shell
+     (`Shared/_OrgStandaloneLayout.cshtml`, DataMapper's layout with the module's MX copy under `wwwroot/mx`, re-copy
+     when MX changes; see `wwwroot/mx/README.md`). `ui.TimeZone` (default server's) for Jalali dates; `ui.BackUrl`.
+   - Pages (area "OrgChart", namespace `OrgChart.Razor.Admin.Pages`): `/OrgChart` (tree + detail, `?unit=&tab=positions|people|units&history=true`),
+     `Units/{Edit,Move,Manager,Status}`, `Positions/{Edit,Move,Status}`, `Assignments/{Edit,End,Transfer,Remove}`
+     (`Edit?handler=Users&q=` = JSON user search via `IUserDirectory`), `Types/{Index,Edit}` (`Edit?handler=Status`), `Audit/Index`.
+     View pages: `[Authorize(OrgChart.View)]`; forms: `[Authorize(OrgChart.Edit)]` on GET and POST.
+   - Modal-first like DataMapper: links with `data-modal`; `OrgPageModel.Form(partialPath)` returns the `.modal` form
+     partial for `X-MX-Modal: 1`, else the full page (`.modal-page`); success → `Done(url, message)` = JSON `{redirect}`
+     or a redirect, with the message in TempData (`OrgChart.Flash`), shown as an MX toast by `orgchart.js`.
+     Errors: `OrgChartAdminException` → model error → `_FormErrors` callout in the same form.
+   - Every page starts with `Shared/_OrgPage.cshtml`: links `css/orgchart.css`, `js/orgchart.js` (defer), the own icon
+     sprite `_OrgIcons` (`oc-*` ids, so pages work in any host layout), the flash, and — inside a host layout — the
+     page title and a small nav (`.fchips`). No `@section`s are used, so any host layout works.
+   - `orgchart.css` uses only MX tokens/components; MX has no tree, so the tree is defined there. `orgchart.js`: tree
+     (toggle, expand/collapse all, search + type filter keeping ancestors, inactive toggle remembered in
+     localStorage, roving-tabindex keyboard incl. RTL arrows) and MX component `oc-user-search`.
+   - Texts: `Resources/OrgText.resx` (neutral = Persian) via `OrgText.Get/Format/Error/Operation/Entity/Kind`. Numbers and
+     dates are shown with Persian digits (`OrgFormat`); inputs accept Persian or Latin digits. Dates: `OrgDates`
+     (Jalali, whole days; "to"/"last day" inclusive in the UI, stored exclusive). No date picker: MX's jalali-picker
+     styles live in the legacy theme.css.
+   - Razor gotcha: `data-*` attributes are rendered even when the value is null — use classes (e.g. `is-inactive`).
+   - New-unit form suggests a type (most common among siblings, else the type after the parent's) and puts new units
+     and positions last (max sort order + 1).
+   - `IOrgChartReader.GetAssignmentAsync(id)`; `IOrgChartAuditReader` (EF: `EfOrgChartAuditReader`, newest first, max 200/page).
+   - Sample `samples/OrgChart.Sample.Web`: SQLite file (EnsureCreated; `OrgChart:Provider=SqlServer` uses migrations),
+     demo seed like the reference page, `DemoUserDirectory`, demo sign-in (every request = `Sample:UserId`),
+     `OrgChart:Layout` = Host (its own MX `_Layout`) or Standalone.
+   - Tests: `tests/OrgChart.Tests/Razor` — `TextResourceTests` (every error code, audit operation, entity, kind, state
+     and every key used in the Razor sources exists) and `AdminPagesTests` on a real host (`AdminUiHost`: TestServer,
+     SQLite, header sign-in `X-Test-User`, users "editor*" pass the edit policy): access, all pages render, modal
+     protocol, form POST with antiforgery, errors in the form, invalid dates, user search.
+   - Checked in Chromium (Playwright) at 1440px and 390px, dark and light, host and standalone layouts; screenshots in
+     `docs/screenshots`.
+5. NEXT (ask the user): `OrgChart.Acl` bridge (needs Acl.Core: internal NuGet feed or git submodule); graphical chart
+   view; NuGet packaging (as Acl: pack, verify with a throwaway consumer); unit relations (decided: not in v1).

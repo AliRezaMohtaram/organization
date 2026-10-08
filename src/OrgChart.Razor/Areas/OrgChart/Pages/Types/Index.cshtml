@@ -1,0 +1,58 @@
+@page
+@model OrgChart.Razor.Admin.Pages.Types.IndexModel
+<partial name="/Areas/OrgChart/Pages/Shared/_OrgPage.cshtml" model="Model" />
+
+<div class="oc-types">
+    @foreach (var (kind, types, title, sub, icon) in new[]
+    {
+        (OrgTypeKind.Unit, Model.Chart.UnitTypes, OrgText.Get("Types_UnitTitle"), OrgText.Get("Types_UnitSub"), "oc-unit"),
+        (OrgTypeKind.Position, Model.Chart.PositionTypes, OrgText.Get("Types_PositionTitle"), OrgText.Get("Types_PositionSub"), "oc-position"),
+    })
+    {
+        <article class="card">
+            <header class="card-head">
+                <div class="card-title">
+                    <span class="card-ico"><svg class="ico"><use href="#@icon" /></svg></span>
+                    <div>@title<div class="card-sub">@sub</div></div>
+                </div>
+                @if (Model.CanEdit)
+                {
+                    <a class="btn btn-soft btn-sm" asp-area="OrgChart" asp-page="/Types/Edit" asp-route-kind="@kind" data-modal><svg class="ico"><use href="#oc-plus" /></svg>@OrgText.Get("Types_New")</a>
+                }
+            </header>
+            @if (types.Count == 0)
+            {
+                <div class="empty">@OrgText.Get("Types_None")</div>
+            }
+            else
+            {
+                <div class="tbl-wrap">
+                    <table class="tbl">
+                        <thead><tr><th>@OrgText.Get("Col_Type")</th><th>@OrgText.Get("Col_Used")</th><th>@OrgText.Get("Col_Status")</th><th></th></tr></thead>
+                        <tbody>
+                            @foreach (OrgTypeNode type in types)
+                            {
+                                <tr class="@(type.IsActive ? "" : "oc-inactive")">
+                                    <td><div class="cell-main">@type.Title</div><div class="code">@type.Key</div></td>
+                                    <td class="nums">@OrgFormat.Number(kind == OrgTypeKind.Unit ? Model.UnitsUsing(type.Key) : Model.PositionsUsing(type.Key))</td>
+                                    <td><span class="badge @(type.IsActive ? "st-active" : "st-inactive")">@OrgText.Get(type.IsActive ? "Status_Active" : "Status_Inactive")</span></td>
+                                    <td>
+                                        @if (Model.CanEdit)
+                                        {
+                                            <div class="row-actions">
+                                                <a class="icon-btn sm" asp-area="OrgChart" asp-page="/Types/Edit" asp-route-kind="@kind" asp-route-key="@type.Key" data-modal title="@OrgText.Get("Edit")" aria-label="@OrgText.Get("Edit")"><svg class="ico"><use href="#oc-edit" /></svg></a>
+                                                <form method="post" asp-area="OrgChart" asp-page="/Types/Edit" asp-page-handler="Status" asp-route-kind="@kind" asp-route-key="@type.Key" asp-route-active="@(!type.IsActive)" class="oc-inline-form">
+                                                    <button type="submit" class="icon-btn sm @(type.IsActive ? "danger" : "primary")" title="@OrgText.Get(type.IsActive ? "Deactivate" : "Activate")" aria-label="@OrgText.Get(type.IsActive ? "Deactivate" : "Activate")"><svg class="ico"><use href="#oc-power" /></svg></button>
+                                                </form>
+                                            </div>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </article>
+    }
+</div>

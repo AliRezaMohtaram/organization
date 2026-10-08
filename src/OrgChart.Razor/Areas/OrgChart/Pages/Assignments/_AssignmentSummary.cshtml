@@ -1,0 +1,6 @@
+@model OrgChart.Razor.Admin.Pages.Assignments.AssignmentActionModel
+<dl class="dl oc-summary">
+    <div><dt>@OrgText.Get("Field_Person")</dt><dd>@Model.PersonName</dd></div>
+    <div><dt>@OrgText.Get("Field_Position")</dt><dd>@Model.PositionTitle<div class="cell-sub">@Model.UnitTitle</div></dd></div>
+    <div><dt>@OrgText.Get("Col_Period")</dt><dd>@Model.Dates.Period(Model.Assignment.ValidFrom, Model.Assignment.ValidTo)<div class="cell-sub">@OrgText.Kind(Model.Assignment.Kind)</div></dd></div>
+</dl>

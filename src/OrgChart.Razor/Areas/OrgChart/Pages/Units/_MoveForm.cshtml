@@ -1,0 +1,29 @@
+@model OrgChart.Razor.Admin.Pages.Units.MoveModel
+@{
+    string cancel = Model.UnitUrl(Model.Unit.Key);
+}
+<form class="modal modal-sm" method="post" asp-area="OrgChart" asp-page="/Units/Move" asp-route-key="@Model.Unit.Key" data-mx-ajax novalidate>
+    <div class="modal-head">
+        <span class="modal-head-ico"><svg class="ico"><use href="#oc-move" /></svg></span>
+        <div>
+            <div class="modal-title">@OrgText.Format("Unit_MoveHeading", Model.Unit.Title)</div>
+            <div class="modal-sub">@OrgText.Get("Unit_MoveHint")</div>
+        </div>
+        <a class="icon-btn plain close" href="@cancel" data-close aria-label="@OrgText.Get("Close")"><svg class="ico"><use href="#oc-x" /></svg></a>
+    </div>
+    <div class="modal-body">
+        <partial name="/Areas/OrgChart/Pages/Shared/_FormErrors.cshtml" />
+        <div class="field">
+            <label class="label" for="NewParentKey">@OrgText.Get("Field_NewParent")</label>
+            <select class="select" asp-for="NewParentKey" asp-items="OrgOptions.Units(Model.Chart, Model.NewParentKey, excludeSubtreeOf: Model.Unit.Key)" autofocus>
+                <option value="">@OrgText.Get("Unit_Root")</option>
+            </select>
+            <span class="hint">@OrgText.Get("Unit_MoveKeysKept")</span>
+        </div>
+    </div>
+    <div class="modal-foot">
+        <span class="spacer"></span>
+        <a class="btn btn-quiet" href="@cancel" data-close>@OrgText.Get("Cancel")</a>
+        <button type="submit" class="btn btn-primary"><svg class="ico"><use href="#oc-move" /></svg>@OrgText.Get("Unit_Move")</button>
+    </div>
+</form>

@@ -1,0 +1,95 @@
+@model OrgChart.Razor.Admin.Pages.Assignments.EditModel
+@{
+    string cancel = Model.UnitUrl(Model.OwnerUnit?.Key, IndexModel.TabPeople);
+    string searchUrl = Url.Page("/Assignments/Edit", "Users", new { area = "OrgChart" }) ?? "";
+}
+<form class="modal" method="post" asp-area="OrgChart" asp-page="/Assignments/Edit" asp-route-id="@Model.Id"
+      asp-route-position="@(Model.IsEdit ? null : Model.FixedPosition?.Key)" asp-route-unit="@(Model.IsEdit || Model.FixedPosition is not null ? null : Model.OwnerUnit?.Key)"
+      data-mx-ajax data-mx-init="oc-user-search" novalidate>
+    <div class="modal-head">
+        <span class="modal-head-ico"><svg class="ico"><use href="#oc-user" /></svg></span>
+        <div>
+            <div class="modal-title">@OrgText.Get(Model.IsEdit ? "Assignment_EditTitle" : "Assignment_New")</div>
+            <div class="modal-sub">@OrgText.Get("Assignment_FormHint")</div>
+        </div>
+        <a class="icon-btn plain close" href="@cancel" data-close aria-label="@OrgText.Get("Close")"><svg class="ico"><use href="#oc-x" /></svg></a>
+    </div>
+
+    <div class="modal-body">
+        <partial name="/Areas/OrgChart/Pages/Shared/_FormErrors.cshtml" />
+        <div class="form-grid">
+            <div class="field span-2">
+                @if (Model.FixedPosition is not null)
+                {
+                    <span class="label">@OrgText.Get("Field_Position")</span>
+                    <span><b>@Model.FixedPosition.Title</b> <span class="cell-sub">— @Model.OwnerUnit?.Title</span></span>
+                }
+                else
+                {
+                    <label class="label" for="Input_PositionKey">@OrgText.Get("Field_Position")<span class="req">*</span></label>
+                    <select class="select" asp-for="Input.PositionKey" asp-items="OrgOptions.Positions(Model.Chart, Model.Input.PositionKey, onlyUnit: Model.OwnerUnit?.Key)" required></select>
+                }
+            </div>
+
+            <div class="field span-2">
+                @if (Model.IsEdit)
+                {
+                    <span class="label">@OrgText.Get("Field_Person")</span>
+                    <span><b>@(Model.Person?.DisplayName ?? Model.Existing!.UserId)</b> <span class="cell-sub" dir="ltr">@(Model.Person?.Detail ?? Model.Existing!.UserId)</span></span>
+                }
+                else
+                {
+                    <label class="label" for="Input_UserId">@OrgText.Get("Field_Person")<span class="req">*</span></label>
+                    @if (Model.HasDirectory)
+                    {
+                        <div class="dd oc-user-search" data-oc-user-search="@searchUrl" data-empty="@OrgText.Get("Assignment_NoUserFound")">
+                            <div class="input-wrap">
+                                <svg class="ico"><use href="#oc-search" /></svg>
+                                <input class="input" type="search" data-oc-user-query placeholder="@OrgText.Get("Assignment_SearchUser")" autocomplete="off" aria-label="@OrgText.Get("Assignment_SearchUser")" autofocus />
+                            </div>
+                            <div class="dd-menu oc-user-results" data-oc-user-results role="listbox"></div>
+                        </div>
+                        <div class="oc-user-picked" data-oc-user-picked hidden="@(Model.Person is null)">
+                            <svg class="ico"><use href="#oc-user" /></svg><span data-oc-user-name>@Model.Person?.DisplayName</span>
+                        </div>
+                    }
+                    <input class="input ltr" asp-for="Input.UserId" autocomplete="off" spellcheck="false" placeholder="@OrgText.Get("Field_UserIdPlaceholder")" required />
+                    <span class="hint">@OrgText.Get(Model.HasDirectory ? "Field_UserIdHint" : "Field_UserIdHintNoDirectory")</span>
+                }
+            </div>
+
+            <div class="field span-2">
+                <span class="label">@OrgText.Get("Field_Kind")</span>
+                <div class="seg oc-radio-seg" role="radiogroup" aria-label="@OrgText.Get("Field_Kind")">
+                    @foreach (AssignmentKind kind in Enum.GetValues<AssignmentKind>())
+                    {
+                        <label>
+                            <input type="radio" name="Input.Kind" value="@kind" checked="@(Model.Input.Kind == kind)" />
+                            <span>@OrgText.Kind(kind)</span>
+                        </label>
+                    }
+                </div>
+            </div>
+            <div class="field">
+                <label class="label" for="Input_ValidFrom">@OrgText.Get("Field_StartDate")</label>
+                <input class="input ltr" asp-for="Input.ValidFrom" autocomplete="off" placeholder="1405/01/01" inputmode="numeric" />
+                <span class="hint">@OrgText.Get("Field_StartDateHint")</span>
+            </div>
+            <div class="field">
+                <label class="label" for="Input_ValidTo">@OrgText.Get("Field_EndDate")</label>
+                <input class="input ltr" asp-for="Input.ValidTo" autocomplete="off" placeholder="1405/12/29" inputmode="numeric" />
+                <span class="hint">@OrgText.Get("Field_ValidToHint")</span>
+            </div>
+            <div class="field span-2">
+                <label class="label" for="Input_Note">@OrgText.Get("Field_Note")</label>
+                <textarea class="textarea" asp-for="Input.Note" rows="2"></textarea>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-foot">
+        <span class="spacer"></span>
+        <a class="btn btn-quiet" href="@cancel" data-close>@OrgText.Get("Cancel")</a>
+        <button type="submit" class="btn btn-primary"><svg class="ico"><use href="#oc-check" /></svg>@OrgText.Get(Model.IsEdit ? "Save" : "Assignment_Assign")</button>
+    </div>
+</form>

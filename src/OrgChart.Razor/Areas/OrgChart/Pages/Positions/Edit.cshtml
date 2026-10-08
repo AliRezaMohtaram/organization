@@ -1,0 +1,9 @@
+@page
+@model OrgChart.Razor.Admin.Pages.Positions.EditModel
+@{
+    ViewData["Title"] = OrgText.Get(Model.IsEdit ? "Position_EditTitle" : "Position_New");
+}
+<partial name="/Areas/OrgChart/Pages/Shared/_OrgPage.cshtml" model="Model" />
+<div class="modal-page">
+    <partial name="@OrgChart.Razor.Admin.Pages.Positions.EditModel.FormPath" model="Model" />
+</div>

@@ -89,6 +89,9 @@ internal sealed class EfOrgChartReader(OrgChartDbContext db, SnapshotCache cache
             .ToListAsync(cancellationToken);
     }
 
+    public Task<AssignmentInfo?> GetAssignmentAsync(int assignmentId, CancellationToken cancellationToken = default) =>
+        Project(db.Assignments.Where(a => a.Id == assignmentId)).SingleOrDefaultAsync(cancellationToken);
+
     public async Task<IReadOnlyDictionary<string, IReadOnlyList<AssignmentInfo>>> GetHoldersAsync(
         IReadOnlyCollection<string> positionKeys,
         DateTime atUtc,

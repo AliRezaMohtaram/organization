@@ -1,0 +1,20 @@
+@model OrgChart.Razor.Admin.Pages.Assignments.RemoveModel
+<form class="modal modal-sm" method="post" asp-area="OrgChart" asp-page="/Assignments/Remove" asp-route-id="@Model.Id" data-mx-ajax novalidate>
+    <div class="modal-head">
+        <span class="modal-head-ico tone-danger"><svg class="ico"><use href="#oc-trash" /></svg></span>
+        <div>
+            <div class="modal-title">@OrgText.Get("Assignment_Remove")</div>
+        </div>
+        <a class="icon-btn plain close" href="@Model.BackUrl" data-close aria-label="@OrgText.Get("Close")"><svg class="ico"><use href="#oc-x" /></svg></a>
+    </div>
+    <div class="modal-body">
+        <partial name="/Areas/OrgChart/Pages/Shared/_FormErrors.cshtml" />
+        <partial name="/Areas/OrgChart/Pages/Assignments/_AssignmentSummary.cshtml" model="Model" />
+        <div class="callout tone-warning" style="margin-top:1rem"><svg class="ico"><use href="#oc-alert" /></svg><div>@OrgText.Get("Assignment_RemoveText")</div></div>
+    </div>
+    <div class="modal-foot">
+        <span class="spacer"></span>
+        <a class="btn btn-quiet" href="@Model.BackUrl" data-close>@OrgText.Get("Cancel")</a>
+        <button type="submit" class="btn btn-danger" autofocus><svg class="ico"><use href="#oc-trash" /></svg>@OrgText.Get("Assignment_Remove")</button>
+    </div>
+</form>

@@ -1,0 +1,404 @@
+@page
+@model IndexModel
+@{
+    OrgChartSnapshot chart = Model.Chart;
+    UnitNode? unit = Model.Unit;
+    HashSet<string> open = new(OrgKey.Comparer);
+    if (unit is not null)
+    {
+        open.UnionWith(chart.GetAncestorKeys(unit.Key));
+        open.Add(unit.Key);
+    }
+    open.UnionWith(chart.Roots.Select(r => r.Key));
+
+}
+<partial name="/Areas/OrgChart/Pages/Shared/_OrgPage.cshtml" model="Model" />
+
+@functions {
+    // Tree node; recursive.
+    async Task Node(UnitNode node, UnitNode? selected, HashSet<string> open)
+    {
+        IReadOnlyList<UnitNode> children = Model.Chart.GetChildren(node.Key);
+        bool expanded = children.Count > 0 && open.Contains(node.Key);
+        bool isSelected = selected is not null && OrgKey.AreEqual(selected.Key, node.Key);
+        string search = $"{node.Title} {node.Key} {node.Code}";
+        <li class="oc-node@(node.IsActive ? "" : " is-inactive")" role="treeitem" aria-expanded="@(children.Count > 0 ? expanded.ToString().ToLowerInvariant() : null)"
+            aria-selected="@(isSelected ? "true" : null)" data-key="@node.Key" data-type="@node.TypeKey" data-search="@search">
+            <div class="oc-row@(isSelected ? " is-selected" : "")">
+                @if (children.Count > 0)
+                {
+                    <button type="button" class="oc-toggle" tabindex="-1" aria-label="@OrgText.Get("Tree_Toggle")"><svg class="ico"><use href="#oc-chev" /></svg></button>
+                }
+                else
+                {
+                    <span class="oc-toggle is-leaf" aria-hidden="true"></span>
+                }
+                <a class="oc-link" asp-area="OrgChart" asp-page="/Index" asp-route-unit="@node.Key" tabindex="@(isSelected ? "0" : "-1")">
+                    <svg class="ico"><use href="#@IndexModel.UnitIcon(Model.Chart, node)" /></svg>
+                    <span class="oc-label">@node.Title</span>
+                </a>
+                <span class="tag oc-type">@Model.TypeTitle(node.TypeKey)</span>
+            </div>
+            @if (children.Count > 0)
+            {
+                <ul role="group" hidden="@(!expanded)">
+                    @foreach (UnitNode child in children)
+                    {
+                        await Node(child, selected, open);
+                    }
+                </ul>
+            }
+        </li>
+    }
+}
+
+@if (chart.Units.Count == 0)
+{
+    <article class="card">
+        <div class="empty">
+            <p>@OrgText.Get("Chart_EmptyText")</p>
+            @if (Model.CanEdit)
+            {
+                <div class="oc-empty-actions">
+                    @if (chart.UnitTypes.Count == 0)
+                    {
+                        <a class="btn btn-ghost btn-sm" asp-area="OrgChart" asp-page="/Types/Edit" asp-route-kind="Unit" data-modal><svg class="ico"><use href="#oc-tag" /></svg>@OrgText.Get("Types_NewUnit")</a>
+                    }
+                    <a class="btn btn-primary btn-sm" asp-area="OrgChart" asp-page="/Units/Edit" data-modal><svg class="ico"><use href="#oc-plus" /></svg>@OrgText.Get("Unit_NewRoot")</a>
+                </div>
+            }
+        </div>
+    </article>
+    return;
+}
+
+<div class="oc-layout">
+    @* ═════ Tree ═════ *@
+    <aside class="card oc-tree-panel" data-oc-tree-panel>
+        <header class="card-head">
+            <div class="card-title">
+                <span class="card-ico"><svg class="ico"><use href="#oc-org" /></svg></span>
+                <div>@OrgText.Get("Tree_Title")<div class="card-sub" data-oc-count data-template="@OrgText.Get("Tree_Count")">@OrgText.Format("Tree_Count", OrgFormat.Number(chart.Units.Count(u => u.IsActive)))</div></div>
+            </div>
+            <div class="oc-tree-tools">
+                <button type="button" class="icon-btn sm plain" data-oc-expand title="@OrgText.Get("Tree_ExpandAll")" aria-label="@OrgText.Get("Tree_ExpandAll")"><svg class="ico"><use href="#oc-expand" /></svg></button>
+                <button type="button" class="icon-btn sm plain" data-oc-collapse title="@OrgText.Get("Tree_CollapseAll")" aria-label="@OrgText.Get("Tree_CollapseAll")"><svg class="ico"><use href="#oc-collapse" /></svg></button>
+                @if (Model.CanEdit)
+                {
+                    <a class="icon-btn sm plain primary" asp-area="OrgChart" asp-page="/Units/Edit" data-modal title="@OrgText.Get("Unit_NewRoot")" aria-label="@OrgText.Get("Unit_NewRoot")"><svg class="ico"><use href="#oc-plus" /></svg></a>
+                }
+            </div>
+        </header>
+        <div class="toolbar oc-tree-filter">
+            <div class="input-wrap">
+                <svg class="ico"><use href="#oc-search" /></svg>
+                <input class="input" type="search" data-oc-search placeholder="@OrgText.Get("Tree_Search")" aria-label="@OrgText.Get("Tree_Search")" autocomplete="off" />
+            </div>
+            <select class="select" data-oc-type aria-label="@OrgText.Get("Tree_TypeFilter")">
+                <option value="">@OrgText.Get("Tree_AllTypes")</option>
+                @foreach (OrgTypeNode type in chart.UnitTypes)
+                {
+                    <option value="@type.Key">@type.Title</option>
+                }
+            </select>
+            <label class="toggle oc-inactive-toggle">
+                <input type="checkbox" data-oc-inactive checked="@(unit is { IsActive: false })" />
+                <span class="toggle-track"></span>
+                <span>@OrgText.Get("Tree_ShowInactive")</span>
+            </label>
+        </div>
+        <div class="oc-tree-body">
+            <ul class="oc-tree@(unit is { IsActive: false } ? " show-inactive" : "")" role="tree" aria-label="@OrgText.Get("Tree_Title")" data-oc-tree>
+                @foreach (UnitNode root in chart.Roots)
+                {
+                    await Node(root, unit, open);
+                }
+            </ul>
+            <p class="empty" data-oc-tree-empty hidden>@OrgText.Get("Tree_NoMatch")</p>
+        </div>
+    </aside>
+
+    @* ═════ Detail ═════ *@
+    @if (unit is not null)
+    {
+        IReadOnlyList<PositionNode> positions = chart.GetPositions(unit.Key);
+        IReadOnlyList<UnitNode> children = chart.GetChildren(unit.Key);
+        PositionNode? manager = chart.FindPosition(unit.ManagerPositionKey);
+        int peopleNow = positions.SelectMany(p => Model.HoldersOf(p.Key)).Select(h => h.UserId).Distinct().Count();
+        IReadOnlyList<UnitNode> path = chart.GetPath(unit.Key);
+
+        <section class="oc-detail" aria-live="polite">
+            <article class="card">
+                <div class="oc-unit-head">
+                    <span class="oc-unit-ico"><svg class="ico"><use href="#@IndexModel.UnitIcon(chart, unit)" /></svg></span>
+                    <div class="oc-unit-main">
+                        <div class="oc-eyebrow">@Model.TypeTitle(unit.TypeKey)</div>
+                        <h2 class="oc-unit-title">
+                            @unit.Title
+                            @if (!unit.IsActive)
+                            {
+                                <span class="badge st-inactive">@OrgText.Get("Status_Inactive")</span>
+                            }
+                        </h2>
+                        <nav class="oc-path" aria-label="@OrgText.Get("Unit_Path")">
+                            @for (int i = 0; i < path.Count; i++)
+                            {
+                                if (i > 0)
+                                {
+                                    <svg class="ico" aria-hidden="true"><use href="#oc-chev" /></svg>
+                                }
+                                if (i == path.Count - 1)
+                                {
+                                    <span aria-current="location">@path[i].Title</span>
+                                }
+                                else
+                                {
+                                    <a asp-area="OrgChart" asp-page="/Index" asp-route-unit="@path[i].Key">@path[i].Title</a>
+                                }
+                            }
+                        </nav>
+                    </div>
+                    @if (Model.CanEdit)
+                    {
+                        <div class="oc-unit-actions">
+                            <a class="btn btn-ghost btn-sm" asp-area="OrgChart" asp-page="/Units/Edit" asp-route-key="@unit.Key" data-modal><svg class="ico"><use href="#oc-edit" /></svg>@OrgText.Get("Edit")</a>
+                            <div class="dd">
+                                <button class="icon-btn sm" type="button" data-dd aria-expanded="false" aria-label="@OrgText.Get("More")" title="@OrgText.Get("More")"><svg class="ico"><use href="#oc-more" /></svg></button>
+                                <div class="dd-menu">
+                                    @if (unit.IsActive)
+                                    {
+                                        <a class="dd-item" asp-area="OrgChart" asp-page="/Units/Edit" asp-route-parent="@unit.Key" data-modal><svg class="ico"><use href="#oc-unit" /></svg>@OrgText.Get("Unit_NewChild")</a>
+                                        <a class="dd-item" asp-area="OrgChart" asp-page="/Positions/Edit" asp-route-unit="@unit.Key" data-modal><svg class="ico"><use href="#oc-position" /></svg>@OrgText.Get("Position_New")</a>
+                                        <a class="dd-item" asp-area="OrgChart" asp-page="/Units/Manager" asp-route-key="@unit.Key" data-modal><svg class="ico"><use href="#oc-star" /></svg>@OrgText.Get("Unit_SetManager")</a>
+                                    }
+                                    <a class="dd-item" asp-area="OrgChart" asp-page="/Units/Move" asp-route-key="@unit.Key" data-modal><svg class="ico"><use href="#oc-move" /></svg>@OrgText.Get("Unit_Move")</a>
+                                    <div class="dd-sep"></div>
+                                    <a class="dd-item@(unit.IsActive ? " danger" : "")" asp-area="OrgChart" asp-page="/Units/Status" asp-route-key="@unit.Key" asp-route-active="@(!unit.IsActive)" data-modal>
+                                        <svg class="ico"><use href="#oc-power" /></svg>@OrgText.Get(unit.IsActive ? "Deactivate" : "Activate")
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+                <dl class="dl oc-info">
+                    <div><dt>@OrgText.Get("Field_Key")</dt><dd><span class="code-chip">@unit.Key</span></dd></div>
+                    <div><dt>@OrgText.Get("Field_Code")</dt><dd>@(unit.Code is null ? "—" : OrgFormat.Digits(unit.Code))</dd></div>
+                    <div><dt>@OrgText.Get("Field_Level")</dt><dd>@OrgFormat.Number(chart.GetLevel(unit.Key))</dd></div>
+                    <div>
+                        <dt>@OrgText.Get("Field_Manager")</dt>
+                        <dd>
+                            @if (manager is null)
+                            {
+                                <span class="muted">@OrgText.Get("Unit_NoManager")</span>
+                            }
+                            else
+                            {
+                                IReadOnlyList<AssignmentInfo> heads = Model.HoldersOf(manager.Key);
+                                <span>@manager.Title</span>
+                                <div class="cell-sub">@(heads.Count == 0 ? OrgText.Get("Position_Vacant") : string.Join("، ", heads.Select(h => Model.UserName(h.UserId))))</div>
+                            }
+                        </dd>
+                    </div>
+                    <div><dt>@OrgText.Get("Field_PositionsCount")</dt><dd>@OrgFormat.Number(positions.Count(p => p.IsActive))</dd></div>
+                    <div><dt>@OrgText.Get("Field_PeopleCount")</dt><dd>@OrgFormat.Number(peopleNow)</dd></div>
+                    <div class="oc-span-all"><dt>@OrgText.Get("Field_Validity")</dt><dd>@Model.Dates.Period(unit.ValidFrom, unit.ValidTo)</dd></div>
+                </dl>
+            </article>
+
+            <article class="card">
+                <div class="oc-tabs-head">
+                    <div class="seg" data-tabs role="tablist">
+                        <button type="button" role="tab" class="@(Model.Tab == IndexModel.TabPositions ? "active" : "")" aria-selected="@(Model.Tab == IndexModel.TabPositions)" data-tab="ocPanePositions">
+                            <svg class="ico"><use href="#oc-position" /></svg>@OrgText.Get("Tab_Positions") <span class="tag">@OrgFormat.Number(positions.Count)</span>
+                        </button>
+                        <button type="button" role="tab" class="@(Model.Tab == IndexModel.TabPeople ? "active" : "")" aria-selected="@(Model.Tab == IndexModel.TabPeople)" data-tab="ocPanePeople">
+                            <svg class="ico"><use href="#oc-users" /></svg>@OrgText.Get("Tab_People") <span class="tag">@OrgFormat.Number(Model.Assignments.Count)</span>
+                        </button>
+                        <button type="button" role="tab" class="@(Model.Tab == IndexModel.TabUnits ? "active" : "")" aria-selected="@(Model.Tab == IndexModel.TabUnits)" data-tab="ocPaneUnits">
+                            <svg class="ico"><use href="#oc-unit" /></svg>@OrgText.Get("Tab_Units") <span class="tag">@OrgFormat.Number(children.Count)</span>
+                        </button>
+                    </div>
+                </div>
+
+                @* Positions *@
+                <div id="ocPanePositions" role="tabpanel" hidden="@(Model.Tab != IndexModel.TabPositions)">
+                    @if (Model.CanEdit && unit.IsActive)
+                    {
+                        <div class="toolbar"><span class="spacer"></span>
+                            <a class="btn btn-soft btn-sm" asp-area="OrgChart" asp-page="/Positions/Edit" asp-route-unit="@unit.Key" data-modal><svg class="ico"><use href="#oc-plus" /></svg>@OrgText.Get("Position_New")</a>
+                        </div>
+                    }
+                    @if (positions.Count == 0)
+                    {
+                        <div class="empty">@OrgText.Get("Unit_NoPositions")</div>
+                    }
+                    else
+                    {
+                        <div class="tbl-wrap">
+                            <table class="tbl">
+                                <thead><tr><th>@OrgText.Get("Col_Position")</th><th>@OrgText.Get("Col_Type")</th><th>@OrgText.Get("Col_Holders")</th><th>@OrgText.Get("Col_Status")</th><th></th></tr></thead>
+                                <tbody>
+                                    @foreach (PositionNode position in positions)
+                                    {
+                                        IReadOnlyList<AssignmentInfo> holders = Model.HoldersOf(position.Key);
+                                        bool isHead = OrgKey.AreEqual(position.Key, unit.ManagerPositionKey);
+                                        <tr class="@(position.IsActive ? "" : "oc-inactive")">
+                                            <td>
+                                                <div class="cell-main">
+                                                    @position.Title
+                                                    @if (isHead)
+                                                    {
+                                                        <span class="tag oc-head-tag" title="@OrgText.Get("Position_IsHead")"><svg class="ico"><use href="#oc-star" /></svg>@OrgText.Get("Position_Head")</span>
+                                                    }
+                                                </div>
+                                                <div class="code">@position.Key</div>
+                                            </td>
+                                            <td>
+                                                <span class="cell-sub">@(position.TypeKey is null ? "—" : Model.TypeTitle(position.TypeKey, unit: false))</span>
+                                                @if (position.IsManagerial)
+                                                {
+                                                    <span class="tag tg-regex">@OrgText.Get("Position_Managerial")</span>
+                                                }
+                                            </td>
+                                            <td>
+                                                @if (holders.Count == 0)
+                                                {
+                                                    <span class="muted">@OrgText.Get("Position_Vacant")</span>
+                                                }
+                                                @foreach (AssignmentInfo holder in holders)
+                                                {
+                                                    <div class="oc-holder">
+                                                        <svg class="ico"><use href="#oc-user" /></svg>@Model.UserName(holder.UserId)
+                                                        @if (holder.Kind == AssignmentKind.Acting)
+                                                        {
+                                                            <span class="tag tg-manual">@OrgText.Kind(holder.Kind)</span>
+                                                        }
+                                                    </div>
+                                                }
+                                            </td>
+                                            <td>
+                                                <span class="badge @(position.IsActive ? "st-active" : "st-inactive")">@OrgText.Get(position.IsActive ? "Status_Active" : "Status_Inactive")</span>
+                                                @if (position.ValidFrom is not null || position.ValidTo is not null)
+                                                {
+                                                    <div class="cell-sub">@Model.Dates.Period(position.ValidFrom, position.ValidTo)</div>
+                                                }
+                                            </td>
+                                            <td>
+                                                @if (Model.CanEdit)
+                                                {
+                                                    <div class="row-actions">
+                                                        @if (position.IsActive)
+                                                        {
+                                                            <a class="icon-btn sm primary" asp-area="OrgChart" asp-page="/Assignments/Edit" asp-route-position="@position.Key" data-modal title="@OrgText.Get("Assignment_New")" aria-label="@OrgText.Get("Assignment_New")"><svg class="ico"><use href="#oc-user" /></svg></a>
+                                                        }
+                                                        <a class="icon-btn sm" asp-area="OrgChart" asp-page="/Positions/Edit" asp-route-key="@position.Key" data-modal title="@OrgText.Get("Edit")" aria-label="@OrgText.Get("Edit")"><svg class="ico"><use href="#oc-edit" /></svg></a>
+                                                        <a class="icon-btn sm" asp-area="OrgChart" asp-page="/Positions/Move" asp-route-key="@position.Key" data-modal title="@OrgText.Get("Position_Move")" aria-label="@OrgText.Get("Position_Move")"><svg class="ico"><use href="#oc-move" /></svg></a>
+                                                        <a class="icon-btn sm @(position.IsActive ? "danger" : "primary")" asp-area="OrgChart" asp-page="/Positions/Status" asp-route-key="@position.Key" asp-route-active="@(!position.IsActive)" data-modal
+                                                           title="@OrgText.Get(position.IsActive ? "Deactivate" : "Activate")" aria-label="@OrgText.Get(position.IsActive ? "Deactivate" : "Activate")"><svg class="ico"><use href="#oc-power" /></svg></a>
+                                                    </div>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+
+                @* People *@
+                <div id="ocPanePeople" role="tabpanel" hidden="@(Model.Tab != IndexModel.TabPeople)">
+                    <div class="toolbar">
+                        <a class="fchip@(Model.History ? "" : " active")" asp-area="OrgChart" asp-page="/Index" asp-route-unit="@unit.Key" asp-route-tab="people">@OrgText.Get("People_Current")</a>
+                        <a class="fchip@(Model.History ? " active" : "")" asp-area="OrgChart" asp-page="/Index" asp-route-unit="@unit.Key" asp-route-tab="people" asp-route-history="true">@OrgText.Get("People_All")</a>
+                        <span class="spacer"></span>
+                        @if (Model.CanEdit && unit.IsActive && positions.Any(p => p.IsActive))
+                        {
+                            <a class="btn btn-soft btn-sm" asp-area="OrgChart" asp-page="/Assignments/Edit" asp-route-unit="@unit.Key" data-modal><svg class="ico"><use href="#oc-plus" /></svg>@OrgText.Get("Assignment_New")</a>
+                        }
+                    </div>
+                    @if (Model.Assignments.Count == 0)
+                    {
+                        <div class="empty">@OrgText.Get(Model.History ? "People_NoneEver" : "People_None")</div>
+                    }
+                    else
+                    {
+                        <div class="tbl-wrap">
+                            <table class="tbl">
+                                <thead><tr><th>@OrgText.Get("Col_Person")</th><th>@OrgText.Get("Col_Position")</th><th>@OrgText.Get("Col_Kind")</th><th>@OrgText.Get("Col_Period")</th><th>@OrgText.Get("Col_Status")</th><th></th></tr></thead>
+                                <tbody>
+                                    @foreach (AssignmentInfo a in Model.Assignments)
+                                    {
+                                        string state = Model.State(a.ValidFrom, a.ValidTo);
+                                        PositionNode? position = chart.FindPosition(a.PositionKey);
+                                        <tr>
+                                            <td>
+                                                <div class="cell-main">@Model.UserName(a.UserId)</div>
+                                                <div class="cell-sub">@(Model.UserDetail(a.UserId) ?? a.UserId)</div>
+                                            </td>
+                                            <td>@(position?.Title ?? a.PositionKey)</td>
+                                            <td><span class="tag @(a.Kind == AssignmentKind.Acting ? "tg-manual" : "tg-auto")">@OrgText.Kind(a.Kind)</span></td>
+                                            <td class="cell-sub">@Model.Dates.Period(a.ValidFrom, a.ValidTo)</td>
+                                            <td><span class="badge @(state switch { "Current" => "st-active", "Upcoming" => "st-uploaded", _ => "st-inactive" })">@OrgText.Get("State_" + state)</span></td>
+                                            <td>
+                                                @if (Model.CanEdit)
+                                                {
+                                                    <div class="row-actions">
+                                                        <a class="icon-btn sm" asp-area="OrgChart" asp-page="/Assignments/Edit" asp-route-id="@a.Id" data-modal title="@OrgText.Get("Edit")" aria-label="@OrgText.Get("Edit")"><svg class="ico"><use href="#oc-edit" /></svg></a>
+                                                        @if (state != "Ended")
+                                                        {
+                                                            <a class="icon-btn sm primary" asp-area="OrgChart" asp-page="/Assignments/Transfer" asp-route-id="@a.Id" data-modal title="@OrgText.Get("Assignment_Transfer")" aria-label="@OrgText.Get("Assignment_Transfer")"><svg class="ico"><use href="#oc-swap" /></svg></a>
+                                                            <a class="icon-btn sm" asp-area="OrgChart" asp-page="/Assignments/End" asp-route-id="@a.Id" data-modal title="@OrgText.Get("Assignment_End")" aria-label="@OrgText.Get("Assignment_End")"><svg class="ico"><use href="#oc-end" /></svg></a>
+                                                        }
+                                                        <a class="icon-btn sm danger" asp-area="OrgChart" asp-page="/Assignments/Remove" asp-route-id="@a.Id" data-modal title="@OrgText.Get("Assignment_Remove")" aria-label="@OrgText.Get("Assignment_Remove")"><svg class="ico"><use href="#oc-trash" /></svg></a>
+                                                    </div>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+
+                @* Sub-units *@
+                <div id="ocPaneUnits" role="tabpanel" hidden="@(Model.Tab != IndexModel.TabUnits)">
+                    @if (Model.CanEdit && unit.IsActive)
+                    {
+                        <div class="toolbar"><span class="spacer"></span>
+                            <a class="btn btn-soft btn-sm" asp-area="OrgChart" asp-page="/Units/Edit" asp-route-parent="@unit.Key" data-modal><svg class="ico"><use href="#oc-plus" /></svg>@OrgText.Get("Unit_NewChild")</a>
+                        </div>
+                    }
+                    @if (children.Count == 0)
+                    {
+                        <div class="empty">@OrgText.Get("Unit_NoChildren")</div>
+                    }
+                    else
+                    {
+                        <div class="tbl-wrap">
+                            <table class="tbl">
+                                <thead><tr><th>@OrgText.Get("Col_Unit")</th><th>@OrgText.Get("Col_Type")</th><th>@OrgText.Get("Col_Positions")</th><th>@OrgText.Get("Col_Status")</th></tr></thead>
+                                <tbody>
+                                    @foreach (UnitNode child in children)
+                                    {
+                                        <tr class="@(child.IsActive ? "" : "oc-inactive")">
+                                            <td>
+                                                <a class="cell-main" asp-area="OrgChart" asp-page="/Index" asp-route-unit="@child.Key">@child.Title</a>
+                                                <div class="code">@child.Key</div>
+                                            </td>
+                                            <td class="cell-sub">@Model.TypeTitle(child.TypeKey)</td>
+                                            <td class="nums">@OrgFormat.Number(chart.GetPositions(child.Key).Count(p => p.IsActive))</td>
+                                            <td><span class="badge @(child.IsActive ? "st-active" : "st-inactive")">@OrgText.Get(child.IsActive ? "Status_Active" : "Status_Inactive")</span></td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+            </article>
+        </section>
+    }
+</div>

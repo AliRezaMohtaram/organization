@@ -1,0 +1,151 @@
+/* =================================================================
+   OrgChart pages — built on the MX design system (mx.css).
+   Only MX tokens (colours, radii, shadows, spacing scale); no colours of its own.
+   MX has no tree component, so the tree is defined here in MX terms.
+   ================================================================= */
+
+/* ── Page head (inside a host layout) ───────────────────────── */
+.oc-head { display:flex; align-items:flex-end; justify-content:space-between; gap:1rem; flex-wrap:wrap; margin-bottom:1rem; }
+.oc-head-title { margin:0; font-size:1.15rem; font-weight:800; color:var(--text-strong); }
+.oc-head-sub { margin:.2rem 0 0; font-size:.8rem; color:var(--muted); }
+.oc-flash { margin-bottom:1rem; }
+.oc-flash.is-toasted { display:none; }
+
+/* ── Layout: tree + detail ──────────────────────────────────── */
+.oc-layout { display:grid; grid-template-columns:22rem minmax(0, 1fr); gap:1rem; align-items:start; }
+.oc-detail { display:grid; gap:1rem; min-width:0; }
+
+/* ── Tree panel ─────────────────────────────────────────────── */
+.oc-tree-panel {
+  position:sticky; top:calc(var(--topbar-h, 0px) + 1rem);
+  display:flex; flex-direction:column;
+  max-height:calc(100vh - var(--topbar-h, 0px) - 2rem);
+}
+.oc-tree-panel > .card-head { flex:none; }
+.oc-tree-tools { display:flex; gap:.15rem; }
+.oc-tree-filter { flex:none; }
+.oc-tree-filter .input-wrap { flex:1 1 100%; }
+.oc-tree-filter .select { flex:1 1 8rem; min-width:0; }
+.oc-inactive-toggle { font-size:.78rem; }
+.oc-tree-body { flex:1; overflow:auto; padding:.5rem .5rem .75rem; }
+
+.oc-tree, .oc-tree ul { list-style:none; margin:0; padding:0; }
+.oc-tree ul { margin-inline-start:.75rem; padding-inline-start:.45rem; border-inline-start:1px solid var(--line); }
+.oc-row {
+  display:flex; align-items:center; gap:.2rem;
+  padding:.1rem .2rem; border-radius:var(--radius-sm);
+  transition:background .15s;
+}
+.oc-row:hover { background:rgb(var(--line-rgb) / .05); }
+.oc-row.is-selected { background:var(--primary-soft); }
+.oc-row.is-selected .oc-link, .oc-row.is-selected .oc-link .ico { color:var(--primary); }
+.oc-row.is-selected .oc-label { font-weight:800; }
+
+.oc-toggle {
+  width:1.45rem; height:1.45rem; flex:none; padding:0;
+  display:grid; place-items:center;
+  border:0; border-radius:var(--radius-xs); background:none; color:var(--faint); cursor:pointer;
+}
+.oc-toggle:hover { color:var(--text-strong); background:rgb(var(--line-rgb) / .07); }
+.oc-toggle.is-leaf { cursor:default; background:none; }
+.oc-toggle .ico { width:.85rem; height:.85rem; transition:transform .18s var(--ease); }
+.oc-node[aria-expanded="true"] > .oc-row .oc-toggle .ico { transform:rotate(-90deg); }
+
+.oc-link {
+  flex:1; min-width:0;
+  display:flex; align-items:center; gap:.45rem;
+  padding:.32rem .3rem; border-radius:var(--radius-xs);
+  color:var(--text); font-size:.84rem; text-decoration:none;
+}
+.oc-link .ico { width:1rem; height:1rem; flex:none; color:var(--muted); }
+.oc-link:focus-visible { outline:2px solid var(--primary); outline-offset:1px; }
+.oc-label { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.oc-type { flex:none; --tone:var(--line-rgb); color:var(--muted); font-weight:600; }
+
+.oc-node.is-inactive { display:none; }
+.oc-tree.show-inactive .oc-node.is-inactive { display:block; }
+.oc-node.is-inactive > .oc-row .oc-label { color:var(--faint); text-decoration:line-through; text-decoration-color:var(--line-strong); }
+.oc-tree .oc-node.is-filtered-out { display:none; }
+.oc-node.is-match > .oc-row .oc-label { color:var(--text-strong); font-weight:700; }
+
+/* ── Unit header ────────────────────────────────────────────── */
+.oc-unit-head { display:flex; align-items:flex-start; gap:1rem; padding:1.15rem 1.15rem .9rem; }
+.oc-unit-ico {
+  width:3rem; height:3rem; flex:none;
+  display:grid; place-items:center;
+  border-radius:var(--radius); border:1px solid var(--primary-border);
+  background:var(--primary-soft); color:var(--primary);
+}
+.oc-unit-ico .ico { width:1.4rem; height:1.4rem; }
+.oc-unit-main { flex:1; min-width:0; }
+.oc-eyebrow { font-size:.72rem; font-weight:700; color:var(--faint); }
+.oc-unit-title {
+  display:flex; align-items:center; gap:.6rem; flex-wrap:wrap;
+  margin:.1rem 0 .35rem; font-size:1.2rem; font-weight:800; color:var(--text-strong);
+}
+.oc-path { display:flex; align-items:center; gap:.25rem; flex-wrap:wrap; font-size:.78rem; color:var(--muted); }
+.oc-path a { color:var(--muted); text-decoration:none; }
+.oc-path a:hover { color:var(--primary); }
+.oc-path .ico { width:.8rem; height:.8rem; color:var(--faint); }
+.oc-unit-actions { display:flex; align-items:center; gap:.4rem; }
+.oc-info { margin:0 1.15rem 1.15rem; }
+.oc-span-all { grid-column:1 / -1; }
+
+/* ── Tabs and tables ────────────────────────────────────────── */
+.oc-tabs-head { padding:.75rem 1.15rem; border-bottom:1px solid var(--line); overflow-x:auto; }
+.oc-holder { display:flex; align-items:center; gap:.35rem; font-size:.84rem; }
+.oc-holder + .oc-holder { margin-top:.2rem; }
+.oc-holder .ico { width:.9rem; height:.9rem; color:var(--faint); }
+.oc-head-tag .ico { width:.75rem; height:.75rem; }
+.tbl tr.oc-inactive td { opacity:.6; }
+.oc-empty-actions { display:flex; justify-content:center; gap:.5rem; margin-top:.8rem; }
+
+/* ── Forms ──────────────────────────────────────────────────── */
+.oc-confirm-text { margin:0; line-height:1.9; }
+.oc-summary { grid-template-columns:repeat(3, minmax(0, 1fr)); }
+.oc-radio-seg { align-self:flex-start; }
+.oc-radio-seg label { position:relative; display:flex; }
+.oc-radio-seg input { position:absolute; opacity:0; pointer-events:none; }
+.oc-radio-seg span {
+  display:inline-flex; align-items:center; height:2rem; padding:0 .9rem;
+  border-radius:calc(var(--radius) - 3px);
+  color:var(--muted); font-size:.8rem; font-weight:700; cursor:pointer;
+  transition:background .15s, color .15s, box-shadow .15s;
+}
+.oc-radio-seg span:hover { color:var(--text-strong); }
+.oc-radio-seg input:checked + span { background:var(--surface); color:var(--text-strong); box-shadow:var(--shadow-sm); }
+.oc-radio-seg input:focus-visible + span { outline:2px solid var(--primary); outline-offset:1px; }
+.oc-user-search .dd-menu { inset-inline:0; max-height:16rem; overflow:auto; }
+.oc-user-results .dd-item small { color:var(--faint); font-size:.72rem; }
+.oc-user-results .oc-user-empty { padding:.5rem .6rem; font-size:.8rem; color:var(--muted); }
+.oc-user-picked { display:flex; align-items:center; gap:.4rem; font-size:.84rem; font-weight:700; color:var(--primary); }
+.oc-user-picked .ico { width:1rem; height:1rem; }
+
+/* ── Types, audit ───────────────────────────────────────────── */
+.oc-types { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:1rem; align-items:start; }
+.oc-types .card-head { justify-content:space-between; }
+.oc-inline-form { display:inline; }
+.oc-date { flex:0 0 9rem; width:9rem; }
+.oc-filter-input { flex:1 1 9rem; width:auto; min-width:0; }
+.oc-json summary { cursor:pointer; color:var(--primary); font-size:.78rem; font-weight:600; }
+.oc-json pre {
+  max-width:34rem; max-height:18rem; overflow:auto;
+  margin:.4rem 0 0; padding:.6rem .75rem;
+  border-radius:var(--radius-sm); background:var(--surface-2);
+  font:500 .72rem/1.6 var(--mono); color:var(--text); text-align:left;
+}
+
+/* ── Responsive ─────────────────────────────────────────────── */
+@media (max-width: 1100px) {
+  .oc-layout { grid-template-columns:18rem minmax(0, 1fr); }
+}
+@media (max-width: 860px) {
+  .oc-layout, .oc-types { grid-template-columns:minmax(0, 1fr); }
+  .oc-tree-panel { position:static; max-height:26rem; }
+  .oc-info, .oc-summary { grid-template-columns:repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 560px) {
+  .oc-unit-head { flex-wrap:wrap; }
+  .oc-unit-actions { width:100%; }
+  .oc-info, .oc-summary { grid-template-columns:minmax(0, 1fr); }
+}

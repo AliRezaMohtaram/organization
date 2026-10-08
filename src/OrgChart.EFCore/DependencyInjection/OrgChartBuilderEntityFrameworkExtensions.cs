@@ -36,6 +36,7 @@ public static class OrgChartBuilderEntityFrameworkExtensions
         builder.Services.AddScoped<IOrgChartReader, EfOrgChartReader>();
         builder.Services.AddScoped<AuditWriter>();
         builder.Services.AddScoped<IOrgChartAdministration, EfOrgChartAdministration>();
+        builder.Services.AddScoped<IOrgChartAuditReader, EfOrgChartAuditReader>();
         return builder;
     }
 }

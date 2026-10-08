@@ -1,0 +1,9 @@
+@page
+@model OrgChart.Razor.Admin.Pages.Positions.MoveModel
+@{
+    ViewData["Title"] = OrgText.Get("Position_Move");
+}
+<partial name="/Areas/OrgChart/Pages/Shared/_OrgPage.cshtml" model="Model" />
+<div class="modal-page">
+    <partial name="@OrgChart.Razor.Admin.Pages.Positions.MoveModel.FormPath" model="Model" />
+</div>

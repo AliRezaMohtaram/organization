@@ -1,0 +1,25 @@
+@model OrgChart.Razor.Admin.Pages.Assignments.EndModel
+<form class="modal modal-sm" method="post" asp-area="OrgChart" asp-page="/Assignments/End" asp-route-id="@Model.Id" data-mx-ajax novalidate>
+    <div class="modal-head">
+        <span class="modal-head-ico tone-warning"><svg class="ico"><use href="#oc-end" /></svg></span>
+        <div>
+            <div class="modal-title">@OrgText.Get("Assignment_End")</div>
+            <div class="modal-sub">@OrgText.Get("Assignment_EndHint")</div>
+        </div>
+        <a class="icon-btn plain close" href="@Model.BackUrl" data-close aria-label="@OrgText.Get("Close")"><svg class="ico"><use href="#oc-x" /></svg></a>
+    </div>
+    <div class="modal-body">
+        <partial name="/Areas/OrgChart/Pages/Shared/_FormErrors.cshtml" />
+        <partial name="/Areas/OrgChart/Pages/Assignments/_AssignmentSummary.cshtml" model="Model" />
+        <div class="field" style="margin-top:1rem">
+            <label class="label" for="LastDay">@OrgText.Get("Field_LastDay")<span class="req">*</span></label>
+            <input class="input ltr" asp-for="LastDay" autocomplete="off" placeholder="1405/07/30" inputmode="numeric" required autofocus />
+            <span class="hint">@OrgText.Get("Field_LastDayHint")</span>
+        </div>
+    </div>
+    <div class="modal-foot">
+        <span class="spacer"></span>
+        <a class="btn btn-quiet" href="@Model.BackUrl" data-close>@OrgText.Get("Cancel")</a>
+        <button type="submit" class="btn btn-primary"><svg class="ico"><use href="#oc-end" /></svg>@OrgText.Get("Assignment_End")</button>
+    </div>
+</form>

@@ -73,6 +73,10 @@ public sealed class ReaderTests : IDisposable
         IReadOnlyList<AssignmentInfo> finTree = await _s.ReadAsync(r => r.GetUnitAssignmentsAsync("FIN", includeSubUnits: true));
         Assert.Equal(["u1", "u2", "u3"], finTree.Select(a => a.UserId).Order());
 
+        AssignmentInfo one = (await _s.ReadAsync(r => r.GetAssignmentAsync(fin[1].Id)))!;
+        Assert.Equal(("u2", "POS-ACC", "FIN"), (one.UserId, one.PositionKey, one.OrgUnitKey));
+        Assert.Null(await _s.ReadAsync(r => r.GetAssignmentAsync(999)));
+
         IReadOnlyDictionary<string, IReadOnlyList<AssignmentInfo>> holders =
             await _s.ReadAsync(r => r.GetHoldersAsync(["pos-acc", "POS-CLERK", "POS-CFO"], s_jan.AddDays(40)));
         Assert.Equal("u2", Assert.Single(holders["POS-ACC"]).UserId);

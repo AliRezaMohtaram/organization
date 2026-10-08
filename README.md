@@ -13,9 +13,34 @@ never change when the chart is restructured.
 |---|---|
 | `OrgChart.Core` | Domain model and abstractions. No ASP.NET Core or EF Core dependency. |
 | `OrgChart.EFCore` | `OrgChartDbContext` (schema `org`), migrations. |
-| `OrgChart.AspNetCore` | *(planned)* DI wiring: `services.AddOrgChart(o => ...)`. |
-| `OrgChart.Razor` | *(planned)* Persian/RTL admin pages on the MX design system. |
+| `OrgChart.AspNetCore` | Current user from the HTTP request (`AddHttpContextUser()`). |
+| `OrgChart.Razor` | Persian/RTL admin pages under `/OrgChart` on the MX design system (`AddAdminUi()`). |
 | `OrgChart.Acl` | *(planned)* Bridge implementing Acl's `IOrgStructure`. |
+
+## Host setup
+
+```csharp
+builder.Services.AddRazorPages();
+builder.Services.AddOrgChart()
+    .AddSqlServerStore(connectionString)      // schema "org"
+    .AddHttpContextUser()                     // who made each change (audit log)
+    .AddUserDirectory<MyUserDirectory>()      // names and user search in the admin pages
+    .AddAdminUi(ui =>
+    {
+        ui.EditPolicy = p => p.RequireRole("OrgAdmin");   // default: any signed-in user
+        // ui.UseStandaloneLayout();                       // host without the MX layout
+    });
+// ...
+app.UseAuthentication();
+app.UseAuthorization();
+app.MapRazorPages();
+```
+
+By default the pages render in the host's `_Layout`, which must load the MX design system (`mx.css`, `mx.js`).
+
+`samples/OrgChart.Sample.Web` runs on SQLite with demo data (`dotnet run`, then open `/OrgChart`).
+
+![Chart page](docs/screenshots/index-dark.png)
 
 ## Database
 

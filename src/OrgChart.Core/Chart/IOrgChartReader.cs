@@ -24,6 +24,9 @@ public interface IOrgChartReader
         bool includeSubUnits = false,
         CancellationToken cancellationToken = default);
 
+    /// <summary>One assignment, or null when it does not exist.</summary>
+    Task<AssignmentInfo?> GetAssignmentAsync(int assignmentId, CancellationToken cancellationToken = default);
+
     /// <summary>Assignments valid at <paramref name="atUtc"/> for each of the positions; positions nobody holds are omitted.</summary>
     Task<IReadOnlyDictionary<string, IReadOnlyList<AssignmentInfo>>> GetHoldersAsync(
         IReadOnlyCollection<string> positionKeys,

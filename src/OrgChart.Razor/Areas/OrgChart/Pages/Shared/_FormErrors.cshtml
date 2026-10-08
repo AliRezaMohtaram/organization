@@ -1,0 +1,15 @@
+@* Model-level errors (failed admin operations) as an MX callout. *@
+@{
+    List<string> errors = ViewData.ModelState
+        .Where(kv => string.IsNullOrEmpty(kv.Key))
+        .SelectMany(kv => kv.Value!.Errors)
+        .Select(e => e.ErrorMessage)
+        .Where(m => !string.IsNullOrWhiteSpace(m))
+        .ToList();
+}
+@if (errors.Count > 0)
+{
+    <div class="callout tone-danger" role="alert" style="margin-bottom:1rem">
+        <svg class="ico"><use href="#oc-alert" /></svg><div>@string.Join(" — ", errors)</div>
+    </div>
+}
