@@ -74,7 +74,11 @@ public sealed record PositionInfo(string Key, string Title, string OrgUnitKey);
   - assignment changes for specific users → `BumpUsersAsync(userIds)`
   - structural changes (move unit, re-parent, deactivate unit/position) → `BumpGlobalAsync()`
 
+Acl source: https://github.com/AliRezaMohtaram/Acl. Hosts register the adapter with
+`AclBuilder.AddOrgStructure<T>()`; Acl ships `NullOrgStructure` as the no-chart default.
 Reference fake implementation: `FakeOrgStructure` in Acl's `tests/Acl.Tests/Integration/AclServices.cs`.
+OrgChart defines its **own** `IUserDirectory` (same shape as Acl's: `SearchAsync`, `GetUsersAsync`,
+`UserInfo(UserId, DisplayName, Detail)`) so a host can implement both with one class or adapt one to the other.
 
 ## Stack & layout (consistent with Acl)
 
