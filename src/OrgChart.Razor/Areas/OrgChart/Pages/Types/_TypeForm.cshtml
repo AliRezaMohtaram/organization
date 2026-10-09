@@ -1,0 +1,59 @@
+@model OrgChart.Razor.Admin.Pages.Types.EditModel
+<form class="modal modal-sm" method="post" asp-area="OrgChart" asp-page="/Types/Edit" asp-route-kind="@Model.Kind" asp-route-key="@Model.Key" data-mx-ajax novalidate>
+    <div class="modal-head">
+        <span class="modal-head-ico"><svg class="ico"><use href="#oc-tag" /></svg></span>
+        <div>
+            <div class="modal-title">@(Model.IsEdit ? OrgText.Format("Types_EditHeading", Model.Existing!.Title) : OrgText.Get(Model.Kind == OrgTypeKind.Unit ? "Types_NewUnit" : "Types_NewPosition"))</div>
+            <div class="modal-sub">@OrgText.Get(Model.Kind == OrgTypeKind.Unit ? "Types_UnitSub" : "Types_PositionSub")</div>
+        </div>
+        <a class="icon-btn plain close" href="@Model.BackUrl" data-close aria-label="@OrgText.Get("Close")"><svg class="ico"><use href="#oc-x" /></svg></a>
+    </div>
+    <div class="modal-body">
+        <partial name="/Areas/OrgChart/Pages/Shared/_FormErrors.cshtml" />
+        <div class="form-grid">
+            @if (Model.IsEdit)
+            {
+                <div class="field span-2">
+                    <span class="label">@OrgText.Get("Field_Key")</span>
+                    <span class="code-chip">@Model.Existing!.Key</span>
+                </div>
+            }
+            else
+            {
+                <div class="field span-2">
+                    <label class="label" for="NewKey">@OrgText.Get("Field_Key")<span class="req">*</span></label>
+                    <input class="input ltr" asp-for="NewKey" autocomplete="off" spellcheck="false" placeholder="DEPARTMENT" required />
+                    <span class="hint">@OrgText.Get("Field_KeyHint")</span>
+                </div>
+            }
+            <div class="field">
+                <label class="label" for="Title">@OrgText.Get("Field_Title")<span class="req">*</span></label>
+                <input class="input" asp-for="Title" autocomplete="off" required autofocus />
+            </div>
+            <div class="field">
+                <label class="label" for="SortOrder">@OrgText.Get("Field_SortOrder")</label>
+                <input class="input ltr" asp-for="SortOrder" type="number" />
+            </div>
+            @if (Model.Kind == OrgTypeKind.Unit)
+            {
+                <div class="field">
+                    <label class="label" for="Level">@OrgText.Get("Field_Level")</label>
+                    <input class="input ltr" asp-for="Level" type="number" min="1" />
+                </div>
+                <div class="field">
+                    <label class="toggle" style="margin-top:1.6rem">
+                        <input asp-for="CanBeRoot" type="checkbox" />
+                        <span class="toggle-track"></span>
+                        <span>@OrgText.Get("Field_CanBeRoot")</span>
+                    </label>
+                </div>
+                <p class="hint span-2" style="margin:0">@OrgText.Get("Field_LevelHint") @OrgText.Get("Field_CanBeRootHint")</p>
+            }
+        </div>
+    </div>
+    <div class="modal-foot">
+        <span class="spacer"></span>
+        <a class="btn btn-quiet" href="@Model.BackUrl" data-close>@OrgText.Get("Cancel")</a>
+        <button type="submit" class="btn btn-primary"><svg class="ico"><use href="#oc-check" /></svg>@OrgText.Get(Model.IsEdit ? "Save" : "Create")</button>
+    </div>
+</form>

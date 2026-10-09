@@ -1,0 +1,9 @@
+@page
+@model OrgChart.Razor.Admin.Pages.Delegations.EditModel
+@{
+    ViewData["Title"] = OrgText.Get(Model.Kind == DelegationKind.ToUser ? "Delegation_Title" : "Deputy_Title");
+}
+<partial name="/Areas/OrgChart/Pages/Shared/_OrgPage.cshtml" model="Model" />
+<div class="modal-page">
+    <partial name="@OrgChart.Razor.Admin.Pages.Delegations.EditModel.FormPath" model="Model" />
+</div>

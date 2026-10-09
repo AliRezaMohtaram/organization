@@ -1,0 +1,26 @@
+@* Full or partial scope of a delegation/deputy. Model: ScopeFields. Posts "FullScope" and "AuthorityKeys". *@
+@model OrgChart.Razor.Admin.ScopeFields
+<div class="field span-2" data-oc-scope>
+    <span class="label">@OrgText.Get("Field_Scope")</span>
+    <div class="seg oc-radio-seg" role="radiogroup" aria-label="@OrgText.Get("Field_Scope")">
+        <label><input type="radio" name="FullScope" value="true" checked="@Model.Full" data-oc-scope-full /><span>@OrgText.Get("Scope_Full")</span></label>
+        <label><input type="radio" name="FullScope" value="false" checked="@(!Model.Full)" disabled="@(Model.Offered.Count == 0)" /><span>@OrgText.Get("Scope_Partial")</span></label>
+    </div>
+    @if (Model.Offered.Count == 0)
+    {
+        <span class="hint">@OrgText.Get("Scope_NoCatalog")</span>
+    }
+    else
+    {
+        <div class="oc-scope-list" data-oc-scope-list>
+            @foreach (Core.Abstractions.AuthorityInfo authority in Model.Offered)
+            {
+                <label class="oc-check">
+                    <input type="checkbox" name="AuthorityKeys" value="@authority.Key" checked="@Model.Selected.Contains(authority.Key)" />
+                    <span>@authority.Title @if (authority.Description is not null) { <small class="faint">@authority.Description</small> }</span>
+                </label>
+            }
+        </div>
+        <span class="hint">@OrgText.Get("Scope_Hint")</span>
+    }
+</div>

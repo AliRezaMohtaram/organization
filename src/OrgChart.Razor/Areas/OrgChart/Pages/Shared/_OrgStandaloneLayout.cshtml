@@ -1,0 +1,168 @@
+@* The module's own shell for hosts without MX: the DataMapper layout (sidebar, topbar, appearance drawer) with the
+   module's copy of MX under _content/OrgChart.Razor/mx. Pages normally render in the host's "_Layout" instead. *@
+@inject Microsoft.Extensions.Options.IOptions<OrgChartUiOptions> UiOptions
+@{
+    string page = ViewContext.RouteData.Values["page"]?.ToString() ?? "";
+    bool IsActive(string prefix) => prefix == "/Index"
+        ? page is "/Index" or ""
+        : page.StartsWith(prefix, StringComparison.OrdinalIgnoreCase);
+    string title = ViewData["Title"] as string ?? OrgText.Get("AppTitle");
+    string? subtitle = ViewData["Subtitle"] as string;
+    var nav = new[]
+    {
+        (Page: "/Index", Prefix: "/Index", Label: OrgText.Get("Nav_Chart"), Icon: "oc-org"),
+        (Page: "/Types/Index", Prefix: "/Types", Label: OrgText.Get("Nav_Types"), Icon: "oc-tag"),
+        (Page: "/Audit/Index", Prefix: "/Audit", Label: OrgText.Get("Nav_Audit"), Icon: "oc-history"),
+        (Page: "/My/Index", Prefix: "/My", Label: OrgText.Get("Nav_My"), Icon: "oc-swap"),
+    };
+}
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@title - @OrgText.Get("AppTitle")</title>
+    <script>
+        (function () {
+            try {
+                var t = JSON.parse(localStorage.getItem("app-theme") || "{}");
+                var r = document.documentElement;
+                r.dataset.theme  = t.mode   || "dark";
+                r.dataset.preset = t.preset || "ocean-dark";
+                r.dataset.accent = t.accent || "cyan";
+                r.dataset.size   = t.size   || "medium";
+                r.dataset.radius = t.radius || "medium";
+            } catch (e) { }
+        })();
+    </script>
+    <link rel="stylesheet" href="~/_content/OrgChart.Razor/mx/css/mx.css" asp-append-version="true" />
+</head>
+<body>
+    <partial name="/Areas/OrgChart/Pages/Shared/_MxIcons.cshtml" />
+
+    <div class="app">
+        <aside class="sidebar" aria-label="@OrgText.Get("Nav_Label")">
+            <a class="sb-brand" asp-area="OrgChart" asp-page="/Index">
+                <span class="sb-logo"><svg class="ico"><use href="#oc-org" /></svg></span>
+                <span class="brand-text">
+                    <span class="brand-name">OrgChart</span>
+                    <span class="brand-sub">@OrgText.Get("AppSubtitle")</span>
+                </span>
+            </a>
+
+            <nav class="nav">
+                <div class="nav-section">@OrgText.Get("AppTitle")</div>
+                @foreach (var item in nav)
+                {
+                    <a class="nav-item@(IsActive(item.Prefix) ? " active" : "")" title="@item.Label"
+                       aria-current="@(IsActive(item.Prefix) ? "page" : null)"
+                       asp-area="OrgChart" asp-page="@item.Page">
+                        <svg class="ico"><use href="#@item.Icon" /></svg><span class="nav-label">@item.Label</span>
+                    </a>
+                }
+
+                <div class="nav-section">@OrgText.Get("Nav_System")</div>
+                <button class="nav-item" type="button" data-action="theme-open" title="@OrgText.Get("Theme_Title")">
+                    <svg class="ico"><use href="#i-palette" /></svg><span class="nav-label">@OrgText.Get("Theme_Title")</span>
+                </button>
+                @if (UiOptions.Value.BackUrl is { } back)
+                {
+                    <a class="nav-item" href="@Url.Content(back)" title="@OrgText.Get("Nav_Back")">
+                        <svg class="ico"><use href="#i-arrow-left" /></svg><span class="nav-label">@OrgText.Get("Nav_Back")</span>
+                    </a>
+                }
+            </nav>
+        </aside>
+        <div class="scrim"></div>
+
+        <div class="main">
+            <header class="topbar">
+                <button class="icon-btn plain menu-btn" type="button" data-sidebar-toggle aria-label="@OrgText.Get("Nav_Menu")"><svg class="ico"><use href="#i-menu" /></svg></button>
+                <button class="icon-btn plain hide-mobile" type="button" data-sidebar-toggle aria-label="@OrgText.Get("Nav_Collapse")" title="@OrgText.Get("Nav_Collapse")"><svg class="ico"><use href="#i-sidebar" /></svg></button>
+                <div class="topbar-title">
+                    <h1>@title</h1>
+                    @if (subtitle is not null)
+                    {
+                        <p>@subtitle</p>
+                    }
+                </div>
+                <div class="topbar-actions">
+                    <button class="icon-btn" type="button" data-action="theme-toggle" title="@OrgText.Get("Theme_Toggle")" aria-label="@OrgText.Get("Theme_Toggle")">
+                        <svg class="ico"><use href="#i-moon" /></svg>
+                    </button>
+                    <button class="icon-btn" type="button" id="openThemeSettings" title="@OrgText.Get("Theme_Title")" aria-label="@OrgText.Get("Theme_Title")">
+                        <svg class="ico"><use href="#i-palette" /></svg>
+                    </button>
+                </div>
+            </header>
+
+            <main class="page">
+                @RenderBody()
+            </main>
+        </div>
+    </div>
+
+    <div class="mx-drawer-overlay" id="themeOverlay"></div>
+    <aside class="mx-drawer" id="themeDrawer" aria-hidden="true" aria-label="@OrgText.Get("Theme_Title")">
+        <div class="drawer-head">
+            <span class="modal-head-ico"><svg class="ico"><use href="#i-palette" /></svg></span>
+            <div><h3>@OrgText.Get("Theme_Title")</h3><p>@OrgText.Get("Theme_Hint")</p></div>
+            <button class="icon-btn plain" id="closeThemeSettings" type="button" aria-label="@OrgText.Get("Close")"><svg class="ico"><use href="#i-x" /></svg></button>
+        </div>
+        <div class="drawer-body">
+            <section>
+                <div class="drawer-label">@OrgText.Get("Theme_Mode")</div>
+                <div class="seg block">
+                    <button type="button" data-mode="light"><svg class="ico"><use href="#i-sun" /></svg>@OrgText.Get("Theme_Light")</button>
+                    <button type="button" data-mode="dark"><svg class="ico"><use href="#i-moon" /></svg>@OrgText.Get("Theme_Dark")</button>
+                    <button type="button" data-mode="system"><svg class="ico"><use href="#i-sliders" /></svg>@OrgText.Get("Theme_System")</button>
+                </div>
+            </section>
+            <section>
+                <div class="drawer-label">@OrgText.Get("Theme_Palette")</div>
+                <div class="pal-grid">
+                    <button class="pal" type="button" data-preset-select="ocean-dark" style="--sw-db:#0d1117;--sw-ds:#1b2633;--sw-lb:#f3f6f9;--sw-ls:#ffffff"><span class="pal-swatch"><i></i><i><b></b></i></span>Ocean</button>
+                    <button class="pal" type="button" data-preset-select="midnight" style="--sw-db:#09090b;--sw-ds:#1e1e23;--sw-lb:#f6f6f7;--sw-ls:#ffffff"><span class="pal-swatch"><i></i><i><b></b></i></span>Midnight</button>
+                    <button class="pal" type="button" data-preset-select="graphite" style="--sw-db:#161514;--sw-ds:#2c2a27;--sw-lb:#f7f5f2;--sw-ls:#fffefc"><span class="pal-swatch"><i></i><i><b></b></i></span>Graphite</button>
+                    <button class="pal" type="button" data-preset-select="arctic-light" style="--sw-db:#0b1218;--sw-ds:#192a36;--sw-lb:#eef4f8;--sw-ls:#ffffff"><span class="pal-swatch"><i></i><i><b></b></i></span>Arctic</button>
+                    <button class="pal" type="button" data-preset-select="emerald" style="--sw-db:#071411;--sw-ds:#153229;--sw-lb:#f0f7f4;--sw-ls:#ffffff"><span class="pal-swatch"><i></i><i><b></b></i></span>Emerald</button>
+                    <button class="pal" type="button" data-preset-select="royal-blue" style="--sw-db:#08111f;--sw-ds:#152943;--sw-lb:#eef3fb;--sw-ls:#ffffff"><span class="pal-swatch"><i></i><i><b></b></i></span>Royal</button>
+                </div>
+            </section>
+            <section>
+                <div class="drawer-label">@OrgText.Get("Theme_Accent")</div>
+                <div class="acc-list">
+                    <button class="accent-dot" type="button" data-accent-select="cyan" style="--c-d:#3bffcb;--c-l:#00876c" aria-label="cyan"></button>
+                    <button class="accent-dot" type="button" data-accent-select="blue" style="--c-d:#4dabf7;--c-l:#1c64c8" aria-label="blue"></button>
+                    <button class="accent-dot" type="button" data-accent-select="purple" style="--c-d:#b197fc;--c-l:#6748d6" aria-label="purple"></button>
+                    <button class="accent-dot" type="button" data-accent-select="orange" style="--c-d:#ff922b;--c-l:#b85400" aria-label="orange"></button>
+                    <button class="accent-dot" type="button" data-accent-select="pink" style="--c-d:#f783ac;--c-l:#be2864" aria-label="pink"></button>
+                    <button class="accent-dot" type="button" data-accent-select="green" style="--c-d:#69db7c;--c-l:#22823a" aria-label="green"></button>
+                </div>
+            </section>
+            <section>
+                <div class="drawer-label">@OrgText.Get("Theme_Size")</div>
+                <div class="seg block">
+                    <button type="button" data-size-select="small">@OrgText.Get("Theme_Small")</button>
+                    <button type="button" data-size-select="medium">@OrgText.Get("Theme_Medium")</button>
+                    <button type="button" data-size-select="large">@OrgText.Get("Theme_Large")</button>
+                </div>
+            </section>
+            <section>
+                <div class="drawer-label">@OrgText.Get("Theme_Radius")</div>
+                <div class="seg block">
+                    <button type="button" data-radius-select="sharp">@OrgText.Get("Theme_Sharp")</button>
+                    <button type="button" data-radius-select="medium">@OrgText.Get("Theme_Medium")</button>
+                    <button type="button" data-radius-select="round">@OrgText.Get("Theme_Round")</button>
+                </div>
+            </section>
+        </div>
+        <div class="drawer-foot">
+            <button class="btn btn-ghost" type="button" id="resetTheme" style="width:100%"><svg class="ico"><use href="#i-refresh" /></svg>@OrgText.Get("Theme_Reset")</button>
+        </div>
+    </aside>
+
+    <script src="~/_content/OrgChart.Razor/mx/js/theme.js" asp-append-version="true"></script>
+    <script src="~/_content/OrgChart.Razor/mx/js/mx.js" asp-append-version="true"></script>
+</body>
+</html>

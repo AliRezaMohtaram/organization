@@ -1,0 +1,92 @@
+@model OrgChart.Razor.Admin.Pages.Positions.EditModel
+@{
+    string cancel = Model.UnitUrl(Model.OwnerUnit!.Key, IndexModel.TabPositions);
+}
+<form class="modal" method="post" asp-area="OrgChart" asp-page="/Positions/Edit" asp-route-key="@Model.Key" asp-route-unit="@(Model.IsEdit ? null : Model.OwnerUnit.Key)" asp-route-parent="@(Model.IsEdit ? null : Model.Parent)" data-mx-ajax novalidate>
+    <div class="modal-head">
+        <span class="modal-head-ico"><svg class="ico"><use href="#oc-position" /></svg></span>
+        <div>
+            <div class="modal-title">@(Model.IsEdit ? OrgText.Format("Position_EditHeading", Model.Existing!.Title) : OrgText.Get("Position_New"))</div>
+            <div class="modal-sub">@OrgText.Format("Position_InUnit", Model.OwnerUnit.Title)</div>
+        </div>
+        <a class="icon-btn plain close" href="@cancel" data-close aria-label="@OrgText.Get("Close")"><svg class="ico"><use href="#oc-x" /></svg></a>
+    </div>
+
+    <div class="modal-body">
+        <partial name="/Areas/OrgChart/Pages/Shared/_FormErrors.cshtml" />
+        <div class="form-grid">
+            @if (Model.IsEdit)
+            {
+                <div class="field span-2">
+                    <span class="label">@OrgText.Get("Field_Key")</span>
+                    <span class="code-chip">@Model.Existing!.Key</span>
+                    <span class="hint">@OrgText.Get("Field_KeyLocked")</span>
+                </div>
+            }
+            else
+            {
+                <div class="field span-2">
+                    <label class="label" for="Input_Key">@OrgText.Get("Field_Key")<span class="req">*</span></label>
+                    <input class="input ltr" asp-for="Input.Key" autocomplete="off" spellcheck="false" placeholder="POS-FIN-MGR" required />
+                    <span class="hint">@OrgText.Get("Field_KeyHint")</span>
+                </div>
+            }
+            <div class="field span-2">
+                <label class="label" for="Input_Title">@OrgText.Get("Field_Title")<span class="req">*</span></label>
+                <input class="input" asp-for="Input.Title" autocomplete="off" required autofocus />
+            </div>
+            <div class="field span-2">
+                <label class="label" for="Input_ParentPositionKey">@OrgText.Get("Field_ParentPosition")</label>
+                @if (Model.IsHead)
+                {
+                    <input type="hidden" asp-for="Input.ParentPositionKey" value="" />
+                    <span class="hint">@OrgText.Get("Field_ParentPositionHead")</span>
+                }
+                else
+                {
+                    <select class="select" asp-for="Input.ParentPositionKey" asp-items="OrgOptions.PositionParents(Model.Chart, Model.OwnerUnit.Key, Model.Input.ParentPositionKey, Model.Existing?.Key)">
+                        <option value="">@OrgText.Get("Position_TopLevel")</option>
+                    </select>
+                    <span class="hint">@OrgText.Get("Field_ParentPositionHint")</span>
+                }
+            </div>
+            <div class="field">
+                <label class="label" for="Input_TypeKey">@OrgText.Get("Field_PositionType")</label>
+                <select class="select" asp-for="Input.TypeKey" asp-items="OrgOptions.Types(Model.Chart.PositionTypes, Model.Input.TypeKey)">
+                    <option value="">@OrgText.Get("None")</option>
+                </select>
+            </div>
+            <div class="field">
+                <label class="label" for="Input_Code">@OrgText.Get("Field_Code")</label>
+                <input class="input ltr" asp-for="Input.Code" autocomplete="off" />
+                <span class="hint">@OrgText.Get("Field_CodeHint")</span>
+            </div>
+            <div class="field span-2">
+                <label class="toggle">
+                    <input asp-for="Input.IsManagerial" type="checkbox" />
+                    <span class="toggle-track"></span>
+                    <span>@OrgText.Get("Field_Managerial")<small>@OrgText.Get("Field_ManagerialHint")</small></span>
+                </label>
+            </div>
+            <div class="field">
+                <label class="label" for="Input_ValidFrom">@OrgText.Get("Field_ValidFrom")</label>
+                <input class="input ltr" asp-for="Input.ValidFrom" autocomplete="off" placeholder="1405/01/01" inputmode="numeric" />
+            </div>
+            <div class="field">
+                <label class="label" for="Input_ValidTo">@OrgText.Get("Field_ValidTo")</label>
+                <input class="input ltr" asp-for="Input.ValidTo" autocomplete="off" placeholder="1405/12/29" inputmode="numeric" />
+                <span class="hint">@OrgText.Get("Field_ValidToHint")</span>
+            </div>
+            <div class="field">
+                <label class="label" for="Input_SortOrder">@OrgText.Get("Field_SortOrder")</label>
+                <input class="input ltr" asp-for="Input.SortOrder" type="number" />
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-foot">
+        <span class="spacer"></span>
+        <a class="btn btn-quiet" href="@cancel" data-close>@OrgText.Get("Cancel")</a>
+        <button type="submit" class="btn btn-primary"><svg class="ico"><use href="#oc-check" /></svg>@OrgText.Get(Model.IsEdit ? "Save" : "Create")</button>
+    </div>
+</form>

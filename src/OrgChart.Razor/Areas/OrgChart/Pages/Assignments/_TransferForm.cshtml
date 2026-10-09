@@ -1,0 +1,49 @@
+@model OrgChart.Razor.Admin.Pages.Assignments.TransferModel
+<form class="modal" method="post" asp-area="OrgChart" asp-page="/Assignments/Transfer" asp-route-id="@Model.Id" data-mx-ajax novalidate>
+    <div class="modal-head">
+        <span class="modal-head-ico"><svg class="ico"><use href="#oc-swap" /></svg></span>
+        <div>
+            <div class="modal-title">@OrgText.Format("Assignment_TransferHeading", Model.PersonName)</div>
+            <div class="modal-sub">@OrgText.Get("Assignment_TransferHint")</div>
+        </div>
+        <a class="icon-btn plain close" href="@Model.BackUrl" data-close aria-label="@OrgText.Get("Close")"><svg class="ico"><use href="#oc-x" /></svg></a>
+    </div>
+    <div class="modal-body">
+        <partial name="/Areas/OrgChart/Pages/Shared/_FormErrors.cshtml" />
+        <partial name="/Areas/OrgChart/Pages/Assignments/_AssignmentSummary.cshtml" model="Model" />
+        <div class="form-grid" style="margin-top:1rem">
+            <div class="field span-2">
+                <label class="label" for="ToPositionKey">@OrgText.Get("Field_NewPosition")<span class="req">*</span></label>
+                <select class="select" asp-for="ToPositionKey" asp-items="OrgOptions.Positions(Model.Chart, Model.ToPositionKey)" required autofocus>
+                    <option value="">@OrgText.Get("Choose")</option>
+                </select>
+            </div>
+            <div class="field">
+                <label class="label" for="FirstDay">@OrgText.Get("Field_FirstDay")<span class="req">*</span></label>
+                <input class="input ltr" asp-for="FirstDay" autocomplete="off" placeholder="1405/08/01" inputmode="numeric" required />
+                <span class="hint">@OrgText.Get("Field_FirstDayHint")</span>
+            </div>
+            <div class="field">
+                <span class="label">@OrgText.Get("Field_Kind")</span>
+                <div class="seg oc-radio-seg" role="radiogroup" aria-label="@OrgText.Get("Field_Kind")">
+                    @foreach (AssignmentKind kind in Enum.GetValues<AssignmentKind>())
+                    {
+                        <label>
+                            <input type="radio" name="Kind" value="@kind" checked="@(Model.Kind == kind)" />
+                            <span>@OrgText.Kind(kind)</span>
+                        </label>
+                    }
+                </div>
+            </div>
+            <div class="field span-2">
+                <label class="label" for="Note">@OrgText.Get("Field_Note")</label>
+                <textarea class="textarea" asp-for="Note" rows="2"></textarea>
+            </div>
+        </div>
+    </div>
+    <div class="modal-foot">
+        <span class="spacer"></span>
+        <a class="btn btn-quiet" href="@Model.BackUrl" data-close>@OrgText.Get("Cancel")</a>
+        <button type="submit" class="btn btn-primary"><svg class="ico"><use href="#oc-swap" /></svg>@OrgText.Get("Assignment_Transfer")</button>
+    </div>
+</form>

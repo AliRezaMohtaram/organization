@@ -1,0 +1,89 @@
+@model OrgChart.Razor.Admin.Pages.Units.EditModel
+@{
+    string cancel = Model.UnitUrl(Model.Existing?.Key ?? Model.Input.ParentKey);
+}
+<form class="modal" method="post" asp-area="OrgChart" asp-page="/Units/Edit" asp-route-key="@Model.Key" data-mx-ajax data-mx-init="oc-unit-form" novalidate>
+    <div class="modal-head">
+        <span class="modal-head-ico"><svg class="ico"><use href="#oc-unit" /></svg></span>
+        <div>
+            <div class="modal-title">@(Model.IsEdit ? OrgText.Format("Unit_EditHeading", Model.Existing!.Title) : OrgText.Get("Unit_NewTitle"))</div>
+            <div class="modal-sub">@OrgText.Get("Unit_FormHint")</div>
+        </div>
+        <a class="icon-btn plain close" href="@cancel" data-close aria-label="@OrgText.Get("Close")"><svg class="ico"><use href="#oc-x" /></svg></a>
+    </div>
+
+    <div class="modal-body">
+        <partial name="/Areas/OrgChart/Pages/Shared/_FormErrors.cshtml" />
+        <div class="form-grid">
+            @if (Model.IsEdit)
+            {
+                <div class="field">
+                    <span class="label">@OrgText.Get("Field_Key")</span>
+                    <span class="code-chip">@Model.Existing!.Key</span>
+                    <span class="hint">@OrgText.Get("Field_KeyLocked")</span>
+                </div>
+                <div class="field">
+                    <span class="label">@OrgText.Get("Field_Parent")</span>
+                    <span>@(Model.Chart.FindUnit(Model.Existing.ParentKey)?.Title ?? OrgText.Get("Unit_Root"))</span>
+                    <span class="hint">@OrgText.Get("Unit_ParentViaMove")</span>
+                </div>
+            }
+            else
+            {
+                <div class="field">
+                    <label class="label" for="Input_Key">@OrgText.Get("Field_Key")<span class="req">*</span></label>
+                    <input class="input ltr" asp-for="Input.Key" autocomplete="off" spellcheck="false" placeholder="DV-FIN" required />
+                    <span class="hint">@OrgText.Get("Field_KeyHint")</span>
+                </div>
+                <div class="field">
+                    <label class="label" for="Input_ParentKey">@OrgText.Get("Field_Parent")</label>
+                    <select class="select" asp-for="Input.ParentKey" data-oc-parent>
+                        <option value="">@OrgText.Get("Unit_Root")</option>
+                        @foreach (UnitNode parent in Model.Chart.Units.Where(u => u.IsActive))
+                        {
+                            <option value="@parent.Key" data-level="@(Model.Chart.FindUnitType(parent.TypeKey)?.Level)" selected="@OrgKey.AreEqual(parent.Key, Model.Input.ParentKey)">@string.Concat(Enumerable.Repeat("\u00A0\u00A0\u00A0", Model.Chart.GetLevel(parent.Key)))@parent.Title</option>
+                        }
+                    </select>
+                </div>
+            }
+            <div class="field span-2">
+                <label class="label" for="Input_Title">@OrgText.Get("Field_Title")<span class="req">*</span></label>
+                <input class="input" asp-for="Input.Title" autocomplete="off" required autofocus />
+            </div>
+            <div class="field">
+                <label class="label" for="Input_TypeKey">@OrgText.Get("Field_UnitType")<span class="req">*</span></label>
+                <select class="select" asp-for="Input.TypeKey" data-oc-type-select required>
+                    @foreach (OrgTypeNode type in Model.AllowedTypes)
+                    {
+                        <option value="@type.Key" data-level="@type.Level" data-root="@(type.CanBeRoot ? "1" : "0")" selected="@OrgKey.AreEqual(type.Key, Model.Input.TypeKey)">@type.Title</option>
+                    }
+                </select>
+                <span class="hint" data-oc-no-type hidden>@OrgText.Get("Unit_NoTypeForParent")</span>
+            </div>
+            <div class="field">
+                <label class="label" for="Input_Code">@OrgText.Get("Field_Code")</label>
+                <input class="input ltr" asp-for="Input.Code" autocomplete="off" />
+                <span class="hint">@OrgText.Get("Field_CodeHint")</span>
+            </div>
+            <div class="field">
+                <label class="label" for="Input_ValidFrom">@OrgText.Get("Field_ValidFrom")</label>
+                <input class="input ltr" asp-for="Input.ValidFrom" autocomplete="off" placeholder="1405/01/01" inputmode="numeric" />
+            </div>
+            <div class="field">
+                <label class="label" for="Input_ValidTo">@OrgText.Get("Field_ValidTo")</label>
+                <input class="input ltr" asp-for="Input.ValidTo" autocomplete="off" placeholder="1405/12/29" inputmode="numeric" />
+                <span class="hint">@OrgText.Get("Field_ValidToHint")</span>
+            </div>
+            <div class="field">
+                <label class="label" for="Input_SortOrder">@OrgText.Get("Field_SortOrder")</label>
+                <input class="input ltr" asp-for="Input.SortOrder" type="number" />
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-foot">
+        <span class="spacer"></span>
+        <a class="btn btn-quiet" href="@cancel" data-close>@OrgText.Get("Cancel")</a>
+        <button type="submit" class="btn btn-primary"><svg class="ico"><use href="#oc-check" /></svg>@OrgText.Get(Model.IsEdit ? "Save" : "Create")</button>
+    </div>
+</form>

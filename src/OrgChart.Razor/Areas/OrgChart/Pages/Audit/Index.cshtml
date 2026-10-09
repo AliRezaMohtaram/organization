@@ -1,0 +1,82 @@
+@page
+@model OrgChart.Razor.Admin.Pages.Audit.IndexModel
+@{
+    AuditPage result = Model.Result;
+    int first = result.TotalCount == 0 ? 0 : ((result.Page - 1) * result.PageSize) + 1;
+    int last = Math.Min(result.Page * result.PageSize, result.TotalCount);
+}
+<partial name="/Areas/OrgChart/Pages/Shared/_OrgPage.cshtml" model="Model" />
+<partial name="/Areas/OrgChart/Pages/Shared/_FormErrors.cshtml" />
+
+<article class="card">
+    <header class="card-head">
+        <div class="card-title">
+            <span class="card-ico"><svg class="ico"><use href="#oc-history" /></svg></span>
+            <div>@OrgText.Get("Nav_Audit")<div class="card-sub">@OrgText.Get("Audit_Subtitle")</div></div>
+        </div>
+    </header>
+    <div class="toolbar">
+        <form method="get" asp-area="OrgChart" asp-page="/Audit/Index" role="search">
+            <input class="input ltr oc-date" name="From" value="@Model.From" placeholder="@OrgText.Get("Audit_From")" aria-label="@OrgText.Get("Audit_From")" inputmode="numeric" autocomplete="off" />
+            <input class="input ltr oc-date" name="To" value="@Model.To" placeholder="@OrgText.Get("Audit_To")" aria-label="@OrgText.Get("Audit_To")" inputmode="numeric" autocomplete="off" />
+            <select class="select" name="Operation" aria-label="@OrgText.Get("Audit_Operation")">
+                <option value="">@OrgText.Get("Audit_AllOperations")</option>
+                @foreach (string op in Model.Operations)
+                {
+                    <option value="@op" selected="@(op == Model.Operation)">@OrgText.Operation(op)</option>
+                }
+            </select>
+            <input class="input ltr oc-filter-input" name="Entity" value="@Model.Entity" placeholder="@OrgText.Get("Audit_Entity")" aria-label="@OrgText.Get("Audit_Entity")" autocomplete="off" />
+            <input class="input ltr oc-filter-input" name="Actor" value="@Model.Actor" placeholder="@OrgText.Get("Audit_Actor")" aria-label="@OrgText.Get("Audit_Actor")" autocomplete="off" />
+            <button type="submit" class="btn btn-ghost"><svg class="ico"><use href="#oc-filter" /></svg>@OrgText.Get("Filter")</button>
+            @if (Model.Filtering)
+            {
+                <a class="btn btn-quiet" asp-area="OrgChart" asp-page="/Audit/Index"><svg class="ico"><use href="#oc-x" /></svg>@OrgText.Get("ClearFilter")</a>
+            }
+        </form>
+    </div>
+
+    @if (result.Items.Count == 0)
+    {
+        <div class="empty">@OrgText.Get(Model.Filtering ? "Audit_NoMatch" : "Audit_Empty")</div>
+    }
+    else
+    {
+        <div class="tbl-wrap">
+            <table class="tbl oc-audit">
+                <thead><tr><th>@OrgText.Get("Audit_When")</th><th>@OrgText.Get("Audit_Who")</th><th>@OrgText.Get("Audit_Operation")</th><th>@OrgText.Get("Audit_Subject")</th><th>@OrgText.Get("Audit_Change")</th></tr></thead>
+                <tbody>
+                    @foreach (AuditEntry entry in result.Items)
+                    {
+                        <tr>
+                            <td class="cell-sub nums">@Model.Dates.Format(entry.At, withTime: true)</td>
+                            <td>@Model.ActorName(entry.ActorUserId)</td>
+                            <td><span class="cell-main">@OrgText.Operation(entry.Operation)</span></td>
+                            <td><span class="cell-sub">@OrgText.Entity(entry.EntityType)</span> <span class="code">@entry.EntityId</span></td>
+                            <td>
+                                @if (!string.IsNullOrWhiteSpace(entry.ChangeJson))
+                                {
+                                    <details class="oc-json"><summary>@OrgText.Get("Audit_ShowChange")</summary><pre dir="ltr">@IndexModel.Pretty(entry.ChangeJson)</pre></details>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <footer class="card-foot">
+            <span>@OrgText.Format("Audit_Range", OrgFormat.Number(first), OrgFormat.Number(last), OrgFormat.Number(result.TotalCount))</span>
+            <nav class="pager" aria-label="@OrgText.Get("Pager")">
+                @if (result.Page > 1)
+                {
+                    <a href="@Model.PageUrl(result.Page - 1)" rel="prev" aria-label="@OrgText.Get("Pager_Prev")"><svg class="ico" style="transform:scaleX(-1)"><use href="#oc-chev" /></svg></a>
+                }
+                <span class="pager-now" aria-current="page">@OrgText.Format("Pager_Now", OrgFormat.Number(result.Page), OrgFormat.Number(Math.Max(1, result.TotalPages)))</span>
+                @if (result.Page < result.TotalPages)
+                {
+                    <a href="@Model.PageUrl(result.Page + 1)" rel="next" aria-label="@OrgText.Get("Pager_Next")"><svg class="ico"><use href="#oc-chev" /></svg></a>
+                }
+            </nav>
+        </footer>
+    }
+</article>

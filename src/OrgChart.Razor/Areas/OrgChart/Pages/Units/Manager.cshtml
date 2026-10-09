@@ -1,0 +1,9 @@
+@page
+@model OrgChart.Razor.Admin.Pages.Units.ManagerModel
+@{
+    ViewData["Title"] = OrgText.Get("Unit_SetManager");
+}
+<partial name="/Areas/OrgChart/Pages/Shared/_OrgPage.cshtml" model="Model" />
+<div class="modal-page">
+    <partial name="@OrgChart.Razor.Admin.Pages.Units.ManagerModel.FormPath" model="Model" />
+</div>

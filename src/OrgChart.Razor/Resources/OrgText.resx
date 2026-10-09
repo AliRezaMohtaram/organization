@@ -1,0 +1,385 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="AppTitle" xml:space="preserve"><value>چارت سازمانی</value></data>
+  <data name="AppSubtitle" xml:space="preserve"><value>واحدها، سمت‌ها و انتصاب‌ها</value></data>
+  <data name="Nav_Chart" xml:space="preserve"><value>ساختار سازمانی</value></data>
+  <data name="Nav_Types" xml:space="preserve"><value>انواع واحد و سمت</value></data>
+  <data name="Nav_Audit" xml:space="preserve"><value>گزارش تغییرات</value></data>
+  <data name="Nav_Label" xml:space="preserve"><value>ناوبری چارت سازمانی</value></data>
+  <data name="Nav_System" xml:space="preserve"><value>سیستم</value></data>
+  <data name="Nav_Back" xml:space="preserve"><value>بازگشت به برنامه</value></data>
+  <data name="Nav_Menu" xml:space="preserve"><value>منو</value></data>
+  <data name="Nav_Collapse" xml:space="preserve"><value>جمع / باز کردن منو</value></data>
+  <data name="Theme_Title" xml:space="preserve"><value>تنظیمات ظاهر</value></data>
+  <data name="Theme_Toggle" xml:space="preserve"><value>تغییر حالت روشن/تیره</value></data>
+  <data name="Theme_Hint" xml:space="preserve"><value>تغییرات بلافاصله اعمال و ذخیره می‌شوند.</value></data>
+  <data name="Theme_Mode" xml:space="preserve"><value>حالت نمایش</value></data>
+  <data name="Theme_Light" xml:space="preserve"><value>روشن</value></data>
+  <data name="Theme_Dark" xml:space="preserve"><value>تیره</value></data>
+  <data name="Theme_System" xml:space="preserve"><value>سیستم</value></data>
+  <data name="Theme_Palette" xml:space="preserve"><value>پالت</value></data>
+  <data name="Theme_Accent" xml:space="preserve"><value>رنگ اصلی</value></data>
+  <data name="Theme_Size" xml:space="preserve"><value>اندازه رابط کاربری</value></data>
+  <data name="Theme_Small" xml:space="preserve"><value>کوچک</value></data>
+  <data name="Theme_Medium" xml:space="preserve"><value>متوسط</value></data>
+  <data name="Theme_Large" xml:space="preserve"><value>بزرگ</value></data>
+  <data name="Theme_Radius" xml:space="preserve"><value>گردی گوشه‌ها</value></data>
+  <data name="Theme_Sharp" xml:space="preserve"><value>کم</value></data>
+  <data name="Theme_Round" xml:space="preserve"><value>زیاد</value></data>
+  <data name="Theme_Reset" xml:space="preserve"><value>بازگردانی تنظیمات پیش‌فرض</value></data>
+  <data name="Close" xml:space="preserve"><value>بستن</value></data>
+  <data name="Cancel" xml:space="preserve"><value>انصراف</value></data>
+  <data name="Save" xml:space="preserve"><value>ذخیره تغییرات</value></data>
+  <data name="Create" xml:space="preserve"><value>ایجاد</value></data>
+  <data name="Edit" xml:space="preserve"><value>ویرایش</value></data>
+  <data name="More" xml:space="preserve"><value>گزینه‌های بیشتر</value></data>
+  <data name="Activate" xml:space="preserve"><value>فعال کردن</value></data>
+  <data name="Deactivate" xml:space="preserve"><value>غیرفعال کردن</value></data>
+  <data name="None" xml:space="preserve"><value>— بدون نوع —</value></data>
+  <data name="Choose" xml:space="preserve"><value>— انتخاب کنید —</value></data>
+  <data name="Filter" xml:space="preserve"><value>اعمال فیلتر</value></data>
+  <data name="ClearFilter" xml:space="preserve"><value>پاک کردن فیلتر</value></data>
+  <data name="Status_Active" xml:space="preserve"><value>فعال</value></data>
+  <data name="Status_Inactive" xml:space="preserve"><value>غیرفعال</value></data>
+  <data name="State_Current" xml:space="preserve"><value>فعلی</value></data>
+  <data name="State_Upcoming" xml:space="preserve"><value>آینده</value></data>
+  <data name="State_Ended" xml:space="preserve"><value>پایان‌یافته</value></data>
+  <data name="Kind_Primary" xml:space="preserve"><value>اصلی</value></data>
+  <data name="Kind_Acting" xml:space="preserve"><value>سرپرستی</value></data>
+  <data name="Period_Always" xml:space="preserve"><value>نامحدود</value></data>
+  <data name="Period_From" xml:space="preserve"><value>از {0}</value></data>
+  <data name="Period_Until" xml:space="preserve"><value>تا {0}</value></data>
+  <data name="Period_Between" xml:space="preserve"><value>از {0} تا {1}</value></data>
+  <data name="Chart_Subtitle" xml:space="preserve"><value>{0} واحد فعال · {1} سمت فعال</value></data>
+  <data name="Chart_EmptyText" xml:space="preserve"><value>هنوز واحدی تعریف نشده است. اول انواع واحد را بسازید و بعد اولین واحد (مثلاً شرکت) را اضافه کنید.</value></data>
+  <data name="Tree_Title" xml:space="preserve"><value>درخت سازمانی</value></data>
+  <data name="Tree_Count" xml:space="preserve"><value>{0} واحد</value></data>
+  <data name="Tree_ExpandAll" xml:space="preserve"><value>باز کردن همه</value></data>
+  <data name="Tree_CollapseAll" xml:space="preserve"><value>بستن همه</value></data>
+  <data name="Tree_Search" xml:space="preserve"><value>جستجوی واحد، سمت یا نام فرد…</value></data>
+  <data name="Tree_TypeFilter" xml:space="preserve"><value>فیلتر نوع واحد</value></data>
+  <data name="Tree_AllTypes" xml:space="preserve"><value>همهٔ انواع</value></data>
+  <data name="Tree_ShowInactive" xml:space="preserve"><value>نمایش غیرفعال‌ها</value></data>
+  <data name="Tree_NoMatch" xml:space="preserve"><value>واحدی با این مشخصات پیدا نشد.</value></data>
+  <data name="Tree_Toggle" xml:space="preserve"><value>باز / بستن</value></data>
+  <data name="Unit_Path" xml:space="preserve"><value>مسیر واحد</value></data>
+  <data name="Unit_Root" xml:space="preserve"><value>— بدون والد (واحد ریشه) —</value></data>
+  <data name="Unit_NoManager" xml:space="preserve"><value>تعیین نشده</value></data>
+  <data name="Unit_NoPositions" xml:space="preserve"><value>این واحد هنوز سمتی ندارد.</value></data>
+  <data name="Unit_NoChildren" xml:space="preserve"><value>این واحد زیرواحدی ندارد.</value></data>
+  <data name="Unit_NewRoot" xml:space="preserve"><value>واحد ریشهٔ جدید</value></data>
+  <data name="Unit_NewChild" xml:space="preserve"><value>زیرواحد جدید</value></data>
+  <data name="Unit_NewTitle" xml:space="preserve"><value>واحد سازمانی جدید</value></data>
+  <data name="Unit_EditTitle" xml:space="preserve"><value>ویرایش واحد</value></data>
+  <data name="Unit_EditHeading" xml:space="preserve"><value>ویرایش «{0}»</value></data>
+  <data name="Unit_FormHint" xml:space="preserve"><value>کلید واحد ثابت است و ماژول‌های دیگر (مثل دسترسی‌ها) با آن به واحد اشاره می‌کنند.</value></data>
+  <data name="Unit_ParentViaMove" xml:space="preserve"><value>برای تغییر والد از «جابه‌جایی واحد» استفاده کنید.</value></data>
+  <data name="Unit_SetManager" xml:space="preserve"><value>تعیین مدیر واحد</value></data>
+  <data name="Unit_ManagerHeading" xml:space="preserve"><value>مدیر واحد «{0}»</value></data>
+  <data name="Unit_ManagerHint" xml:space="preserve"><value>یکی از سمت‌های فعال همین واحد به‌عنوان رئیس واحد؛ زنجیرهٔ گزارش‌دهی از آن ساخته می‌شود.</value></data>
+  <data name="Unit_ManagerNoPositions" xml:space="preserve"><value>این واحد سمت فعالی ندارد؛ اول یک سمت بسازید.</value></data>
+  <data name="Unit_Move" xml:space="preserve"><value>جابه‌جایی واحد</value></data>
+  <data name="Unit_MoveHeading" xml:space="preserve"><value>جابه‌جایی «{0}»</value></data>
+  <data name="Unit_MoveHint" xml:space="preserve"><value>واحد با همهٔ زیرواحدها، سمت‌ها و متصدیانش زیر والد جدید می‌رود.</value></data>
+  <data name="Unit_MoveKeysKept" xml:space="preserve"><value>کلیدها تغییر نمی‌کنند؛ دسترسی‌های وابسته به این واحد حفظ می‌شوند.</value></data>
+  <data name="Unit_ActivateHeading" xml:space="preserve"><value>فعال کردن «{0}»</value></data>
+  <data name="Unit_DeactivateHeading" xml:space="preserve"><value>غیرفعال کردن «{0}»</value></data>
+  <data name="Unit_ActivateText" xml:space="preserve"><value>واحد دوباره در درخت و فهرست‌ها نمایش داده می‌شود. والد آن باید فعال باشد.</value></data>
+  <data name="Unit_DeactivateText" xml:space="preserve"><value>واحد حذف نمی‌شود و کلیدش برای داده‌های قدیمی می‌ماند، اما دیگر قابل انتخاب نیست. واحدی که زیرواحد یا سمت فعال دارد غیرفعال نمی‌شود.</value></data>
+  <data name="Field_Key" xml:space="preserve"><value>کلید</value></data>
+  <data name="Field_KeyHint" xml:space="preserve"><value>حروف و اعداد انگلیسی، نقطه، - و _ . پس از ایجاد قابل تغییر نیست.</value></data>
+  <data name="Field_KeyLocked" xml:space="preserve"><value>کلید پس از ایجاد قابل تغییر نیست.</value></data>
+  <data name="Field_Code" xml:space="preserve"><value>کد</value></data>
+  <data name="Field_CodeHint" xml:space="preserve"><value>کد نمایشی اختیاری؛ برخلاف کلید قابل تغییر است.</value></data>
+  <data name="Field_Title" xml:space="preserve"><value>عنوان</value></data>
+  <data name="Field_UnitType" xml:space="preserve"><value>نوع واحد</value></data>
+  <data name="Field_PositionType" xml:space="preserve"><value>نوع سمت</value></data>
+  <data name="Field_Parent" xml:space="preserve"><value>واحد والد</value></data>
+  <data name="Field_NewParent" xml:space="preserve"><value>والد جدید</value></data>
+  <data name="Field_NewUnit" xml:space="preserve"><value>واحد جدید</value></data>
+  <data name="Field_TreeLevel" xml:space="preserve"><value>سطح در درخت</value></data>
+  <data name="Field_Manager" xml:space="preserve"><value>مدیر واحد</value></data>
+  <data name="Field_ManagerPosition" xml:space="preserve"><value>سمت مدیر</value></data>
+  <data name="Field_PositionsCount" xml:space="preserve"><value>سمت‌های فعال</value></data>
+  <data name="Field_PeopleCount" xml:space="preserve"><value>متصدیان فعلی</value></data>
+  <data name="Field_Validity" xml:space="preserve"><value>دورهٔ اعتبار</value></data>
+  <data name="Field_ValidFrom" xml:space="preserve"><value>اعتبار از</value></data>
+  <data name="Field_ValidTo" xml:space="preserve"><value>اعتبار تا</value></data>
+  <data name="Field_ValidToHint" xml:space="preserve"><value>آخرین روز اعتبار (خودِ این روز هم حساب است). خالی یعنی نامحدود.</value></data>
+  <data name="Field_SortOrder" xml:space="preserve"><value>ترتیب نمایش</value></data>
+  <data name="Field_Managerial" xml:space="preserve"><value>سمت مدیریتی</value></data>
+  <data name="Field_ManagerialHint" xml:space="preserve"><value>برای گزارش‌ها و گردش کار؛ رئیس واحد جداگانه تعیین می‌شود.</value></data>
+  <data name="Field_Position" xml:space="preserve"><value>سمت</value></data>
+  <data name="Field_Person" xml:space="preserve"><value>فرد</value></data>
+  <data name="Field_Kind" xml:space="preserve"><value>نوع انتصاب</value></data>
+  <data name="Field_StartDate" xml:space="preserve"><value>از تاریخ</value></data>
+  <data name="Field_StartDateHint" xml:space="preserve"><value>تاریخ آینده یعنی انتصاب برنامه‌ریزی‌شده.</value></data>
+  <data name="Field_EndDate" xml:space="preserve"><value>تا تاریخ</value></data>
+  <data name="Field_Note" xml:space="preserve"><value>توضیح</value></data>
+  <data name="Field_UserIdPlaceholder" xml:space="preserve"><value>شناسهٔ کاربر</value></data>
+  <data name="Field_UserIdHint" xml:space="preserve"><value>کاربر را جستجو کنید یا شناسه‌اش را مستقیم بنویسید.</value></data>
+  <data name="Field_UserIdHintNoDirectory" xml:space="preserve"><value>شناسهٔ کاربر در برنامهٔ اصلی (مثلاً Id جدول کاربران).</value></data>
+  <data name="Field_LastDay" xml:space="preserve"><value>آخرین روز در سمت</value></data>
+  <data name="Field_LastDayHint" xml:space="preserve"><value>فقط برای «در تاریخ مشخص»: فرد تا پایان این روز در سمت است و از روز بعد سمت بلاتصدی می‌شود.</value></data>
+  <data name="Field_NewPosition" xml:space="preserve"><value>سمت جدید</value></data>
+  <data name="Field_FirstDay" xml:space="preserve"><value>اولین روز در سمت جدید</value></data>
+  <data name="Field_FirstDayHint" xml:space="preserve"><value>انتصاب فعلی روز قبل از آن تمام می‌شود.</value></data>
+  <data name="Tab_Positions" xml:space="preserve"><value>سمت‌ها</value></data>
+  <data name="Tab_People" xml:space="preserve"><value>افراد</value></data>
+  <data name="Tab_Units" xml:space="preserve"><value>زیرواحدها</value></data>
+  <data name="Col_Position" xml:space="preserve"><value>سمت</value></data>
+  <data name="Col_Type" xml:space="preserve"><value>نوع</value></data>
+  <data name="Col_Holders" xml:space="preserve"><value>متصدی فعلی</value></data>
+  <data name="Col_Status" xml:space="preserve"><value>وضعیت</value></data>
+  <data name="Col_Person" xml:space="preserve"><value>فرد</value></data>
+  <data name="Col_Kind" xml:space="preserve"><value>نوع</value></data>
+  <data name="Col_Period" xml:space="preserve"><value>دوره</value></data>
+  <data name="Col_Unit" xml:space="preserve"><value>واحد</value></data>
+  <data name="Col_Positions" xml:space="preserve"><value>سمت‌ها</value></data>
+  <data name="Col_Used" xml:space="preserve"><value>استفاده</value></data>
+  <data name="Position_New" xml:space="preserve"><value>سمت جدید</value></data>
+  <data name="Position_EditTitle" xml:space="preserve"><value>ویرایش سمت</value></data>
+  <data name="Position_EditHeading" xml:space="preserve"><value>ویرایش «{0}»</value></data>
+  <data name="Position_InUnit" xml:space="preserve"><value>در واحد «{0}»</value></data>
+  <data name="Position_Move" xml:space="preserve"><value>جابه‌جایی سمت</value></data>
+  <data name="Position_MoveHeading" xml:space="preserve"><value>انتقال «{0}»</value></data>
+  <data name="Position_MoveHint" xml:space="preserve"><value>سمت با متصدیان و همهٔ سمت‌های زیرمجموعه‌اش زیر سمت انتخاب‌شده می‌رود و واحدش همان واحدِ آن سمت می‌شود.</value></data>
+  <data name="Position_Vacant" xml:space="preserve"><value>بلاتصدی</value></data>
+  <data name="Position_Head" xml:space="preserve"><value>رئیس واحد</value></data>
+  <data name="Position_IsHead" xml:space="preserve"><value>این سمت رئیس واحد است</value></data>
+  <data name="Position_Managerial" xml:space="preserve"><value>مدیریتی</value></data>
+  <data name="Position_ActivateHeading" xml:space="preserve"><value>فعال کردن «{0}»</value></data>
+  <data name="Position_DeactivateHeading" xml:space="preserve"><value>غیرفعال کردن «{0}»</value></data>
+  <data name="Position_ActivateText" xml:space="preserve"><value>سمت دوباره قابل انتخاب و انتصاب می‌شود. واحد آن باید فعال باشد.</value></data>
+  <data name="Position_DeactivateText" xml:space="preserve"><value>سمت حذف نمی‌شود و سابقه‌اش می‌ماند. سمتی که متصدی فعلی یا آینده دارد یا رئیس واحد است غیرفعال نمی‌شود.</value></data>
+  <data name="People_Current" xml:space="preserve"><value>فعلی و آینده</value></data>
+  <data name="People_All" xml:space="preserve"><value>همه (با سابقه)</value></data>
+  <data name="People_None" xml:space="preserve"><value>در حال حاضر کسی در سمت‌های این واحد نیست.</value></data>
+  <data name="People_NoneEver" xml:space="preserve"><value>هیچ انتصابی در این واحد ثبت نشده است.</value></data>
+  <data name="Assignment_New" xml:space="preserve"><value>انتصاب جدید</value></data>
+  <data name="Assignment_EditTitle" xml:space="preserve"><value>ویرایش انتصاب</value></data>
+  <data name="Assignment_FormHint" xml:space="preserve"><value>یک نفر می‌تواند هم‌زمان چند سمت داشته باشد؛ سرپرستی هم یک انتصاب است.</value></data>
+  <data name="Assignment_SearchUser" xml:space="preserve"><value>جستجوی نام، نام کاربری یا ایمیل…</value></data>
+  <data name="Assignment_NoUserFound" xml:space="preserve"><value>کاربری پیدا نشد.</value></data>
+  <data name="Assignment_Assign" xml:space="preserve"><value>ثبت انتصاب</value></data>
+  <data name="Assignment_End" xml:space="preserve"><value>پایان انتصاب</value></data>
+  <data name="Assignment_EndHint" xml:space="preserve"><value>انتصاب حذف نمی‌شود و در سابقه می‌ماند.</value></data>
+  <data name="Assignment_Transfer" xml:space="preserve"><value>انتقال به سمت دیگر</value></data>
+  <data name="Assignment_TransferHeading" xml:space="preserve"><value>انتقال «{0}»</value></data>
+  <data name="Assignment_TransferHint" xml:space="preserve"><value>انتصاب فعلی تمام می‌شود و انتصاب جدید از همان تاریخ شروع می‌شود.</value></data>
+  <data name="Assignment_Remove" xml:space="preserve"><value>حذف انتصاب</value></data>
+  <data name="Assignment_RemoveText" xml:space="preserve"><value>فقط برای انتصابی که اشتباه ثبت شده است. برای پایان دادن به انتصاب واقعی از «پایان انتصاب» استفاده کنید تا سابقه بماند.</value></data>
+  <data name="Types_Subtitle" xml:space="preserve"><value>انواع قابل تعریف برای هر سازمان</value></data>
+  <data name="Types_UnitTitle" xml:space="preserve"><value>انواع واحد</value></data>
+  <data name="Types_UnitSub" xml:space="preserve"><value>مثل شرکت، شعبه، معاونت، اداره، بخش، تیم</value></data>
+  <data name="Types_PositionTitle" xml:space="preserve"><value>انواع سمت</value></data>
+  <data name="Types_PositionSub" xml:space="preserve"><value>مثل مدیریتی، سرپرستی، کارشناسی، اداری</value></data>
+  <data name="Types_New" xml:space="preserve"><value>نوع جدید</value></data>
+  <data name="Types_NewUnit" xml:space="preserve"><value>نوع واحد جدید</value></data>
+  <data name="Types_NewPosition" xml:space="preserve"><value>نوع سمت جدید</value></data>
+  <data name="Types_EditTitle" xml:space="preserve"><value>ویرایش نوع</value></data>
+  <data name="Types_EditHeading" xml:space="preserve"><value>ویرایش «{0}»</value></data>
+  <data name="Types_None" xml:space="preserve"><value>هنوز نوعی تعریف نشده است.</value></data>
+  <data name="Audit_Subtitle" xml:space="preserve"><value>چه کسی، کی و چه تغییری در چارت داد</value></data>
+  <data name="Audit_From" xml:space="preserve"><value>از تاریخ</value></data>
+  <data name="Audit_To" xml:space="preserve"><value>تا تاریخ</value></data>
+  <data name="Audit_Operation" xml:space="preserve"><value>عملیات</value></data>
+  <data name="Audit_AllOperations" xml:space="preserve"><value>همهٔ عملیات‌ها</value></data>
+  <data name="Audit_Entity" xml:space="preserve"><value>کلید یا شناسه</value></data>
+  <data name="Audit_Actor" xml:space="preserve"><value>شناسهٔ کاربر</value></data>
+  <data name="Audit_When" xml:space="preserve"><value>زمان</value></data>
+  <data name="Audit_Who" xml:space="preserve"><value>کاربر</value></data>
+  <data name="Audit_Subject" xml:space="preserve"><value>موضوع</value></data>
+  <data name="Audit_Change" xml:space="preserve"><value>تغییر</value></data>
+  <data name="Audit_ShowChange" xml:space="preserve"><value>نمایش جزئیات</value></data>
+  <data name="Audit_System" xml:space="preserve"><value>سیستم</value></data>
+  <data name="Audit_Empty" xml:space="preserve"><value>هنوز تغییری ثبت نشده است.</value></data>
+  <data name="Audit_NoMatch" xml:space="preserve"><value>تغییری با این مشخصات پیدا نشد.</value></data>
+  <data name="Audit_Range" xml:space="preserve"><value>{0} تا {1} از {2}</value></data>
+  <data name="Pager" xml:space="preserve"><value>صفحه‌بندی</value></data>
+  <data name="Pager_Prev" xml:space="preserve"><value>صفحهٔ قبل</value></data>
+  <data name="Pager_Next" xml:space="preserve"><value>صفحهٔ بعد</value></data>
+  <data name="Pager_Now" xml:space="preserve"><value>صفحهٔ {0} از {1}</value></data>
+  <data name="Flash_UnitCreated" xml:space="preserve"><value>واحد «{0}» ایجاد شد.</value></data>
+  <data name="Flash_UnitSaved" xml:space="preserve"><value>واحد «{0}» ذخیره شد.</value></data>
+  <data name="Flash_UnitMoved" xml:space="preserve"><value>واحد «{0}» جابه‌جا شد.</value></data>
+  <data name="Flash_UnitActivated" xml:space="preserve"><value>واحد «{0}» فعال شد.</value></data>
+  <data name="Flash_UnitDeactivated" xml:space="preserve"><value>واحد «{0}» غیرفعال شد.</value></data>
+  <data name="Flash_ManagerSet" xml:space="preserve"><value>مدیر واحد «{0}» ذخیره شد.</value></data>
+  <data name="Flash_PositionCreated" xml:space="preserve"><value>سمت «{0}» ایجاد شد.</value></data>
+  <data name="Flash_PositionSaved" xml:space="preserve"><value>سمت «{0}» ذخیره شد.</value></data>
+  <data name="Flash_PositionMoved" xml:space="preserve"><value>سمت «{0}» منتقل شد.</value></data>
+  <data name="Flash_PositionActivated" xml:space="preserve"><value>سمت «{0}» فعال شد.</value></data>
+  <data name="Flash_PositionDeactivated" xml:space="preserve"><value>سمت «{0}» غیرفعال شد.</value></data>
+  <data name="Flash_AssignmentCreated" xml:space="preserve"><value>انتصاب ثبت شد.</value></data>
+  <data name="Flash_AssignmentSaved" xml:space="preserve"><value>انتصاب ذخیره شد.</value></data>
+  <data name="Flash_AssignmentEnded" xml:space="preserve"><value>انتصاب «{0}» پایان یافت.</value></data>
+  <data name="Flash_AssignmentTransferred" xml:space="preserve"><value>«{0}» به سمت جدید منتقل شد.</value></data>
+  <data name="Flash_AssignmentRemoved" xml:space="preserve"><value>انتصاب «{0}» حذف شد.</value></data>
+  <data name="Flash_TypeSaved" xml:space="preserve"><value>نوع «{0}» ذخیره شد.</value></data>
+  <data name="Flash_TypeActivated" xml:space="preserve"><value>نوع «{0}» فعال شد.</value></data>
+  <data name="Flash_TypeDeactivated" xml:space="preserve"><value>نوع «{0}» غیرفعال شد.</value></data>
+  <data name="Error_Unknown" xml:space="preserve"><value>عملیات انجام نشد ({0}).</value></data>
+  <data name="Error_InvalidDate" xml:space="preserve"><value>تاریخ معتبر نیست. به شکل ۱۴۰۵/۰۷/۱۶ وارد کنید.</value></data>
+  <data name="Error_KeyInvalid" xml:space="preserve"><value>کلید معتبر نیست؛ فقط حروف و اعداد انگلیسی، نقطه، - و _ (با حرف یا عدد شروع شود).</value></data>
+  <data name="Error_KeyTaken" xml:space="preserve"><value>این کلید قبلاً استفاده شده است (بزرگی و کوچکی حروف مهم نیست).</value></data>
+  <data name="Error_TitleRequired" xml:space="preserve"><value>عنوان لازم است.</value></data>
+  <data name="Error_TitleTooLong" xml:space="preserve"><value>عنوان بیش از حد طولانی است.</value></data>
+  <data name="Error_CodeTooLong" xml:space="preserve"><value>کد بیش از حد طولانی است.</value></data>
+  <data name="Error_CodeTaken" xml:space="preserve"><value>این کد قبلاً استفاده شده است.</value></data>
+  <data name="Error_NoteTooLong" xml:space="preserve"><value>توضیح بیش از حد طولانی است.</value></data>
+  <data name="Error_InvalidPeriod" xml:space="preserve"><value>تاریخ شروع باید قبل از تاریخ پایان باشد.</value></data>
+  <data name="Error_TypeNotFound" xml:space="preserve"><value>نوع انتخاب‌شده وجود ندارد.</value></data>
+  <data name="Error_TypeInactive" xml:space="preserve"><value>نوع انتخاب‌شده غیرفعال است.</value></data>
+  <data name="Error_UnitNotFound" xml:space="preserve"><value>واحد پیدا نشد.</value></data>
+  <data name="Error_UnitInactive" xml:space="preserve"><value>واحد غیرفعال است.</value></data>
+  <data name="Error_ParentNotFound" xml:space="preserve"><value>واحد والد پیدا نشد.</value></data>
+  <data name="Error_ParentInactive" xml:space="preserve"><value>واحد والد غیرفعال است.</value></data>
+  <data name="Error_ParentCycle" xml:space="preserve"><value>واحد را نمی‌شود زیر خودش یا یکی از زیرواحدهایش برد.</value></data>
+  <data name="Error_UnitHasActiveChildren" xml:space="preserve"><value>این واحد زیرواحد فعال دارد؛ اول آن‌ها را جابه‌جا یا غیرفعال کنید.</value></data>
+  <data name="Error_UnitHasActivePositions" xml:space="preserve"><value>این واحد سمت فعال دارد؛ اول آن‌ها را منتقل یا غیرفعال کنید.</value></data>
+  <data name="Error_PositionNotFound" xml:space="preserve"><value>سمت پیدا نشد.</value></data>
+  <data name="Error_PositionInactive" xml:space="preserve"><value>سمت غیرفعال است.</value></data>
+  <data name="Error_PositionHasAssignments" xml:space="preserve"><value>این سمت متصدی فعلی یا آینده دارد؛ اول انتصاب‌ها را پایان دهید.</value></data>
+  <data name="Error_PositionIsUnitManager" xml:space="preserve"><value>این سمت رئیس واحد است؛ اول مدیر واحد را تغییر دهید.</value></data>
+  <data name="Error_ManagerPositionNotInUnit" xml:space="preserve"><value>سمت مدیر باید از سمت‌های همین واحد باشد.</value></data>
+  <data name="Error_UserIdRequired" xml:space="preserve"><value>فرد را انتخاب کنید.</value></data>
+  <data name="Error_UserIdTooLong" xml:space="preserve"><value>شناسهٔ کاربر بیش از حد طولانی است.</value></data>
+  <data name="Error_InvalidKind" xml:space="preserve"><value>نوع انتخاب‌شده معتبر نیست.</value></data>
+  <data name="Error_AssignmentNotFound" xml:space="preserve"><value>انتصاب پیدا نشد.</value></data>
+  <data name="Error_AssignmentOverlap" xml:space="preserve"><value>این فرد در همین دوره در این سمت انتصاب دارد.</value></data>
+  <data name="Error_AssignmentAlreadyEnded" xml:space="preserve"><value>این انتصاب زودتر از این تاریخ تمام می‌شود.</value></data>
+  <data name="Error_InvalidEndDate" xml:space="preserve"><value>تاریخ پایان باید بعد از شروع انتصاب باشد.</value></data>
+  <data name="Op_TypeCreated" xml:space="preserve"><value>ایجاد نوع</value></data>
+  <data name="Op_TypeUpdated" xml:space="preserve"><value>ویرایش نوع</value></data>
+  <data name="Op_TypeActivated" xml:space="preserve"><value>فعال کردن نوع</value></data>
+  <data name="Op_TypeDeactivated" xml:space="preserve"><value>غیرفعال کردن نوع</value></data>
+  <data name="Op_UnitCreated" xml:space="preserve"><value>ایجاد واحد</value></data>
+  <data name="Op_UnitUpdated" xml:space="preserve"><value>ویرایش واحد</value></data>
+  <data name="Op_UnitMoved" xml:space="preserve"><value>جابه‌جایی واحد</value></data>
+  <data name="Op_UnitActivated" xml:space="preserve"><value>فعال کردن واحد</value></data>
+  <data name="Op_UnitDeactivated" xml:space="preserve"><value>غیرفعال کردن واحد</value></data>
+  <data name="Op_UnitManagerChanged" xml:space="preserve"><value>تغییر مدیر واحد</value></data>
+  <data name="Op_PositionCreated" xml:space="preserve"><value>ایجاد سمت</value></data>
+  <data name="Op_PositionUpdated" xml:space="preserve"><value>ویرایش سمت</value></data>
+  <data name="Op_PositionMoved" xml:space="preserve"><value>انتقال سمت</value></data>
+  <data name="Op_PositionActivated" xml:space="preserve"><value>فعال کردن سمت</value></data>
+  <data name="Op_PositionDeactivated" xml:space="preserve"><value>غیرفعال کردن سمت</value></data>
+  <data name="Op_AssignmentCreated" xml:space="preserve"><value>انتصاب</value></data>
+  <data name="Op_AssignmentUpdated" xml:space="preserve"><value>ویرایش انتصاب</value></data>
+  <data name="Op_AssignmentEnded" xml:space="preserve"><value>پایان انتصاب</value></data>
+  <data name="Op_AssignmentTransferred" xml:space="preserve"><value>انتقال</value></data>
+  <data name="Op_AssignmentRemoved" xml:space="preserve"><value>حذف انتصاب</value></data>
+  <data name="Entity_OrgUnit" xml:space="preserve"><value>واحد</value></data>
+  <data name="Entity_Position" xml:space="preserve"><value>سمت</value></data>
+  <data name="Entity_Assignment" xml:space="preserve"><value>انتصاب</value></data>
+  <data name="Entity_OrgUnitType" xml:space="preserve"><value>نوع واحد</value></data>
+  <data name="Entity_PositionType" xml:space="preserve"><value>نوع سمت</value></data>
+  <data name="Tree_ShowPositions" xml:space="preserve"><value>نمایش سمت‌ها</value></data>
+  <data name="Error_ParentPositionNotInUnit" xml:space="preserve"><value>سمت بالادست باید از سمت‌های همین واحد باشد.</value></data>
+  <data name="Error_ParentPositionCycle" xml:space="preserve"><value>سمت را نمی‌شود زیر خودش یا یکی از زیرمجموعه‌هایش برد.</value></data>
+  <data name="Error_PositionHasSubordinates" xml:space="preserve"><value>سمت‌های دیگری زیر این سمت هستند؛ اول آن‌ها را جابه‌جا یا غیرفعال کنید.</value></data>
+  <data name="Error_UnitHeadHasParent" xml:space="preserve"><value>رئیس واحد نمی‌تواند زیر سمت دیگری از همان واحد باشد؛ بالادستش خودکار رئیس واحد بالاتر است.</value></data>
+  <data name="Error_InvalidLevel" xml:space="preserve"><value>سطح باید عدد ۱ یا بزرگ‌تر باشد (یا خالی).</value></data>
+  <data name="Error_TypeLevelNotAllowed" xml:space="preserve"><value>این نوع واحد در این سطح مجاز نیست؛ سطح نوع واحد باید از سطح نوع والد بیشتر باشد.</value></data>
+  <data name="Error_TypeCannotBeRoot" xml:space="preserve"><value>واحد از این نوع نمی‌تواند بدون والد (ریشه) باشد.</value></data>
+  <data name="Error_TypeLevelConflict" xml:space="preserve"><value>با این سطح، بعضی از واحدهای موجود قانون سلسله‌مراتب را می‌شکنند. اول آن واحدها را اصلاح کنید.</value></data>
+  <data name="Field_ParentPosition" xml:space="preserve"><value>سمت بالادست</value></data>
+  <data name="Field_ParentPositionHint" xml:space="preserve"><value>خالی یعنی مستقیم زیر رئیس واحد (و رئیس واحد زیر رئیس واحد بالاتر).</value></data>
+  <data name="Field_ParentPositionHead" xml:space="preserve"><value>رئیس واحد بالادستی در همین واحد ندارد؛ به رئیس واحد بالاتر گزارش می‌دهد.</value></data>
+  <data name="Position_TopLevel" xml:space="preserve"><value>— مستقیم زیر رئیس واحد —</value></data>
+  <data name="Position_ReportsTo" xml:space="preserve"><value>گزارش به: {0}</value></data>
+  <data name="Position_ReportsToNone" xml:space="preserve"><value>بالاترین سمت</value></data>
+  <data name="Field_Level" xml:space="preserve"><value>سطح</value></data>
+  <data name="Field_LevelHint" xml:space="preserve"><value>۱ برای بالاترین (مثلاً شرکت). زیرواحد باید سطح بزرگ‌تری از والدش داشته باشد. خالی یعنی بدون محدودیت.</value></data>
+  <data name="Field_CanBeRoot" xml:space="preserve"><value>می‌تواند واحد ریشه باشد</value></data>
+  <data name="Field_CanBeRootHint" xml:space="preserve"><value>مثلاً شرکت؛ واحدهای این نوع می‌توانند بدون والد باشند.</value></data>
+  <data name="Col_Level" xml:space="preserve"><value>سطح</value></data>
+  <data name="Col_ReportsTo" xml:space="preserve"><value>گزارش به</value></data>
+  <data name="Types_Root" xml:space="preserve"><value>ریشه</value></data>
+  <data name="Types_NoLevel" xml:space="preserve"><value>بدون محدودیت</value></data>
+  <data name="Unit_NoTypeForParent" xml:space="preserve"><value>برای این والد نوع واحد مجازی تعریف نشده است. سطح انواع واحد را در «انواع واحد و سمت» بررسی کنید.</value></data>
+  <data name="Position_NewSubordinate" xml:space="preserve"><value>سمت زیرمجموعه</value></data>
+  <data name="Field_EndWhen" xml:space="preserve"><value>زمان پایان</value></data>
+  <data name="End_Now" xml:space="preserve"><value>همین حالا</value></data>
+  <data name="End_OnDate" xml:space="preserve"><value>در تاریخ مشخص</value></data>
+  <data name="End_NowHint" xml:space="preserve"><value>«همین حالا»: سمت از همین لحظه بلاتصدی می‌شود. «در تاریخ مشخص»: فرد تا پایان «آخرین روز» در سمت می‌ماند.</value></data>
+  <data name="Holder_Until" xml:space="preserve"><value>تا {0}</value></data>
+  <data name="Field_NewSuperior" xml:space="preserve"><value>سمت بالادست جدید</value></data>
+  <data name="Position_UnitTop" xml:space="preserve"><value>— سطح بالای «{0}» (این واحد رئیس ندارد) —</value></data>
+  <data name="Position_MoveKeysKept" xml:space="preserve"><value>کلید سمت‌ها تغییر نمی‌کند؛ دسترسی‌های وابسته به این سمت‌ها حفظ می‌شوند.</value></data>
+  <data name="Kind_Delegated" xml:space="preserve"><value>تفویض</value></data>
+  <data name="Kind_Deputy" xml:space="preserve"><value>جانشینی</value></data>
+  <data name="Error_DelegationNotFound" xml:space="preserve"><value>تفویض یا جانشینی پیدا نشد.</value></data>
+  <data name="Error_DelegatorNotHolder" xml:space="preserve"><value>تفویض‌کننده در این دوره متصدی این سمت نیست. فقط متصدی سمت می‌تواند اختیاراتش را تفویض کند.</value></data>
+  <data name="Error_DelegateIsSelf" xml:space="preserve"><value>نمی‌شود به خود تفویض کرد یا سمتی را جانشین خودش کرد.</value></data>
+  <data name="Error_DelegationOverlap" xml:space="preserve"><value>همین تفویض یا جانشینی در دورهٔ هم‌پوشان ثبت شده است.</value></data>
+  <data name="Error_EndDateRequired" xml:space="preserve"><value>تفویض به فرد باید تاریخ پایان داشته باشد.</value></data>
+  <data name="Error_ScopeNotAvailable" xml:space="preserve"><value>برای این سمت فهرست اختیارات تعریف نشده است؛ فقط تفویض کامل ممکن است.</value></data>
+  <data name="Error_UnknownAuthority" xml:space="preserve"><value>یکی از اختیارات انتخاب‌شده برای این سمت تعریف نشده است.</value></data>
+  <data name="Error_ScopeEmpty" xml:space="preserve"><value>دست‌کم یک مورد از اختیارات را انتخاب کنید، یا تفویض کامل را انتخاب کنید.</value></data>
+  <data name="Error_DelegationAlreadyEnded" xml:space="preserve"><value>این تفویض زودتر از این تاریخ تمام می‌شود.</value></data>
+  <data name="Error_InvalidPriority" xml:space="preserve"><value>اولویت باید عدد ۱ یا بزرگ‌تر باشد.</value></data>
+  <data name="Op_DelegationCreated" xml:space="preserve"><value>تفویض اختیار</value></data>
+  <data name="Op_DeputyAdded" xml:space="preserve"><value>تعیین جانشین</value></data>
+  <data name="Op_DelegationUpdated" xml:space="preserve"><value>ویرایش تفویض/جانشینی</value></data>
+  <data name="Op_DelegationEnded" xml:space="preserve"><value>پایان تفویض/جانشینی</value></data>
+  <data name="Op_DelegationRemoved" xml:space="preserve"><value>حذف تفویض/جانشینی</value></data>
+  <data name="Entity_Delegation" xml:space="preserve"><value>تفویض/جانشینی</value></data>
+  <data name="Tab_Delegations" xml:space="preserve"><value>تفویض و جانشینی</value></data>
+  <data name="Col_From" xml:space="preserve"><value>تفویض‌کننده</value></data>
+  <data name="Col_To" xml:space="preserve"><value>گیرنده</value></data>
+  <data name="Col_Scope" xml:space="preserve"><value>دامنه</value></data>
+  <data name="Delegation_Title" xml:space="preserve"><value>تفویض اختیار</value></data>
+  <data name="Deputy_Title" xml:space="preserve"><value>تعیین جانشین</value></data>
+  <data name="Delegation_Heading" xml:space="preserve"><value>تفویض اختیار «{0}»</value></data>
+  <data name="Deputy_Heading" xml:space="preserve"><value>جانشین سمت «{0}»</value></data>
+  <data name="Delegation_Hint" xml:space="preserve"><value>متصدی سمت، همهٔ اختیارات یا بخشی از آن‌ها را برای یک دورهٔ مشخص به فرد دیگری می‌سپارد. اختیارات خود متصدی حفظ می‌شود.</value></data>
+  <data name="Deputy_Hint" xml:space="preserve"><value>متصدی سمت جانشین، در دامنهٔ تعیین‌شده همیشه اختیارات این سمت را دارد (تا وقتی این سمت متصدی دارد). اختیارات سمت بلاتصدی را مدیر سامانه واگذار می‌کند.</value></data>
+  <data name="Delegation_NoHolder" xml:space="preserve"><value>این سمت در حال حاضر یا آینده متصدی ندارد؛ تفویض فقط از طرف متصدی سمت ممکن است.</value></data>
+  <data name="Delegation_Summary" xml:space="preserve"><value>تفویض اختیار «{0}» از {1} به {2}</value></data>
+  <data name="Deputy_Summary" xml:space="preserve"><value>جانشینی سمت «{0}» توسط «{1}»</value></data>
+  <data name="Delegation_End" xml:space="preserve"><value>پایان تفویض</value></data>
+  <data name="Delegation_Remove" xml:space="preserve"><value>حذف تفویض/جانشینی</value></data>
+  <data name="Delegation_RemoveText" xml:space="preserve"><value>این رکورد کامل حذف می‌شود و در تاریخچه فقط در گزارش تغییرات می‌ماند. اگر تفویض اجرا شده است، به جای حذف آن را پایان دهید.</value></data>
+  <data name="Delegation_New" xml:space="preserve"><value>تفویض اختیار</value></data>
+  <data name="Deputy_New" xml:space="preserve"><value>تعیین جانشین</value></data>
+  <data name="Delegations_AddHint" xml:space="preserve"><value>برای تفویض یا تعیین جانشین، از دکمه‌های ردیف هر سمت در زبانهٔ سمت‌ها استفاده کنید.</value></data>
+  <data name="Delegations_None" xml:space="preserve"><value>تفویض یا جانشینی برای سمت‌های این واحد ثبت نشده است.</value></data>
+  <data name="Field_Delegator" xml:space="preserve"><value>تفویض‌کننده (متصدی سمت)</value></data>
+  <data name="Field_Delegate" xml:space="preserve"><value>گیرندهٔ تفویض</value></data>
+  <data name="Field_DeputyPosition" xml:space="preserve"><value>سمت جانشین</value></data>
+  <data name="Field_Priority" xml:space="preserve"><value>اولویت</value></data>
+  <data name="Field_PriorityHint" xml:space="preserve"><value>عدد کمتر یعنی جانشین اول.</value></data>
+  <data name="Field_DelegationEndHint" xml:space="preserve"><value>تفویض به فرد باید تاریخ پایان داشته باشد (آخرین روز، شامل).</value></data>
+  <data name="Field_Reason" xml:space="preserve"><value>علت / توضیح</value></data>
+  <data name="Field_Scope" xml:space="preserve"><value>دامنهٔ اختیارات</value></data>
+  <data name="Scope_Full" xml:space="preserve"><value>همهٔ اختیارات</value></data>
+  <data name="Scope_Partial" xml:space="preserve"><value>فقط اختیارات انتخاب‌شده</value></data>
+  <data name="Scope_NoCatalog" xml:space="preserve"><value>فهرست اختیارات این سمت در دسترس نیست؛ فقط تفویض کامل ممکن است.</value></data>
+  <data name="Scope_Hint" xml:space="preserve"><value>اختیارات از نقش‌های سمت در سامانهٔ دسترسی می‌آیند.</value></data>
+  <data name="Scope_Count" xml:space="preserve"><value>{0} اختیار</value></data>
+  <data name="Scope_PartialTag" xml:space="preserve"><value>(بخشی از اختیارات)</value></data>
+  <data name="Priority_Short" xml:space="preserve"><value>اولویت {0}</value></data>
+  <data name="Position_DeputyLine" xml:space="preserve"><value>جانشین {0}: {1}</value></data>
+  <data name="Holder_DelegatedTo" xml:space="preserve"><value>تفویض به {0} تا {1}</value></data>
+  <data name="Flash_DelegationSaved" xml:space="preserve"><value>تفویض اختیار «{0}» ذخیره شد.</value></data>
+  <data name="Flash_DeputySaved" xml:space="preserve"><value>جانشین «{0}» ذخیره شد.</value></data>
+  <data name="Flash_DelegationEnded" xml:space="preserve"><value>تفویض پایان یافت.</value></data>
+  <data name="Flash_DelegationRemoved" xml:space="preserve"><value>تفویض/جانشینی حذف شد.</value></data>
+  <data name="Nav_My" xml:space="preserve"><value>تفویض‌های من</value></data>
+  <data name="My_Subtitle" xml:space="preserve"><value>سمت‌های شما، اختیاراتی که تفویض کرده‌اید و اختیاراتی که به شما تفویض شده است</value></data>
+  <data name="My_Positions" xml:space="preserve"><value>سمت‌های من</value></data>
+  <data name="My_PositionsHint" xml:space="preserve"><value>سمت‌های فعلی و آینده، شامل تفویض و جانشینی</value></data>
+  <data name="My_NoPositions" xml:space="preserve"><value>سمتی برای شما ثبت نشده است.</value></data>
+  <data name="My_Given" xml:space="preserve"><value>تفویض‌های من</value></data>
+  <data name="My_GivenHint" xml:space="preserve"><value>اختیاراتی که به دیگران سپرده‌اید</value></data>
+  <data name="My_NoGiven" xml:space="preserve"><value>تفویض فعالی ندارید.</value></data>
+  <data name="My_Received" xml:space="preserve"><value>تفویض‌شده به من</value></data>
+  <data name="My_NoReceived" xml:space="preserve"><value>اختیاری به شما تفویض نشده است.</value></data>
+  <data name="My_EndText" xml:space="preserve"><value>تفویض اختیار «{0}» از همین حالا پایان می‌یابد (اگر هنوز شروع نشده باشد، حذف می‌شود).</value></data>
+</root>

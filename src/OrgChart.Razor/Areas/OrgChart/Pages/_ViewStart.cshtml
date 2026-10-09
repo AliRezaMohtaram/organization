@@ -1,0 +1,4 @@
+@inject Microsoft.Extensions.Options.IOptions<OrgChartUiOptions> UiOptions
+@{
+    Layout = UiOptions.Value.Layout;
+}

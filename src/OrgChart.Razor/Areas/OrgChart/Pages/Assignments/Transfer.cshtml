@@ -1,0 +1,9 @@
+@page
+@model OrgChart.Razor.Admin.Pages.Assignments.TransferModel
+@{
+    ViewData["Title"] = OrgText.Get("Assignment_Transfer");
+}
+<partial name="/Areas/OrgChart/Pages/Shared/_OrgPage.cshtml" model="Model" />
+<div class="modal-page">
+    <partial name="@OrgChart.Razor.Admin.Pages.Assignments.TransferModel.FormPath" model="Model" />
+</div>

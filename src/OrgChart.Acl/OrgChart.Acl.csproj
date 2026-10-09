@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <Description>Connects OrgChart to the Acl access-control module: positions (with delegations and deputies) for Acl, cache invalidation on chart changes, and Acl roles as delegable authorities.</Description>
+  </PropertyGroup>
+
+
+  <ItemGroup>
+    <PackageReference Include="Acl.Core" Version="0.3.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\OrgChart.Core\OrgChart.Core.csproj" />
+  </ItemGroup>
+
+</Project>

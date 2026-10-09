@@ -1,0 +1,55 @@
+@model OrgChart.Razor.Admin.Pages.My.DelegateModel
+@{
+    string searchUrl = Url.Page("/My/Delegate", "Users", new { area = "OrgChart" }) ?? "";
+}
+<form class="modal" method="post" asp-area="OrgChart" asp-page="/My/Delegate" asp-route-position="@Model.Subject.Key" data-mx-ajax data-mx-init="oc-delegation-form" novalidate>
+    <div class="modal-head">
+        <span class="modal-head-ico"><svg class="ico"><use href="#oc-swap" /></svg></span>
+        <div>
+            <div class="modal-title">@OrgText.Format("Delegation_Heading", Model.Subject.Title)</div>
+            <div class="modal-sub">@OrgText.Get("Delegation_Hint")</div>
+        </div>
+        <a class="icon-btn plain close" href="@Model.BackUrl" data-close aria-label="@OrgText.Get("Close")"><svg class="ico"><use href="#oc-x" /></svg></a>
+    </div>
+    <div class="modal-body">
+        <partial name="/Areas/OrgChart/Pages/Shared/_FormErrors.cshtml" />
+        <div class="form-grid">
+            <div class="field span-2">
+                <label class="label" for="ToUserId">@OrgText.Get("Field_Delegate")<span class="req">*</span></label>
+                @if (Model.HasDirectory)
+                {
+                    <div class="dd oc-user-search" data-oc-user-search="@searchUrl" data-oc-user-target="ToUserId" data-empty="@OrgText.Get("Assignment_NoUserFound")">
+                        <div class="input-wrap">
+                            <svg class="ico"><use href="#oc-search" /></svg>
+                            <input class="input" type="search" data-oc-user-query placeholder="@OrgText.Get("Assignment_SearchUser")" autocomplete="off" aria-label="@OrgText.Get("Assignment_SearchUser")" autofocus />
+                        </div>
+                        <div class="dd-menu oc-user-results" data-oc-user-results role="listbox"></div>
+                    </div>
+                    <div class="oc-user-picked" data-oc-user-picked hidden>
+                        <svg class="ico"><use href="#oc-user" /></svg><span data-oc-user-name></span>
+                    </div>
+                }
+                <input class="input ltr" id="ToUserId" name="ToUserId" value="@Model.ToUserId" autocomplete="off" spellcheck="false" placeholder="@OrgText.Get("Field_UserIdPlaceholder")" required />
+            </div>
+            <div class="field">
+                <label class="label" for="ValidFrom">@OrgText.Get("Field_StartDate")</label>
+                <input class="input ltr" id="ValidFrom" name="ValidFrom" value="@Model.ValidFrom" autocomplete="off" placeholder="1405/01/01" inputmode="numeric" />
+            </div>
+            <div class="field">
+                <label class="label" for="ValidTo">@OrgText.Get("Field_EndDate")<span class="req">*</span></label>
+                <input class="input ltr" id="ValidTo" name="ValidTo" value="@Model.ValidTo" autocomplete="off" placeholder="1405/12/29" inputmode="numeric" required />
+                <span class="hint">@OrgText.Get("Field_DelegationEndHint")</span>
+            </div>
+            <partial name="/Areas/OrgChart/Pages/Shared/_ScopeFields.cshtml" model="Model.Scope" />
+            <div class="field span-2">
+                <label class="label" for="Note">@OrgText.Get("Field_Reason")</label>
+                <textarea class="textarea" id="Note" name="Note" rows="2">@Model.Note</textarea>
+            </div>
+        </div>
+    </div>
+    <div class="modal-foot">
+        <span class="spacer"></span>
+        <a class="btn btn-quiet" href="@Model.BackUrl" data-close>@OrgText.Get("Cancel")</a>
+        <button type="submit" class="btn btn-primary"><svg class="ico"><use href="#oc-check" /></svg>@OrgText.Get("Create")</button>
+    </div>
+</form>

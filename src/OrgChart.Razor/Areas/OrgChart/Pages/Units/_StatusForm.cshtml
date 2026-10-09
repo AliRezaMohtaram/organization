@@ -1,0 +1,22 @@
+@model OrgChart.Razor.Admin.Pages.Units.StatusModel
+@{
+    string cancel = Model.UnitUrl(Model.Unit.Key);
+}
+<form class="modal modal-sm" method="post" asp-area="OrgChart" asp-page="/Units/Status" asp-route-key="@Model.Unit.Key" asp-route-active="@Model.Active" data-mx-ajax novalidate>
+    <div class="modal-head">
+        <span class="modal-head-ico @(Model.Active ? "tone-success" : "tone-danger")"><svg class="ico"><use href="#oc-power" /></svg></span>
+        <div>
+            <div class="modal-title">@OrgText.Format(Model.Active ? "Unit_ActivateHeading" : "Unit_DeactivateHeading", Model.Unit.Title)</div>
+        </div>
+        <a class="icon-btn plain close" href="@cancel" data-close aria-label="@OrgText.Get("Close")"><svg class="ico"><use href="#oc-x" /></svg></a>
+    </div>
+    <div class="modal-body">
+        <partial name="/Areas/OrgChart/Pages/Shared/_FormErrors.cshtml" />
+        <p class="oc-confirm-text">@OrgText.Get(Model.Active ? "Unit_ActivateText" : "Unit_DeactivateText")</p>
+    </div>
+    <div class="modal-foot">
+        <span class="spacer"></span>
+        <a class="btn btn-quiet" href="@cancel" data-close>@OrgText.Get("Cancel")</a>
+        <button type="submit" class="btn @(Model.Active ? "btn-primary" : "btn-danger")" autofocus><svg class="ico"><use href="#oc-power" /></svg>@OrgText.Get(Model.Active ? "Activate" : "Deactivate")</button>
+    </div>
+</form>

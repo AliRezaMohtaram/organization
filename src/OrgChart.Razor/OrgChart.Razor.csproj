@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
+    <Description>OrgChart admin UI: Persian (RTL) Razor Pages under /OrgChart on the MX design system.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\OrgChart.AspNetCore\OrgChart.AspNetCore.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="wwwroot\mx\README.md" />
+    <Content Remove="wwwroot\mx\README.md" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="OrgChart.Tests" />
+  </ItemGroup>
+
+</Project>

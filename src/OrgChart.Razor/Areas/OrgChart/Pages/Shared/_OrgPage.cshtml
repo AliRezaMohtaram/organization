@@ -1,0 +1,43 @@
+@* Top of every OrgChart page: own stylesheet, icon sprite, script, the flash message of the last change and, inside
+   a host layout, the module's own navigation and title. Model: the page model. *@
+@model OrgPageModel
+@{
+    string page = ViewContext.RouteData.Values["page"]?.ToString() ?? "";
+    string? flash = TempData[OrgPageModel.FlashKey] as string;
+    var nav = new[]
+    {
+        (Page: "/Index", Active: page == "/Index", Label: OrgText.Get("Nav_Chart"), Icon: "oc-org"),
+        (Page: "/Types/Index", Active: page.StartsWith("/Types"), Label: OrgText.Get("Nav_Types"), Icon: "oc-tag"),
+        (Page: "/Audit/Index", Active: page.StartsWith("/Audit"), Label: OrgText.Get("Nav_Audit"), Icon: "oc-history"),
+        (Page: "/My/Index", Active: page.StartsWith("/My"), Label: OrgText.Get("Nav_My"), Icon: "oc-swap"),
+    };
+}
+<link rel="stylesheet" href="~/_content/OrgChart.Razor/css/orgchart.css" asp-append-version="true" />
+<script src="~/_content/OrgChart.Razor/js/orgchart.js" asp-append-version="true" defer></script>
+<partial name="/Areas/OrgChart/Pages/Shared/_OrgIcons.cshtml" />
+@if (flash is not null)
+{
+    <div class="callout tone-success oc-flash" role="status" data-oc-toast="@flash">
+        <svg class="ico"><use href="#oc-check" /></svg><div>@flash</div>
+    </div>
+}
+@if (!Model.Standalone)
+{
+    <div class="oc-head">
+        <div>
+            <h1 class="oc-head-title">@ViewData["Title"]</h1>
+            @if (ViewData["Subtitle"] is string subtitle)
+            {
+                <p class="oc-head-sub">@subtitle</p>
+            }
+        </div>
+        <nav class="fchips" aria-label="@OrgText.Get("Nav_Label")">
+            @foreach (var item in nav)
+            {
+                <a class="fchip@(item.Active ? " active" : "")" asp-area="OrgChart" asp-page="@item.Page" aria-current="@(item.Active ? "page" : null)">
+                    <svg class="ico"><use href="#@item.Icon" /></svg>@item.Label
+                </a>
+            }
+        </nav>
+    </div>
+}

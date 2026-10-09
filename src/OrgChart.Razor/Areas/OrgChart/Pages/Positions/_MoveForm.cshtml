@@ -1,0 +1,48 @@
+@model OrgChart.Razor.Admin.Pages.Positions.MoveModel
+@{
+    string cancel = Model.UnitUrl(Model.Position.UnitKey, IndexModel.TabPositions);
+    OrgChartSnapshot chart = Model.Chart;
+    const string indent = "\u00A0\u00A0\u00A0";
+}
+<form class="modal" method="post" asp-area="OrgChart" asp-page="/Positions/Move" asp-route-key="@Model.Position.Key" data-mx-ajax novalidate>
+    <div class="modal-head">
+        <span class="modal-head-ico"><svg class="ico"><use href="#oc-move" /></svg></span>
+        <div>
+            <div class="modal-title">@OrgText.Format("Position_MoveHeading", Model.Position.Title)</div>
+            <div class="modal-sub">@OrgText.Get("Position_MoveHint")</div>
+        </div>
+        <a class="icon-btn plain close" href="@cancel" data-close aria-label="@OrgText.Get("Close")"><svg class="ico"><use href="#oc-x" /></svg></a>
+    </div>
+    <div class="modal-body">
+        <partial name="/Areas/OrgChart/Pages/Shared/_FormErrors.cshtml" />
+        <div class="field">
+            <label class="label" for="Target">@OrgText.Get("Field_NewSuperior")<span class="req">*</span></label>
+            <select class="select" id="Target" name="Target" required autofocus>
+                @foreach (UnitNode unit in chart.Units.Where(u => u.IsActive))
+                {
+                    List<(PositionNode Position, int Depth)> options = chart.GetPositionOutline(unit.Key)
+                        .Where(o => o.Position.IsActive && !chart.IsSelfOrSubordinate(o.Position.Key, Model.Position.Key))
+                        .ToList();
+                    bool hasHead = chart.FindPosition(unit.ManagerPositionKey) is { IsActive: true };
+                    <optgroup label="@string.Join(" › ", chart.GetPath(unit.Key).Select(u => u.Title))">
+                        @if (!hasHead)
+                        {
+                            string value = OrgChart.Razor.Admin.Pages.Positions.MoveModel.UnitPrefix + unit.Key;
+                            <option value="@value" selected="@(Model.Target == value)">@OrgText.Format("Position_UnitTop", unit.Title)</option>
+                        }
+                        @foreach ((PositionNode position, int depth) in options)
+                        {
+                            <option value="@position.Key" selected="@OrgKey.AreEqual(Model.Target, position.Key)">@string.Concat(Enumerable.Repeat(indent, depth))@position.Title</option>
+                        }
+                    </optgroup>
+                }
+            </select>
+            <span class="hint">@OrgText.Get("Position_MoveKeysKept")</span>
+        </div>
+    </div>
+    <div class="modal-foot">
+        <span class="spacer"></span>
+        <a class="btn btn-quiet" href="@cancel" data-close>@OrgText.Get("Cancel")</a>
+        <button type="submit" class="btn btn-primary"><svg class="ico"><use href="#oc-move" /></svg>@OrgText.Get("Position_Move")</button>
+    </div>
+</form>
