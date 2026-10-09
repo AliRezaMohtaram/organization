@@ -339,5 +339,11 @@ All UI must follow the **MX design system** from https://github.com/AliRezaMohta
      `AclAuthorityCatalog` (authority key = Acl role id, title = role name). `AclBuilder.AddOrgChart()` for the Acl side only.
    - Tests: `tests/OrgChart.Acl.Tests` (both modules in one container, each on its own SQLite connection):
      holder/delegate/deputy access, immediate effect of ending, catalog, stamps, IOrgStructure lists.
-8. NEXT (decision 14): `Users` module (Identity, MX pages, implements `IUserDirectory`) + unified admin panel
-   (users, chart and Acl; Acl's admin UI to move to MX). Later: graphical chart; NuGet packaging.
+8. Users and the host (user decisions): no separate admin panel — the host app (first: DataMapper/Mapper,
+   github.com/AliRezaMohtaram/DataMapper) is the integration point. Mapper had no sign-in, so the Users module was built
+   inside its solution but self-contained (`Borc.Users`, `Borc.Users.Web`; Identity, `long` user ids, schema `usr`,
+   sign-in by user name or e-mail, no public registration; pushed to Mapper's `master`). OrgChart/Acl store the id as a
+   string. A host `IUserDirectory` over `IUserLookup` serves both modules.
+9. NEXT: Acl admin UI to MX; a shared menu contract (module pages in the host sidebar); connect OrgChart + Acl to Mapper
+   (`AddOrgChart().AddAcl()`, `IUserDirectory` adapter, end assignments on user deactivation via `IUserStatusListener`).
+   Later: graphical chart; NuGet packaging.
