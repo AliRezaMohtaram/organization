@@ -344,6 +344,9 @@ All UI must follow the **MX design system** from https://github.com/AliRezaMohta
    inside its solution but self-contained (`Borc.Users`, `Borc.Users.Web`; Identity, `long` user ids, schema `usr`,
    sign-in by user name or e-mail, no public registration; pushed to Mapper's `master`). OrgChart/Acl store the id as a
    string. A host `IUserDirectory` over `IUserLookup` serves both modules.
-9. NEXT: Acl admin UI to MX; a shared menu contract (module pages in the host sidebar); connect OrgChart + Acl to Mapper
-   (`AddOrgChart().AddAcl()`, `IUserDirectory` adapter, end assignments on user deactivation via `IUserStatusListener`).
-   Later: graphical chart; NuGet packaging.
+9. DONE: Acl admin UI on MX (Acl 0.3.0, pushed to Acl's master) and OrgChart + Acl connected to Mapper (DataMapper master):
+   OrgChart packed as 0.1.0 into `artifacts/packages` (local feed for Mapper), view/edit policies = Acl permission on the
+   host resource `Mapper.OrgChart`, `IUserDirectory` over the Users module, deactivated users leave their positions
+   (`IUserStatusListener` in Mapper), module pages in Mapper's `_Layout`. No shared menu contract (user: keep modules
+   independent; the host lists module pages). Details in DataMapper's CLAUDE.md.
+10. NEXT: user's manual tests in Mapper (`docs/modules-test-checklist.md` there). Later: graphical chart; shared NuGet feed.
