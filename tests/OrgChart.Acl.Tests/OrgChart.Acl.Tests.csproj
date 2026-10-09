@@ -5,14 +5,11 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
-    <!-- Same local Acl feed as src/OrgChart.Acl. -->
-    <AclPackages Condition="'$(AclPackages)' == ''">$(MSBuildThisFileDirectory)..\..\..\Acl\artifacts\packages</AclPackages>
-    <RestoreAdditionalProjectSources Condition="Exists('$(AclPackages)')">$(AclPackages)</RestoreAdditionalProjectSources>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Acl.AspNetCore" Version="0.2.0" />
-    <PackageReference Include="Acl.EFCore" Version="0.2.0" />
+    <PackageReference Include="Acl.AspNetCore" Version="0.3.0" />
+    <PackageReference Include="Acl.EFCore" Version="0.3.0" />
     <PackageReference Include="coverlet.collector" Version="6.0.2" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.20" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />

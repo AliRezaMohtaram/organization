@@ -7,18 +7,9 @@
     <Description>Connects OrgChart to the Acl access-control module: positions (with delegations and deputies) for Acl, cache invalidation on chart changes, and Acl roles as delegable authorities.</Description>
   </PropertyGroup>
 
-  <!--
-    Acl comes as NuGet packages. Until they are on a shared feed, restore them from a local folder:
-    by default the Acl clone next to this repository (../Acl/artifacts/packages, after `dotnet pack Acl.sln -c Release`);
-    override with the AclPackages property or environment variable.
-  -->
-  <PropertyGroup>
-    <AclPackages Condition="'$(AclPackages)' == ''">$(MSBuildThisFileDirectory)..\..\..\Acl\artifacts\packages</AclPackages>
-    <RestoreAdditionalProjectSources Condition="Exists('$(AclPackages)')">$(AclPackages)</RestoreAdditionalProjectSources>
-  </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Acl.Core" Version="0.2.0" />
+    <PackageReference Include="Acl.Core" Version="0.3.0" />
   </ItemGroup>
 
   <ItemGroup>

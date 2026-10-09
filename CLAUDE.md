@@ -329,10 +329,9 @@ All UI must follow the **MX design system** from https://github.com/AliRezaMohta
    - Acl: `PositionAssignment.Kind`/`RoleIds` (see contract above); a delegate/deputy gets only the position's
      PositionRoles filtered by RoleIds, in the position's unit, no OrgUnitRoles, and does not count as a member of the
      unit for user data-scope rules. `IAssignmentAdministration.GetPositionRolesAsync(positionKey)`.
-   - Distribution (user's choice): local NuGet feed. `OrgChart.Acl` and `tests/OrgChart.Acl.Tests` add
-     `$(AclPackages)` (default `../Acl/artifacts/packages`, overridable by property/env var) via
-     `RestoreAdditionalProjectSources`; pack Acl first (`dotnet pack Acl.sln -c Release`). In the cloud container the
-     clone is `/home/user/acl`: run with `AclPackages=/home/user/acl/artifacts/packages`.
+   - Distribution (user's choice): local NuGet feed, in `nuget.config`: `../Acl/artifacts/packages` with package source
+     mapping (`Acl.*` only from there — nuget.org has unrelated packages named Acl.Core 3.x). Pack Acl first
+     (`dotnet pack Acl.sln -c Release`); OrgChart.Acl references Acl 0.3.0. Cloud container: symlink /home/user/Acl → acl.
    - Bridge: `OrgChartBuilder.AddAcl()` = `OrgChartOrgStructure` (replaces Acl's `NullOrgStructure`; active units and
      positions for pickers; Primary/Acting → Holder, Delegated/Deputy mapped, AuthorityKeys parsed as role ids),
      `AclStampChangeListener` (Assignments → BumpUsers, Structure → BumpGlobal, Details → nothing),
