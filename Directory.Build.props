@@ -9,7 +9,7 @@
 
   <!-- NuGet package metadata, shared by the packages under src/. -->
   <PropertyGroup>
-    <Version>0.1.0</Version>
+    <Version>0.2.0</Version>
     <Authors>Alireza</Authors>
     <Copyright>Copyright © Alireza $([System.DateTime]::UtcNow.Year)</Copyright>
     <Description>Reusable organizational chart module for ASP.NET Core: org units, positions and assignments with stable keys.</Description>

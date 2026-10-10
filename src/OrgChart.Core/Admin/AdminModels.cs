@@ -9,18 +9,20 @@ public enum OrgTypeKind
     Position = 2,
 }
 
+/// <param name="Key">Stable key; null or blank = generated ("UTYPE-0001", "PTYPE-0001"). Never changes afterwards.</param>
 /// <param name="Level">Unit types only: place in the hierarchy (1 = top); a unit's type needs a greater level than its parent's. Null = no rule.</param>
 /// <param name="CanBeRoot">Unit types only: units of this type may be roots of the tree.</param>
-public sealed record OrgTypeInput(string Key, string Title, int SortOrder = 0, int? Level = null, bool CanBeRoot = true);
+public sealed record OrgTypeInput(string? Key, string Title, int SortOrder = 0, int? Level = null, bool CanBeRoot = true);
 
 /// <param name="Level">Unit types only; see <see cref="OrgTypeInput"/>. Rejected when existing units would break the rule.</param>
 public sealed record OrgTypeUpdate(string Title, int SortOrder, int? Level = null, bool CanBeRoot = true);
 
+/// <param name="Key">Stable key; null or blank = generated ("UNIT-0001"). Never changes afterwards.</param>
 /// <param name="ParentKey">Null for a root unit (e.g. a company).</param>
 /// <param name="ValidFrom">Inclusive start (UTC), or null for unbounded.</param>
 /// <param name="ValidTo">Exclusive end (UTC), or null for unbounded.</param>
 public sealed record UnitInput(
-    string Key,
+    string? Key,
     string Title,
     string TypeKey,
     string? ParentKey = null,
@@ -38,9 +40,10 @@ public sealed record UnitUpdate(
     DateTime? ValidFrom,
     DateTime? ValidTo);
 
+/// <param name="Key">Stable key; null or blank = generated ("POS-0001"). Never changes afterwards.</param>
 /// <param name="ParentPositionKey">The position (in the same unit) this one reports to; null for a top position.</param>
 public sealed record PositionInput(
-    string Key,
+    string? Key,
     string Title,
     string UnitKey,
     string? TypeKey = null,

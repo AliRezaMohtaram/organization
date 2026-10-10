@@ -30,12 +30,7 @@
             }
             else
             {
-                <div class="field">
-                    <label class="label" for="Input_Key">@OrgText.Get("Field_Key")<span class="req">*</span></label>
-                    <input class="input ltr" asp-for="Input.Key" autocomplete="off" spellcheck="false" placeholder="DV-FIN" required />
-                    <span class="hint">@OrgText.Get("Field_KeyHint")</span>
-                </div>
-                <div class="field">
+                <div class="field span-2">
                     <label class="label" for="Input_ParentKey">@OrgText.Get("Field_Parent")</label>
                     <select class="select" asp-for="Input.ParentKey" data-oc-parent>
                         <option value="">@OrgText.Get("Unit_Root")</option>

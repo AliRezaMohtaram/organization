@@ -348,4 +348,8 @@ All UI must follow the **MX design system** from https://github.com/AliRezaMohta
    host resource `Mapper.OrgChart`, `IUserDirectory` over the Users module, deactivated users leave their positions
    (`IUserStatusListener` in Mapper), module pages in Mapper's `_Layout`. No shared menu contract (user: keep modules
    independent; the host lists module pages). Details in DataMapper's CLAUDE.md.
-10. NEXT: user's manual tests in Mapper (`docs/modules-test-checklist.md` there). Later: graphical chart; shared NuGet feed.
+10. DONE: Generated keys (0.2.0; user: no key is typed by hand). `UnitInput`/`PositionInput`/`OrgTypeInput.Key` may be null or
+   blank → `UNIT-0001`, `POS-0001`, `UTYPE-0001`, `PTYPE-0001` (prefix + highest number in use + 1, inactive rows count; safe
+   because chart transactions are serialized by the stamp lock). The create methods return the key. The admin forms no longer
+   show a key field (still shown read-only on edit and in the unit details). An explicit key still works (future import).
+11. NEXT: user's manual tests in Mapper (`docs/modules-test-checklist.md` there). Later: graphical chart; shared NuGet feed.

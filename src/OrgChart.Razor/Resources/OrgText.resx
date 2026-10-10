@@ -91,7 +91,6 @@
   <data name="Unit_ActivateText" xml:space="preserve"><value>واحد دوباره در درخت و فهرست‌ها نمایش داده می‌شود. والد آن باید فعال باشد.</value></data>
   <data name="Unit_DeactivateText" xml:space="preserve"><value>واحد حذف نمی‌شود و کلیدش برای داده‌های قدیمی می‌ماند، اما دیگر قابل انتخاب نیست. واحدی که زیرواحد یا سمت فعال دارد غیرفعال نمی‌شود.</value></data>
   <data name="Field_Key" xml:space="preserve"><value>کلید</value></data>
-  <data name="Field_KeyHint" xml:space="preserve"><value>حروف و اعداد انگلیسی، نقطه، - و _ . پس از ایجاد قابل تغییر نیست.</value></data>
   <data name="Field_KeyLocked" xml:space="preserve"><value>کلید پس از ایجاد قابل تغییر نیست.</value></data>
   <data name="Field_Code" xml:space="preserve"><value>کد</value></data>
   <data name="Field_CodeHint" xml:space="preserve"><value>کد نمایشی اختیاری؛ برخلاف کلید قابل تغییر است.</value></data>

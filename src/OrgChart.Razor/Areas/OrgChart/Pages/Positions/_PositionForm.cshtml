@@ -23,14 +23,6 @@
                     <span class="hint">@OrgText.Get("Field_KeyLocked")</span>
                 </div>
             }
-            else
-            {
-                <div class="field span-2">
-                    <label class="label" for="Input_Key">@OrgText.Get("Field_Key")<span class="req">*</span></label>
-                    <input class="input ltr" asp-for="Input.Key" autocomplete="off" spellcheck="false" placeholder="POS-FIN-MGR" required />
-                    <span class="hint">@OrgText.Get("Field_KeyHint")</span>
-                </div>
-            }
             <div class="field span-2">
                 <label class="label" for="Input_Title">@OrgText.Get("Field_Title")<span class="req">*</span></label>
                 <input class="input" asp-for="Input.Title" autocomplete="off" required autofocus />

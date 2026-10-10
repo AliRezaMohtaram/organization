@@ -9,14 +9,16 @@ namespace OrgChart.Core.Admin;
 /// <remarks>All dates are UTC; a value with <see cref="DateTimeKind.Unspecified"/> is taken as UTC.</remarks>
 public interface IOrgChartAdministration
 {
-    Task CreateTypeAsync(OrgTypeKind kind, OrgTypeInput input, CancellationToken cancellationToken = default);
+    /// <summary>Returns the key: the given one, or a generated one when it is blank.</summary>
+    Task<string> CreateTypeAsync(OrgTypeKind kind, OrgTypeInput input, CancellationToken cancellationToken = default);
 
     Task UpdateTypeAsync(OrgTypeKind kind, string key, OrgTypeUpdate update, CancellationToken cancellationToken = default);
 
     /// <summary>An inactive type stays on the units/positions that use it but cannot be chosen any more.</summary>
     Task SetTypeActiveAsync(OrgTypeKind kind, string key, bool isActive, CancellationToken cancellationToken = default);
 
-    Task CreateUnitAsync(UnitInput input, CancellationToken cancellationToken = default);
+    /// <summary>Returns the key: the given one, or a generated one when it is blank.</summary>
+    Task<string> CreateUnitAsync(UnitInput input, CancellationToken cancellationToken = default);
 
     Task UpdateUnitAsync(string key, UnitUpdate update, CancellationToken cancellationToken = default);
 
@@ -32,7 +34,8 @@ public interface IOrgChartAdministration
     /// <summary>Names one active position of the unit as its head, or clears it (null).</summary>
     Task SetUnitManagerAsync(string unitKey, string? positionKey, CancellationToken cancellationToken = default);
 
-    Task CreatePositionAsync(PositionInput input, CancellationToken cancellationToken = default);
+    /// <summary>Returns the key: the given one, or a generated one when it is blank.</summary>
+    Task<string> CreatePositionAsync(PositionInput input, CancellationToken cancellationToken = default);
 
     Task UpdatePositionAsync(string key, PositionUpdate update, CancellationToken cancellationToken = default);
 

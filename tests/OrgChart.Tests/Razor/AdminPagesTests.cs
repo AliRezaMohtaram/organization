@@ -119,16 +119,16 @@ public sealed class AdminPagesTests : IAsyncLifetime
 
         HttpResponseMessage response = await AdminUiHost.SubmitAsync(client, "/OrgChart/Units/Edit?parent=C",
         [
-            new("Input.Key", "HR"), new("Input.Title", "منابع انسانی"), new("Input.TypeKey", "DEPARTMENT"),
+            new("Input.Title", "منابع انسانی"), new("Input.TypeKey", "DEPARTMENT"),
             new("Input.ParentKey", "C"), new("Input.ValidFrom", "۱۴۰۵/۰۱/۰۱"), new("Input.SortOrder", "2"),
         ]);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         using JsonDocument json = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
-        Assert.Contains("unit=HR", json.RootElement.GetProperty("redirect").GetString());
+        Assert.Contains("unit=UNIT-0001", json.RootElement.GetProperty("redirect").GetString());
 
         OrgChartSnapshot chart = await ScopeAsync(sp => sp.GetRequiredService<IOrgChartReader>().GetSnapshotAsync());
-        UnitNode hr = chart.FindUnit("HR")!;
+        UnitNode hr = chart.FindUnit("UNIT-0001")!;
         Assert.Equal(("منابع انسانی", "C", 2), (hr.Title, hr.ParentKey, hr.SortOrder));
         Assert.NotNull(hr.ValidFrom);
 
@@ -142,13 +142,13 @@ public sealed class AdminPagesTests : IAsyncLifetime
         HttpClient client = _host.Client("editor", modal: true);
 
         HttpResponseMessage response = await AdminUiHost.SubmitAsync(client, "/OrgChart/Units/Edit?parent=C",
-            [new("Input.Key", "fin"), new("Input.Title", "تکراری"), new("Input.TypeKey", "DEPARTMENT"), new("Input.ParentKey", "C")]);
+            [new("Input.Title", "نوع ناموجود"), new("Input.TypeKey", "NO-SUCH-TYPE"), new("Input.ParentKey", "C")]);
 
         string html = await AdminUiHost.TextAsync(response);
         Assert.StartsWith("<form", html.TrimStart());
         Assert.Contains("callout tone-danger", html);
-        Assert.Contains("این کلید قبلاً استفاده شده است", html);
-        Assert.Contains("value=\"تکراری\"", html);
+        Assert.Contains("نوع انتخاب‌شده وجود ندارد", html);
+        Assert.Contains("value=\"نوع ناموجود\"", html);
     }
 
     [Fact]
@@ -157,7 +157,7 @@ public sealed class AdminPagesTests : IAsyncLifetime
         HttpClient client = _host.Client("editor", modal: true);
 
         HttpResponseMessage response = await AdminUiHost.SubmitAsync(client, "/OrgChart/Units/Edit?parent=C",
-            [new("Input.Key", "OPS"), new("Input.Title", "عملیات"), new("Input.TypeKey", "DEPARTMENT"), new("Input.ValidFrom", "1405/13/01")]);
+            [new("Input.Title", "عملیات"), new("Input.TypeKey", "DEPARTMENT"), new("Input.ValidFrom", "1405/13/01")]);
 
         Assert.Contains("تاریخ معتبر نیست", await AdminUiHost.TextAsync(response));
         Assert.Null((await ScopeAsync(sp => sp.GetRequiredService<IOrgChartReader>().GetSnapshotAsync())).FindUnit("OPS"));

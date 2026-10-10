@@ -46,7 +46,6 @@ public sealed class EditModel(IOrgChartReader reader, IOrgChartAdministration ad
         {
             Input = new UnitForm
             {
-                Key = unit.Key,
                 Title = unit.Title,
                 TypeKey = unit.TypeKey,
                 ParentKey = unit.ParentKey,
@@ -90,8 +89,7 @@ public sealed class EditModel(IOrgChartReader reader, IOrgChartAdministration ad
             }
             else
             {
-                key = Input.Key?.Trim() ?? "";
-                await admin.CreateUnitAsync(new UnitInput(key, Input.Title ?? "", Input.TypeKey ?? "", NullIfEmpty(Input.ParentKey), Input.Code, Input.SortOrder, from, to), cancellationToken);
+                key = await admin.CreateUnitAsync(new UnitInput(null, Input.Title ?? "", Input.TypeKey ?? "", NullIfEmpty(Input.ParentKey), Input.Code, Input.SortOrder, from, to), cancellationToken);
             }
 
             return Done(UnitUrl(key), OrgText.Format(IsEdit ? "Flash_UnitSaved" : "Flash_UnitCreated", Input.Title?.Trim()));
@@ -143,7 +141,6 @@ public sealed class EditModel(IOrgChartReader reader, IOrgChartAdministration ad
 
 public sealed class UnitForm
 {
-    public string? Key { get; set; }
     public string? Title { get; set; }
     public string? TypeKey { get; set; }
     public string? ParentKey { get; set; }

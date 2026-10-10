@@ -20,9 +20,6 @@ public sealed class EditModel(IOrgChartReader reader, IOrgChartAdministration ad
     public string? Key { get; set; }
 
     [BindProperty]
-    public string? NewKey { get; set; }
-
-    [BindProperty]
     public string? Title { get; set; }
 
     [BindProperty]
@@ -72,7 +69,7 @@ public sealed class EditModel(IOrgChartReader reader, IOrgChartAdministration ad
             }
             else
             {
-                await admin.CreateTypeAsync(Kind, new OrgTypeInput(NewKey?.Trim() ?? "", Title ?? "", SortOrder, Level, CanBeRoot), cancellationToken);
+                await admin.CreateTypeAsync(Kind, new OrgTypeInput(null, Title ?? "", SortOrder, Level, CanBeRoot), cancellationToken);
             }
 
             return Done(BackUrl, OrgText.Format("Flash_TypeSaved", Title?.Trim()));

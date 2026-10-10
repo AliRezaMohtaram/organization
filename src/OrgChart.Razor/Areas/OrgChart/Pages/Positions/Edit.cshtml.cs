@@ -47,7 +47,6 @@ public sealed class EditModel(IOrgChartReader reader, IOrgChartAdministration ad
         {
             Input = new PositionForm
             {
-                Key = position.Key,
                 Title = position.Title,
                 TypeKey = position.TypeKey,
                 IsManagerial = position.IsManagerial,
@@ -92,7 +91,7 @@ public sealed class EditModel(IOrgChartReader reader, IOrgChartAdministration ad
             else
             {
                 await admin.CreatePositionAsync(new PositionInput(
-                    Input.Key?.Trim() ?? "", Input.Title ?? "", OwnerUnit!.Key, type, Input.IsManagerial, Input.Code, Input.SortOrder, from, to, parentKey), cancellationToken);
+                    null, Input.Title ?? "", OwnerUnit!.Key, type, Input.IsManagerial, Input.Code, Input.SortOrder, from, to, parentKey), cancellationToken);
             }
 
             return Done(UnitUrl(OwnerUnit!.Key, IndexModel.TabPositions),
@@ -124,7 +123,6 @@ public sealed class EditModel(IOrgChartReader reader, IOrgChartAdministration ad
 
 public sealed class PositionForm
 {
-    public string? Key { get; set; }
     public string? Title { get; set; }
     public string? TypeKey { get; set; }
     public bool IsManagerial { get; set; }
