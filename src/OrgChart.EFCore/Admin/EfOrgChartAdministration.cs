@@ -1,3 +1,4 @@
+using System.Globalization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 
@@ -20,13 +21,13 @@ internal sealed partial class EfOrgChartAdministration(
 {
     // ---------------------------------------------------------------- types
 
-    public Task CreateTypeAsync(OrgTypeKind kind, OrgTypeInput input, CancellationToken cancellationToken = default)
+    public Task<string> CreateTypeAsync(OrgTypeKind kind, OrgTypeInput input, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(input);
 
         return RunAsync(chart: true, async change =>
         {
-            string key = RequireKey(input.Key);
+            string key = await KeyOrNextAsync(input.Key, Types(kind), kind == OrgTypeKind.Unit ? UnitTypeKeyPrefix : PositionTypeKeyPrefix, cancellationToken);
             string normalized = OrgKey.Normalize(key);
             if (await Types(kind).AnyAsync(t => t.NormalizedKey == normalized, cancellationToken))
             {
@@ -43,6 +44,7 @@ internal sealed partial class EfOrgChartAdministration(
 
             audit.Write("TypeCreated", TypeEntity(kind), type.Key, new { after = TypeState(type) });
             change.Kind = OrgChartChangeKind.Details;
+            return key;
         }, cancellationToken);
     }
 
@@ -85,13 +87,13 @@ internal sealed partial class EfOrgChartAdministration(
 
     // ---------------------------------------------------------------- units
 
-    public Task CreateUnitAsync(UnitInput input, CancellationToken cancellationToken = default)
+    public Task<string> CreateUnitAsync(UnitInput input, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(input);
 
         return RunAsync(chart: true, async change =>
         {
-            string key = RequireKey(input.Key);
+            string key = await KeyOrNextAsync(input.Key, db.OrgUnits, UnitKeyPrefix, cancellationToken);
             string normalized = OrgKey.Normalize(key);
             if (await db.OrgUnits.AnyAsync(u => u.NormalizedKey == normalized, cancellationToken))
             {
@@ -127,6 +129,7 @@ internal sealed partial class EfOrgChartAdministration(
 
             audit.Write("UnitCreated", nameof(OrgUnit), unit.Key, new { after = UnitState(unit) });
             change.Kind = OrgChartChangeKind.Structure;
+            return key;
         }, cancellationToken);
     }
 
@@ -276,13 +279,13 @@ internal sealed partial class EfOrgChartAdministration(
 
     // ---------------------------------------------------------------- positions
 
-    public Task CreatePositionAsync(PositionInput input, CancellationToken cancellationToken = default)
+    public Task<string> CreatePositionAsync(PositionInput input, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(input);
 
         return RunAsync(chart: true, async change =>
         {
-            string key = RequireKey(input.Key);
+            string key = await KeyOrNextAsync(input.Key, db.Positions, PositionKeyPrefix, cancellationToken);
             string normalized = OrgKey.Normalize(key);
             if (await db.Positions.AnyAsync(p => p.NormalizedKey == normalized, cancellationToken))
             {
@@ -313,6 +316,7 @@ internal sealed partial class EfOrgChartAdministration(
 
             audit.Write("PositionCreated", nameof(Position), position.Key, new { after = PositionState(position) });
             change.Kind = OrgChartChangeKind.Structure;
+            return key;
         }, cancellationToken);
     }
 
@@ -893,6 +897,35 @@ internal sealed partial class EfOrgChartAdministration(
 
         assignment.ValidTo = end;
         return end;
+    }
+
+    private const string UnitKeyPrefix = "UNIT-";
+    private const string PositionKeyPrefix = "POS-";
+    private const string UnitTypeKeyPrefix = "UTYPE-";
+    private const string PositionTypeKeyPrefix = "PTYPE-";
+
+    /// <summary>
+    /// The given key, or — when it is blank — the next free generated one: the prefix plus one more than the highest
+    /// number already used after that prefix (e.g. "UNIT-0007"). Inactive rows count, so a key is never reused. Runs
+    /// inside a chart transaction, whose stamp lock serializes creations, so two calls cannot pick the same number.
+    /// </summary>
+    private static async Task<string> KeyOrNextAsync(string? key, IQueryable<KeyedEntity> table, string prefix, CancellationToken cancellationToken)
+    {
+        if (!string.IsNullOrWhiteSpace(key))
+        {
+            return RequireKey(key);
+        }
+
+        string normalizedPrefix = OrgKey.Normalize(prefix);
+        List<string> used = await table
+            .Where(e => e.NormalizedKey.StartsWith(normalizedPrefix))
+            .Select(e => e.NormalizedKey)
+            .ToListAsync(cancellationToken);
+        int highest = used
+            .Select(k => int.TryParse(k.AsSpan(normalizedPrefix.Length), NumberStyles.None, CultureInfo.InvariantCulture, out int n) ? n : 0)
+            .DefaultIfEmpty()
+            .Max();
+        return prefix + (highest + 1).ToString("0000", CultureInfo.InvariantCulture);
     }
 
     private static string RequireKey(string? key)

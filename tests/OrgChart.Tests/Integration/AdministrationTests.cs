@@ -53,6 +53,27 @@ public sealed class AdministrationTests : IDisposable
         Assert.Equal(_s.Now, row.CreatedAt);
     }
 
+    [Fact]
+    public async Task Blank_keys_are_generated_per_table_and_never_reused()
+    {
+        await _s.SeedAsync();
+        string first = "", second = "", position = "", unitType = "", positionType = "";
+
+        await _s.AdminAsync(async a => first = await a.CreateUnitAsync(new UnitInput(null, "یک", "DEPARTMENT", "C")));
+        await _s.AdminAsync(a => a.SetUnitActiveAsync(first, false));
+        await _s.AdminAsync(a => a.CreateUnitAsync(new UnitInput("unit-0041", "دستی", "DEPARTMENT", "C")));
+        await _s.AdminAsync(async a => second = await a.CreateUnitAsync(new UnitInput("  ", "دو", "DEPARTMENT", "C")));
+        await _s.AdminAsync(async a => position = await a.CreatePositionAsync(new PositionInput(null, "کارشناس", "FIN")));
+        await _s.AdminAsync(async a => unitType = await a.CreateTypeAsync(OrgTypeKind.Unit, new OrgTypeInput(null, "گروه")));
+        await _s.AdminAsync(async a => positionType = await a.CreateTypeAsync(OrgTypeKind.Position, new OrgTypeInput("", "تخصصی")));
+
+        // The inactive UNIT-0001 still counts and a hand-made UNIT-0041 moves the counter on.
+        Assert.Equal(("UNIT-0001", "UNIT-0042", "POS-0001", "UTYPE-0001", "PTYPE-0001"), (first, second, position, unitType, positionType));
+        OrgChartSnapshot chart = await SnapshotAsync();
+        Assert.Equal("دو", chart.FindUnit("UNIT-0042")!.Title);
+        Assert.Equal("کارشناس", chart.FindPosition("POS-0001")!.Title);
+    }
+
     [Theory]
     [InlineData("bad key", OrgChartErrors.KeyInvalid)]
     [InlineData("fin", OrgChartErrors.KeyTaken)]

@@ -323,7 +323,7 @@ internal sealed class EfOrgChartReader(OrgChartDbContext db, SnapshotCache cache
             .ToListAsync(cancellationToken);
 
         List<OrgTypeNode> positionTypes = await db.PositionTypes.AsNoTracking()
-            .Select(t => new OrgTypeNode(t.Key, t.Title, t.SortOrder, t.IsActive))
+            .Select(t => new OrgTypeNode(t.Key, t.Title, t.SortOrder, t.IsActive, null, true))
             .ToListAsync(cancellationToken);
 
         return new OrgChartSnapshot(units, positions, unitTypes, positionTypes);
