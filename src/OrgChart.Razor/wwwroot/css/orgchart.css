@@ -168,3 +168,7 @@
   .oc-unit-actions { width:100%; }
   .oc-info, .oc-summary { grid-template-columns:minmax(0, 1fr); }
 }
+
+/* Search box above a long select (orgchart.js selectSearch) */
+.oc-select-search { margin-bottom:.35rem; }
+select[size] { height:auto; padding-block:.25rem; }

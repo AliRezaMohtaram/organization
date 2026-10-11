@@ -32,7 +32,7 @@
             {
                 <div class="field span-2">
                     <label class="label" for="Input_ParentKey">@OrgText.Get("Field_Parent")</label>
-                    <select class="select" asp-for="Input.ParentKey" data-oc-parent>
+                    <select class="select" data-oc-select-search="@OrgText.Get("Field_SearchList")" asp-for="Input.ParentKey" data-oc-parent>
                         <option value="">@OrgText.Get("Unit_Root")</option>
                         @foreach (UnitNode parent in Model.Chart.Units.Where(u => u.IsActive))
                         {

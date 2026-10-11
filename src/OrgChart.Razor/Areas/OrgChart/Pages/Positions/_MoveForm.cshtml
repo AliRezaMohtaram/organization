@@ -4,7 +4,7 @@
     OrgChartSnapshot chart = Model.Chart;
     const string indent = "\u00A0\u00A0\u00A0";
 }
-<form class="modal" method="post" asp-area="OrgChart" asp-page="/Positions/Move" asp-route-key="@Model.Position.Key" data-mx-ajax novalidate>
+<form class="modal" method="post" asp-area="OrgChart" asp-page="/Positions/Move" asp-route-key="@Model.Position.Key" data-mx-ajax novalidate data-mx-init="oc-select-search">
     <div class="modal-head">
         <span class="modal-head-ico"><svg class="ico"><use href="#oc-move" /></svg></span>
         <div>
@@ -17,7 +17,7 @@
         <partial name="/Areas/OrgChart/Pages/Shared/_FormErrors.cshtml" />
         <div class="field">
             <label class="label" for="Target">@OrgText.Get("Field_NewSuperior")<span class="req">*</span></label>
-            <select class="select" id="Target" name="Target" required autofocus>
+            <select class="select" data-oc-select-search="@OrgText.Get("Field_SearchList")" id="Target" name="Target" required autofocus>
                 @foreach (UnitNode unit in chart.Units.Where(u => u.IsActive))
                 {
                     List<(PositionNode Position, int Depth)> options = chart.GetPositionOutline(unit.Key)

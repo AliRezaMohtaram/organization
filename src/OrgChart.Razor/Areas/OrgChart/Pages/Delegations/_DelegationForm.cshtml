@@ -75,7 +75,7 @@
                     }
                     else
                     {
-                        <select class="select" id="DeputyPositionKey" name="DeputyPositionKey" required>
+                        <select class="select" data-oc-select-search="@OrgText.Get("Field_SearchList")" id="DeputyPositionKey" name="DeputyPositionKey" required>
                             <option value="">@OrgText.Get("Choose")</option>
                             @foreach (var item in OrgOptions.Positions(Model.Chart, Model.DeputyPositionKey).Where(i => !OrgKey.AreEqual(i.Value, Model.Subject.Key)))
                             {

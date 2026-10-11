@@ -237,13 +237,59 @@
         });
     }
 
+    /* ---------------- searchable selects: select[data-oc-select-search="placeholder"] ----------------
+       A search box above the select; typing filters its options (and option groups), opens the list as a listbox and
+       picks the first match; Enter or a click takes the choice and closes the list. */
+    function selectSearch(root) {
+        $$("select[data-oc-select-search]", root).forEach(select => {
+            if (select.ocSearch) return;
+            select.ocSearch = true;
+            const input = document.createElement("input");
+            input.type = "search";
+            input.className = "input oc-select-search";
+            input.placeholder = select.dataset.ocSelectSearch || "";
+            input.setAttribute("aria-label", input.placeholder);
+            input.autocomplete = "off";
+            select.before(input);
+            const options = Array.from(select.options);
+            const close = () => { select.removeAttribute("size"); };
+
+            input.addEventListener("input", () => {
+                const q = norm(input.value);
+                let shown = 0, first = null;
+                options.forEach(o => {
+                    const group = o.parentElement.tagName === "OPTGROUP" ? o.parentElement.label : "";
+                    const hit = !q || (o.value && norm(o.text + " " + group).includes(q));
+                    o.hidden = !hit;
+                    if (hit && o.value) { shown++; first ??= o; }
+                });
+                $$("optgroup", select).forEach(g => { g.hidden = !Array.from(g.children).some(o => !o.hidden); });
+                if (!q) { close(); return; }
+                select.size = Math.max(2, Math.min(8, shown + $$("optgroup", select).filter(g => !g.hidden).length));
+                if (first && (!select.selectedOptions[0] || select.selectedOptions[0].hidden)) {
+                    select.value = first.value;
+                    select.dispatchEvent(new Event("change", { bubbles: true }));
+                }
+            });
+            input.addEventListener("keydown", e => {
+                if (e.key === "Enter") { e.preventDefault(); close(); select.focus(); }
+                else if (e.key === "ArrowDown" && select.size > 1) { e.preventDefault(); select.focus(); }
+            });
+            select.addEventListener("click", () => { if (select.size > 1) close(); });
+            select.addEventListener("keydown", e => { if (e.key === "Enter" && select.size > 1) { e.preventDefault(); close(); } });
+        });
+    }
+
     function init() {
         flash();
         tree();
+        selectSearch(document);
+        const withSearch = fn => root => { fn(root); selectSearch(root); };
         if (window.MX?.component) {
-            window.MX.component("oc-user-search", userSearch);
-            window.MX.component("oc-unit-form", unitForm);
-            window.MX.component("oc-delegation-form", form => { userSearch(form); scopeFields(form); });
+            window.MX.component("oc-user-search", withSearch(userSearch));
+            window.MX.component("oc-unit-form", withSearch(unitForm));
+            window.MX.component("oc-delegation-form", withSearch(form => { userSearch(form); scopeFields(form); }));
+            window.MX.component("oc-select-search", selectSearch);
         } else {
             $$("[data-mx-init='oc-user-search']").forEach(userSearch);
             $$("[data-mx-init='oc-unit-form']").forEach(unitForm);

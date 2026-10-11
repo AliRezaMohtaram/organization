@@ -1,16 +1,26 @@
 @* Top of every OrgChart page: own stylesheet, icon sprite, script, the flash message of the last change and, inside
    a host layout, the module's own navigation and title. Model: the page model. *@
 @model OrgPageModel
+@inject Microsoft.AspNetCore.Authorization.IAuthorizationService Authorization
 @{
     string page = ViewContext.RouteData.Values["page"]?.ToString() ?? "";
     string? flash = TempData[OrgPageModel.FlashKey] as string;
     var nav = new[]
     {
-        (Page: "/Index", Active: page == "/Index", Label: OrgText.Get("Nav_Chart"), Icon: "oc-org"),
-        (Page: "/Types/Index", Active: page.StartsWith("/Types"), Label: OrgText.Get("Nav_Types"), Icon: "oc-tag"),
-        (Page: "/Audit/Index", Active: page.StartsWith("/Audit"), Label: OrgText.Get("Nav_Audit"), Icon: "oc-history"),
-        (Page: "/My/Index", Active: page.StartsWith("/My"), Label: OrgText.Get("Nav_My"), Icon: "oc-swap"),
+        (Page: "/Index", Active: page == "/Index", Label: OrgText.Get("Nav_Chart"), Icon: "oc-org", Policy: OrgChartPolicies.View),
+        (Page: "/Types/Index", Active: page.StartsWith("/Types"), Label: OrgText.Get("Nav_Types"), Icon: "oc-tag", Policy: OrgChartPolicies.View),
+        (Page: "/Audit/Index", Active: page.StartsWith("/Audit"), Label: OrgText.Get("Nav_Audit"), Icon: "oc-history", Policy: OrgChartPolicies.View),
+        (Page: "/My/Index", Active: page.StartsWith("/My"), Label: OrgText.Get("Nav_My"), Icon: "oc-swap", Policy: OrgChartPolicies.Self),
     };
+
+    // Only the pages the user may open (a link must never lead to "access denied").
+    var allowed = new Dictionary<string, bool>();
+    foreach (string policy in nav.Select(n => n.Policy).Distinct())
+    {
+        allowed[policy] = (await Microsoft.AspNetCore.Authorization.AuthorizationServiceExtensions.AuthorizeAsync(Authorization, User, policy)).Succeeded;
+    }
+
+    var visibleNav = nav.Where(n => allowed[n.Policy]).ToList();
 }
 <link rel="stylesheet" href="~/_content/OrgChart.Razor/css/orgchart.css" asp-append-version="true" />
 <script src="~/_content/OrgChart.Razor/js/orgchart.js" asp-append-version="true" defer></script>
@@ -32,7 +42,7 @@
             }
         </div>
         <nav class="fchips" aria-label="@OrgText.Get("Nav_Label")">
-            @foreach (var item in nav)
+            @foreach (var item in visibleNav)
             {
                 <a class="fchip@(item.Active ? " active" : "")" asp-area="OrgChart" asp-page="@item.Page" aria-current="@(item.Active ? "page" : null)">
                     <svg class="ico"><use href="#@item.Icon" /></svg>@item.Label

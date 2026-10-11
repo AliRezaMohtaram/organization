@@ -27,7 +27,7 @@
                 else
                 {
                     <label class="label" for="Input_PositionKey">@OrgText.Get("Field_Position")<span class="req">*</span></label>
-                    <select class="select" asp-for="Input.PositionKey" asp-items="OrgOptions.Positions(Model.Chart, Model.Input.PositionKey, onlyUnit: Model.OwnerUnit?.Key)" required></select>
+                    <select class="select" data-oc-select-search="@OrgText.Get("Field_SearchList")" asp-for="Input.PositionKey" asp-items="OrgOptions.Positions(Model.Chart, Model.Input.PositionKey, onlyUnit: Model.OwnerUnit?.Key)" required></select>
                 }
             </div>
 

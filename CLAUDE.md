@@ -354,4 +354,8 @@ All UI must follow the **MX design system** from https://github.com/AliRezaMohta
    show a key field (still shown read-only on edit and in the unit details). An explicit key still works (future import).
 11. Distribution: Mapper keeps the packages in its own repo (`modules-feed/`, refreshed by its `tools/update-modules.sh`);
    bump the version before every release (0.2.1 = first one shipped that way).
-12. NEXT: user's manual tests in Mapper (`docs/modules-test-checklist.md` there). Later: graphical chart; shared NuGet feed.
+12. DONE: 0.2.2 (user: never show what a user cannot open; position pickers searchable). The module nav in `_OrgPage` lists only
+   pages whose policy (View / Self) the user passes. `select[data-oc-select-search]` (MX component `oc-select-search`, also
+   applied inside the other form components) gets a filter box above it: position, unit, parent and manager selects in the
+   unit, position, assignment, transfer and delegation forms. Text `Field_SearchList`.
+13. NEXT: user's manual tests in Mapper (`docs/modules-test-checklist.md` there). Later: graphical chart; shared NuGet feed.

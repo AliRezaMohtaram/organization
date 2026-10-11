@@ -381,4 +381,5 @@
   <data name="My_Received" xml:space="preserve"><value>تفویض‌شده به من</value></data>
   <data name="My_NoReceived" xml:space="preserve"><value>اختیاری به شما تفویض نشده است.</value></data>
   <data name="My_EndText" xml:space="preserve"><value>تفویض اختیار «{0}» از همین حالا پایان می‌یابد (اگر هنوز شروع نشده باشد، حذف می‌شود).</value></data>
+  <data name="Field_SearchList" xml:space="preserve"><value>جستجو در فهرست…</value></data>
 </root>

@@ -2,7 +2,7 @@
 @{
     string cancel = Model.UnitUrl(Model.Unit.Key);
 }
-<form class="modal modal-sm" method="post" asp-area="OrgChart" asp-page="/Units/Move" asp-route-key="@Model.Unit.Key" data-mx-ajax novalidate>
+<form class="modal modal-sm" method="post" asp-area="OrgChart" asp-page="/Units/Move" asp-route-key="@Model.Unit.Key" data-mx-ajax novalidate data-mx-init="oc-select-search">
     <div class="modal-head">
         <span class="modal-head-ico"><svg class="ico"><use href="#oc-move" /></svg></span>
         <div>
@@ -15,7 +15,7 @@
         <partial name="/Areas/OrgChart/Pages/Shared/_FormErrors.cshtml" />
         <div class="field">
             <label class="label" for="NewParentKey">@OrgText.Get("Field_NewParent")</label>
-            <select class="select" asp-for="NewParentKey" asp-items="OrgOptions.ParentsFor(Model.Chart, Model.Chart.FindUnitType(Model.Unit.TypeKey), Model.NewParentKey, excludeSubtreeOf: Model.Unit.Key)" autofocus>
+            <select class="select" data-oc-select-search="@OrgText.Get("Field_SearchList")" asp-for="NewParentKey" asp-items="OrgOptions.ParentsFor(Model.Chart, Model.Chart.FindUnitType(Model.Unit.TypeKey), Model.NewParentKey, excludeSubtreeOf: Model.Unit.Key)" autofocus>
                 <option value="">@OrgText.Get("Unit_Root")</option>
             </select>
             <span class="hint">@OrgText.Get("Unit_MoveKeysKept")</span>

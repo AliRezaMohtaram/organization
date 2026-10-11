@@ -1,5 +1,5 @@
 @model OrgChart.Razor.Admin.Pages.Assignments.TransferModel
-<form class="modal" method="post" asp-area="OrgChart" asp-page="/Assignments/Transfer" asp-route-id="@Model.Id" data-mx-ajax novalidate>
+<form class="modal" method="post" asp-area="OrgChart" asp-page="/Assignments/Transfer" asp-route-id="@Model.Id" data-mx-ajax novalidate data-mx-init="oc-select-search">
     <div class="modal-head">
         <span class="modal-head-ico"><svg class="ico"><use href="#oc-swap" /></svg></span>
         <div>
@@ -14,7 +14,7 @@
         <div class="form-grid" style="margin-top:1rem">
             <div class="field span-2">
                 <label class="label" for="ToPositionKey">@OrgText.Get("Field_NewPosition")<span class="req">*</span></label>
-                <select class="select" asp-for="ToPositionKey" asp-items="OrgOptions.Positions(Model.Chart, Model.ToPositionKey)" required autofocus>
+                <select class="select" data-oc-select-search="@OrgText.Get("Field_SearchList")" asp-for="ToPositionKey" asp-items="OrgOptions.Positions(Model.Chart, Model.ToPositionKey)" required autofocus>
                     <option value="">@OrgText.Get("Choose")</option>
                 </select>
             </div>
