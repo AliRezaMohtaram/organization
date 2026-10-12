@@ -17,8 +17,8 @@
     </header>
     <div class="toolbar">
         <form method="get" asp-area="OrgChart" asp-page="/Audit/Index" role="search">
-            <input class="input ltr oc-date" name="From" value="@Model.From" placeholder="@OrgText.Get("Audit_From")" aria-label="@OrgText.Get("Audit_From")" inputmode="numeric" autocomplete="off" />
-            <input class="input ltr oc-date" name="To" value="@Model.To" placeholder="@OrgText.Get("Audit_To")" aria-label="@OrgText.Get("Audit_To")" inputmode="numeric" autocomplete="off" />
+            <input data-jdate class="input ltr oc-date" name="From" value="@Model.From" placeholder="@OrgText.Get("Audit_From")" aria-label="@OrgText.Get("Audit_From")" inputmode="numeric" autocomplete="off" />
+            <input data-jdate class="input ltr oc-date" name="To" value="@Model.To" placeholder="@OrgText.Get("Audit_To")" aria-label="@OrgText.Get("Audit_To")" inputmode="numeric" autocomplete="off" />
             <select class="select" name="Operation" aria-label="@OrgText.Get("Audit_Operation")">
                 <option value="">@OrgText.Get("Audit_AllOperations")</option>
                 @foreach (string op in Model.Operations)

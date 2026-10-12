@@ -33,11 +33,11 @@
             </div>
             <div class="field">
                 <label class="label" for="ValidFrom">@OrgText.Get("Field_StartDate")</label>
-                <input class="input ltr" id="ValidFrom" name="ValidFrom" value="@Model.ValidFrom" autocomplete="off" placeholder="1405/01/01" inputmode="numeric" />
+                <input data-jdate class="input ltr" id="ValidFrom" name="ValidFrom" value="@Model.ValidFrom" autocomplete="off" placeholder="1405/01/01" inputmode="numeric" />
             </div>
             <div class="field">
                 <label class="label" for="ValidTo">@OrgText.Get("Field_EndDate")<span class="req">*</span></label>
-                <input class="input ltr" id="ValidTo" name="ValidTo" value="@Model.ValidTo" autocomplete="off" placeholder="1405/12/29" inputmode="numeric" required />
+                <input data-jdate class="input ltr" id="ValidTo" name="ValidTo" value="@Model.ValidTo" autocomplete="off" placeholder="1405/12/29" inputmode="numeric" required />
                 <span class="hint">@OrgText.Get("Field_DelegationEndHint")</span>
             </div>
             <partial name="/Areas/OrgChart/Pages/Shared/_ScopeFields.cshtml" model="Model.Scope" />

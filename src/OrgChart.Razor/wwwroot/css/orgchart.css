@@ -145,6 +145,8 @@
 .oc-types .card-head { justify-content:space-between; }
 .oc-inline-form { display:inline; }
 .oc-date { flex:0 0 9rem; width:9rem; }
+.jdate:has(> .oc-date) { flex:0 0 9rem; width:9rem; } /* the host's Jalali picker wraps the input */
+.jdate > .oc-date { width:100%; }
 .oc-filter-input { flex:1 1 9rem; width:auto; min-width:0; }
 .oc-json summary { cursor:pointer; color:var(--primary); font-size:.78rem; font-weight:600; }
 .oc-json pre {

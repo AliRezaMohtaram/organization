@@ -358,4 +358,8 @@ All UI must follow the **MX design system** from https://github.com/AliRezaMohta
    pages whose policy (View / Self) the user passes. `select[data-oc-select-search]` (MX component `oc-select-search`, also
    applied inside the other form components) gets a filter box above it: position, unit, parent and manager selects in the
    unit, position, assignment, transfer and delegation forms. Text `Field_SearchList`.
-13. NEXT: user's manual tests in Mapper (`docs/modules-test-checklist.md` there). Later: graphical chart; shared NuGet feed.
+13. DONE: 0.2.3 (user: every date input gets a Jalali calendar). The date inputs (unit, position, assignment, transfer, end,
+   delegation, my-delegation forms, audit filter) carry `data-jdate`: the host's MX design system turns them into a Jalali date
+   picker (text still typed as before; values written as "۱۴۰۵/۰۷/۲۰", which `OrgFormat` already parses). Without MX they stay
+   plain text boxes. `orgchart.css` sizes the wrapper of `.oc-date`.
+14. NEXT: user's manual tests in Mapper (`docs/modules-test-checklist.md` there). Later: graphical chart; shared NuGet feed.

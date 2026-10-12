@@ -72,12 +72,12 @@
             </div>
             <div class="field">
                 <label class="label" for="Input_ValidFrom">@OrgText.Get("Field_StartDate")</label>
-                <input class="input ltr" asp-for="Input.ValidFrom" autocomplete="off" placeholder="1405/01/01" inputmode="numeric" />
+                <input data-jdate class="input ltr" asp-for="Input.ValidFrom" autocomplete="off" placeholder="1405/01/01" inputmode="numeric" />
                 <span class="hint">@OrgText.Get("Field_StartDateHint")</span>
             </div>
             <div class="field">
                 <label class="label" for="Input_ValidTo">@OrgText.Get("Field_EndDate")</label>
-                <input class="input ltr" asp-for="Input.ValidTo" autocomplete="off" placeholder="1405/12/29" inputmode="numeric" />
+                <input data-jdate class="input ltr" asp-for="Input.ValidTo" autocomplete="off" placeholder="1405/12/29" inputmode="numeric" />
                 <span class="hint">@OrgText.Get("Field_ValidToHint")</span>
             </div>
             <div class="field span-2">
