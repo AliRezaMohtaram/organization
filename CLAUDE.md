@@ -362,4 +362,15 @@ All UI must follow the **MX design system** from https://github.com/AliRezaMohta
    delegation, my-delegation forms, audit filter) carry `data-jdate`: the host's MX design system turns them into a Jalali date
    picker (text still typed as before; values written as "۱۴۰۵/۰۷/۲۰", which `OrgFormat` already parses). Without MX they stay
    plain text boxes. `orgchart.css` sizes the wrapper of `.oc-date`.
-14. NEXT: user's manual tests in Mapper (`docs/modules-test-checklist.md` there). Later: graphical chart; shared NuGet feed.
+14. DONE: 0.2.4 — graphical chart (user request) and fixed row actions.
+   - Page `Diagram` (policy View; nav "نمودار سازمانی", icon `oc-diagram`; "نمایش در نمودار" on a unit's page): the units as
+     boxes top-down (nested `ul`/`li`, connector lines drawn by CSS pseudo-elements with logical properties, so RTL works),
+     each with title (link to the unit page), type, head position and holders (or "مدیر تعیین نشده"/vacant), positions and
+     people counts, a link to show only that branch (`?unit=`), and its positions on request. Inactive units with
+     `?inactive=true`. Script (`orgchart.js` → `diagram()`): collapse/expand per box (button with the count below), one /
+     two levels / all (remembered; big charts start at two), search (matches highlighted, branches opened, Enter = next),
+     zoom 30–150% (CSS `zoom`, Ctrl + wheel, remembered), drag to pan, print. Styles in `orgchart.css` (`.ocd-*`, MX tokens).
+     Test: `AdminPagesTests.The_graphical_chart_shows_units_heads_and_holders_and_one_branch`.
+   - Tables: row actions in the last column with `col-sticky` (sticky while a wide table scrolls); `wwwroot/mx` synced with
+     Mapper's mx.css/mx.js.
+15. NEXT: user's manual tests in Mapper (`docs/modules-test-checklist.md` there). Later: shared NuGet feed.

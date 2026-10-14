@@ -207,6 +207,7 @@
                             }
                         </nav>
                     </div>
+                    <a class="btn btn-ghost btn-sm" asp-area="OrgChart" asp-page="/Diagram" asp-route-unit="@unit.Key"><svg class="ico"><use href="#oc-diagram" /></svg>@OrgText.Get("Diagram_ShowUnit")</a>
                     @if (Model.CanEdit)
                     {
                         <div class="oc-unit-actions">
@@ -289,7 +290,7 @@
                     {
                         <div class="tbl-wrap">
                             <table class="tbl">
-                                <thead><tr><th>@OrgText.Get("Col_Position")</th><th>@OrgText.Get("Col_ReportsTo")</th><th>@OrgText.Get("Col_Type")</th><th>@OrgText.Get("Col_Holders")</th><th>@OrgText.Get("Col_Status")</th><th></th></tr></thead>
+                                <thead><tr><th>@OrgText.Get("Col_Position")</th><th>@OrgText.Get("Col_ReportsTo")</th><th>@OrgText.Get("Col_Type")</th><th>@OrgText.Get("Col_Holders")</th><th>@OrgText.Get("Col_Status")</th><th class="col-sticky"></th></tr></thead>
                                 <tbody>
                                     @foreach ((PositionNode position, int depth) in chart.GetPositionOutline(unit.Key))
                                     {
@@ -363,7 +364,7 @@
                                                     <div class="cell-sub">@Model.Dates.Period(position.ValidFrom, position.ValidTo)</div>
                                                 }
                                             </td>
-                                            <td>
+                                            <td class="col-sticky">
                                                 @if (Model.CanEdit)
                                                 {
                                                     <div class="row-actions">
@@ -408,7 +409,7 @@
                     {
                         <div class="tbl-wrap">
                             <table class="tbl">
-                                <thead><tr><th>@OrgText.Get("Col_Person")</th><th>@OrgText.Get("Col_Position")</th><th>@OrgText.Get("Col_Kind")</th><th>@OrgText.Get("Col_Period")</th><th>@OrgText.Get("Col_Status")</th><th></th></tr></thead>
+                                <thead><tr><th>@OrgText.Get("Col_Person")</th><th>@OrgText.Get("Col_Position")</th><th>@OrgText.Get("Col_Kind")</th><th>@OrgText.Get("Col_Period")</th><th>@OrgText.Get("Col_Status")</th><th class="col-sticky"></th></tr></thead>
                                 <tbody>
                                     @foreach (AssignmentInfo a in Model.Assignments)
                                     {
@@ -423,7 +424,7 @@
                                             <td><span class="tag @(a.Kind == AssignmentKind.Acting ? "tg-manual" : "tg-auto")">@OrgText.Kind(a.Kind)</span></td>
                                             <td class="cell-sub">@Model.Dates.Period(a.ValidFrom, a.ValidTo)</td>
                                             <td><span class="badge @(state switch { "Current" => "st-active", "Upcoming" => "st-uploaded", _ => "st-inactive" })">@OrgText.Get("State_" + state)</span></td>
-                                            <td>
+                                            <td class="col-sticky">
                                                 @if (Model.CanEdit)
                                                 {
                                                     <div class="row-actions">
@@ -497,7 +498,7 @@
                     {
                         <div class="tbl-wrap">
                             <table class="tbl">
-                                <thead><tr><th>@OrgText.Get("Col_Position")</th><th>@OrgText.Get("Col_Kind")</th><th>@OrgText.Get("Col_From")</th><th>@OrgText.Get("Col_To")</th><th>@OrgText.Get("Col_Scope")</th><th>@OrgText.Get("Col_Period")</th><th>@OrgText.Get("Col_Status")</th><th></th></tr></thead>
+                                <thead><tr><th>@OrgText.Get("Col_Position")</th><th>@OrgText.Get("Col_Kind")</th><th>@OrgText.Get("Col_From")</th><th>@OrgText.Get("Col_To")</th><th>@OrgText.Get("Col_Scope")</th><th>@OrgText.Get("Col_Period")</th><th>@OrgText.Get("Col_Status")</th><th class="col-sticky"></th></tr></thead>
                                 <tbody>
                                     @foreach (DelegationInfo d in Model.Delegations)
                                     {
@@ -511,7 +512,7 @@
                                             <td class="cell-sub">@(d.AuthorityKeys is null ? OrgText.Get("Scope_Full") : OrgText.Format("Scope_Count", OrgFormat.Number(d.AuthorityKeys.Count)))</td>
                                             <td class="cell-sub">@Model.Dates.Period(d.ValidFrom, d.ValidTo)</td>
                                             <td><span class="badge @(state switch { "Current" => "st-active", "Upcoming" => "st-uploaded", _ => "st-inactive" })">@OrgText.Get("State_" + state)</span></td>
-                                            <td>
+                                            <td class="col-sticky">
                                                 @if (Model.CanEdit)
                                                 {
                                                     <div class="row-actions">

@@ -1,0 +1,135 @@
+@page
+@model DiagramModel
+<partial name="/Areas/OrgChart/Pages/Shared/_OrgPage.cshtml" model="Model" />
+
+@functions {
+    // A unit's box and its sub-units below it; recursive.
+    async Task Box(UnitNode unit, int depth)
+    {
+        IReadOnlyList<UnitNode> children = Model.ChildrenOf(unit);
+        IReadOnlyList<PositionNode> positions = Model.PositionsOf(unit);
+        PositionNode? head = Model.Chart.FindPosition(unit.ManagerPositionKey);
+        string headNames = Model.Names(head?.Key);
+        string type = Model.Chart.FindUnitType(unit.TypeKey)?.Title ?? "";
+        string search = string.Join(" ", new[] { unit.Title, unit.Code, type, head?.Title, headNames }
+            .Concat(positions.SelectMany(p => new[] { p.Title, Model.Names(p.Key) })).Where(s => !string.IsNullOrEmpty(s)));
+        int below = Model.DescendantsOf(unit);
+        <li class="ocd-node@(unit.IsActive ? "" : " is-inactive")" data-key="@unit.Key" data-depth="@depth" data-search="@search">
+            <div class="ocd-box@(Model.Top is not null && depth == 0 ? " is-top" : "")" tabindex="0">
+                <div class="ocd-box-head">
+                    <a class="ocd-title" asp-area="OrgChart" asp-page="/Index" asp-route-unit="@unit.Key" title="@OrgText.Get("Diagram_OpenUnit")">@unit.Title</a>
+                    @if (type.Length > 0)
+                    {
+                        <span class="ocd-type">@type</span>
+                    }
+                </div>
+                <div class="ocd-head@(head is null ? " is-none" : headNames.Length == 0 ? " is-vacant" : "")">
+                    <svg class="ico"><use href="#oc-star" /></svg>
+                    @if (head is null)
+                    {
+                        <span>@OrgText.Get("Diagram_NoHead")</span>
+                    }
+                    else
+                    {
+                        <span><b>@head.Title</b> @(headNames.Length == 0 ? OrgText.Get("Position_Vacant") : headNames)</span>
+                    }
+                </div>
+                <div class="ocd-meta">
+                    <span title="@OrgText.Get("Diagram_Positions")"><svg class="ico"><use href="#oc-position" /></svg>@OrgFormat.Number(positions.Count)</span>
+                    <span title="@OrgText.Get("Diagram_People")"><svg class="ico"><use href="#oc-users" /></svg>@OrgFormat.Number(Model.PeopleOf(unit))</span>
+                    @if (!unit.IsActive)
+                    {
+                        <span class="tag">@OrgText.Get("Status_Inactive")</span>
+                    }
+                    @if (depth > 0 || Model.Top is null)
+                    {
+                        <a class="ocd-branch" asp-area="OrgChart" asp-page="/Diagram" asp-route-unit="@unit.Key" asp-route-inactive="@(Model.Inactive ? true : null)" title="@OrgText.Get("Diagram_Branch")"><svg class="ico"><use href="#oc-expand" /></svg></a>
+                    }
+                </div>
+                @if (positions.Count > 0)
+                {
+                    <ul class="ocd-positions">
+                        @foreach (PositionNode position in positions)
+                        {
+                            string names = Model.Names(position.Key);
+                            <li class="@(position.IsActive ? "" : "is-inactive")@(names.Length == 0 ? " is-vacant" : "")">
+                                <span class="ocd-pos-title">@position.Title</span>
+                                <span class="ocd-pos-names">@(names.Length == 0 ? OrgText.Get("Position_Vacant") : names)</span>
+                            </li>
+                        }
+                    </ul>
+                }
+                @if (children.Count > 0)
+                {
+                    <button type="button" class="ocd-toggle" data-ocd-toggle aria-expanded="true"
+                            aria-label="@OrgText.Format("Diagram_Toggle", unit.Title)" title="@OrgText.Format("Diagram_Below", OrgFormat.Number(below))">
+                        <span class="ocd-toggle-minus">−</span><span class="ocd-toggle-plus">@OrgFormat.Number(below)</span>
+                    </button>
+                }
+            </div>
+            @if (children.Count > 0)
+            {
+                <ul>
+                    @foreach (UnitNode child in children)
+                    {
+                        await Box(child, depth + 1);
+                    }
+                </ul>
+            }
+        </li>
+    }
+}
+
+<div class="ocd" data-ocd>
+    <div class="ocd-bar">
+        <div class="input-wrap ocd-search">
+            <svg class="ico"><use href="#oc-search" /></svg>
+            <input class="input" type="search" data-ocd-search placeholder="@OrgText.Get("Diagram_Search")" aria-label="@OrgText.Get("Diagram_Search")" autocomplete="off" />
+        </div>
+        <span class="ocd-found faint" data-ocd-found data-text="@OrgText.Get("Diagram_Found")" data-none="@OrgText.Get("Diagram_NotFound")"></span>
+        <span class="ocd-spacer"></span>
+        <div class="seg" role="group" aria-label="@OrgText.Get("Diagram_Levels")">
+            <button type="button" data-ocd-level="1">@OrgText.Get("Diagram_Level1")</button>
+            <button type="button" data-ocd-level="2">@OrgText.Get("Diagram_Level2")</button>
+            <button type="button" data-ocd-level="0">@OrgText.Get("Diagram_All")</button>
+        </div>
+        <label class="ocd-check"><input type="checkbox" data-ocd-positions /> @OrgText.Get("Diagram_ShowPositions")</label>
+        <a class="btn btn-ghost btn-sm" asp-area="OrgChart" asp-page="/Diagram" asp-route-unit="@Model.Top?.Key" asp-route-inactive="@(Model.Inactive ? null : true)">@OrgText.Get(Model.Inactive ? "Diagram_HideInactive" : "Diagram_ShowInactive")</a>
+        <div class="seg ocd-zoom" role="group" aria-label="@OrgText.Get("Diagram_Zoom")">
+            <button type="button" data-ocd-zoom="-1" aria-label="@OrgText.Get("Diagram_ZoomOut")" title="@OrgText.Get("Diagram_ZoomOut")">−</button>
+            <button type="button" data-ocd-zoom="0" data-ocd-zoom-label title="@OrgText.Get("Diagram_ZoomFit")">۱۰۰٪</button>
+            <button type="button" data-ocd-zoom="1" aria-label="@OrgText.Get("Diagram_ZoomIn")" title="@OrgText.Get("Diagram_ZoomIn")">+</button>
+        </div>
+        <button type="button" class="btn btn-ghost btn-sm" data-ocd-print>@OrgText.Get("Diagram_Print")</button>
+    </div>
+    @if (Model.Top is not null)
+    {
+        <div class="ocd-path">
+            <a asp-area="OrgChart" asp-page="/Diagram" asp-route-inactive="@(Model.Inactive ? true : null)">@OrgText.Get("Diagram_Whole")</a>
+            @foreach (UnitNode step in Model.Chart.GetPath(Model.Top.Key).SkipLast(1))
+            {
+                <span>›</span>
+                <a asp-area="OrgChart" asp-page="/Diagram" asp-route-unit="@step.Key" asp-route-inactive="@(Model.Inactive ? true : null)">@step.Title</a>
+            }
+            <span>›</span><b>@Model.Top.Title</b>
+        </div>
+    }
+    <div class="ocd-scroll" data-ocd-scroll>
+        @if (Model.Roots.Count == 0)
+        {
+            <div class="empty">@OrgText.Get("Diagram_Empty")</div>
+        }
+        else
+        {
+            <div class="ocd-canvas" data-ocd-canvas>
+                <ul class="ocd-tree">
+                    @foreach (UnitNode root in Model.Roots)
+                    {
+                        await Box(root, 0);
+                    }
+                </ul>
+            </div>
+        }
+    </div>
+    <p class="hint ocd-hint">@OrgText.Get("Diagram_Hint")</p>
+</div>

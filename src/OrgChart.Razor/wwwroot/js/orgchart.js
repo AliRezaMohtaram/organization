@@ -280,9 +280,143 @@
         });
     }
 
+
+    /* ---------------- graphical chart (Diagram page) ---------------- */
+    function diagram() {
+        const root = $("[data-ocd]");
+        if (!root) return;
+        const scroller = $("[data-ocd-scroll]", root);
+        const canvas = $("[data-ocd-canvas]", root);
+        if (!canvas) return;
+        const nodes = $$(".ocd-node", canvas);
+        const search = $("[data-ocd-search]", root);
+        const found = $("[data-ocd-found]", root);
+        const zoomLabel = $("[data-ocd-zoom-label]", root);
+        const ZOOMS = [0.3, 0.4, 0.5, 0.65, 0.8, 1, 1.15, 1.3, 1.5];
+        let zoom = ZOOMS.includes(+store.get("oc.diagram.zoom")) ? +store.get("oc.diagram.zoom") : 1;
+        let matches = [], current = -1;
+
+        const setCollapsed = (li, collapsed) => {
+            li.classList.toggle("is-collapsed", collapsed);
+            const toggle = $(":scope > .ocd-box [data-ocd-toggle]", li);
+            if (toggle) toggle.setAttribute("aria-expanded", collapsed ? "false" : "true");
+        };
+        const hasChildren = li => !!$(":scope > ul", li);
+
+        function level(n) {
+            for (const li of nodes) if (hasChildren(li)) setCollapsed(li, n > 0 && +li.dataset.depth >= n - 1);
+            $$("[data-ocd-level]", root).forEach(b => b.classList.toggle("active", +b.dataset.ocdLevel === n));
+            store.set("oc.diagram.level", String(n));
+        }
+
+        function setZoom(z) {
+            zoom = z;
+            canvas.style.zoom = String(z);
+            if (zoomLabel) zoomLabel.textContent = fa(Math.round(z * 100)) + "٪";
+            store.set("oc.diagram.zoom", String(z));
+        }
+
+        function centerOn(el) {
+            el.scrollIntoView({ block: "nearest", inline: "center" });
+        }
+
+        // collapse / expand one branch
+        canvas.addEventListener("click", e => {
+            const toggle = e.target.closest("[data-ocd-toggle]");
+            if (!toggle) return;
+            const li = toggle.closest(".ocd-node");
+            setCollapsed(li, !li.classList.contains("is-collapsed"));
+        });
+        canvas.addEventListener("keydown", e => {
+            const box = e.target.closest(".ocd-box");
+            if (!box || e.target !== box) return;
+            if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                const li = box.closest(".ocd-node");
+                if (hasChildren(li)) setCollapsed(li, !li.classList.contains("is-collapsed"));
+            }
+        });
+
+        // levels, positions, zoom, print
+        $$("[data-ocd-level]", root).forEach(b => b.addEventListener("click", () => level(+b.dataset.ocdLevel)));
+        const positions = $("[data-ocd-positions]", root);
+        positions.checked = store.get("oc.diagram.positions") === "1";
+        root.classList.toggle("show-positions", positions.checked);
+        positions.addEventListener("change", () => {
+            root.classList.toggle("show-positions", positions.checked);
+            store.set("oc.diagram.positions", positions.checked ? "1" : "0");
+        });
+        $$("[data-ocd-zoom]", root).forEach(b => b.addEventListener("click", () => {
+            const step = +b.dataset.ocdZoom, i = ZOOMS.indexOf(zoom);
+            setZoom(step === 0 ? 1 : ZOOMS[Math.max(0, Math.min(ZOOMS.length - 1, i + step))]);
+        }));
+        scroller.addEventListener("wheel", e => {
+            if (!e.ctrlKey) return;
+            e.preventDefault();
+            const i = ZOOMS.indexOf(zoom);
+            setZoom(ZOOMS[Math.max(0, Math.min(ZOOMS.length - 1, i + (e.deltaY < 0 ? 1 : -1)))]);
+        }, { passive: false });
+        $("[data-ocd-print]", root)?.addEventListener("click", () => window.print());
+
+        // pan: drag the chart (a click on a link or button still works)
+        let pan = null, panned = false;
+        scroller.addEventListener("pointerdown", e => {
+            if (e.button !== 0 || e.target.closest("a, button, input, label")) return;
+            pan = { x: e.clientX, y: e.clientY, left: scroller.scrollLeft, top: scroller.scrollTop };
+            panned = false;
+        });
+        window.addEventListener("pointermove", e => {
+            if (!pan) return;
+            const dx = e.clientX - pan.x, dy = e.clientY - pan.y;
+            if (!panned && Math.abs(dx) + Math.abs(dy) < 5) return;
+            panned = true;
+            scroller.classList.add("is-panning");
+            scroller.scrollLeft = pan.left - dx;
+            scroller.scrollTop = pan.top - dy;
+        });
+        window.addEventListener("pointerup", () => { pan = null; scroller.classList.remove("is-panning"); });
+        scroller.addEventListener("click", e => { if (panned) { e.preventDefault(); e.stopPropagation(); panned = false; } }, true);
+
+        // search: matching boxes highlighted, their branches opened; Enter = next match
+        function find() {
+            const q = norm(search.value);
+            $$(".ocd-box.is-match", canvas).forEach(b => b.classList.remove("is-match", "is-current"));
+            matches = [];
+            current = -1;
+            if (!q) { found.textContent = ""; return; }
+            for (const li of nodes) {
+                if (!norm(li.dataset.search).includes(q)) continue;
+                matches.push(li);
+                $(":scope > .ocd-box", li).classList.add("is-match");
+                for (let up = li.parentElement.closest(".ocd-node"); up; up = up.parentElement.closest(".ocd-node")) setCollapsed(up, false);
+            }
+            found.textContent = matches.length ? (found.dataset.text || "{0}").replace("{0}", fa(matches.length)) : (found.dataset.none || "—");
+            next();
+        }
+        function next() {
+            if (!matches.length) return;
+            $$(".ocd-box.is-current", canvas).forEach(b => b.classList.remove("is-current"));
+            current = (current + 1) % matches.length;
+            const box = $(":scope > .ocd-box", matches[current]);
+            box.classList.add("is-current");
+            centerOn(box);
+        }
+        let timer = 0;
+        search.addEventListener("input", () => { clearTimeout(timer); timer = setTimeout(find, 200); });
+        search.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); next(); } });
+
+        // start: the saved level (big charts: two levels), the saved zoom, the top centred
+        const saved = store.get("oc.diagram.level");
+        level(saved !== null ? +saved : nodes.length > 40 ? 2 : 0);
+        setZoom(zoom);
+        const top = $(".ocd-box", canvas);
+        if (top) requestAnimationFrame(() => centerOn(top));
+    }
+
     function init() {
         flash();
         tree();
+        diagram();
         selectSearch(document);
         const withSearch = fn => root => { fn(root); selectSearch(root); };
         if (window.MX?.component) {

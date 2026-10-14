@@ -19,6 +19,8 @@
      data-mx-ajax               (on a form inside a remote modal) submit via fetch
      data-mx-init="name"        run MX.component(name) on this element
      data-mx-src="/js/x.js"     …loading that script first if needed
+     data-jdate                 Jalali date picker on a text input; ="latin" writes Latin digits;
+                                MX.jdate(input) for inputs a script adds later
    ========================================================= */
 
 (() => {
@@ -361,6 +363,7 @@
     }
 
     async function initComponents(scope = document) {
+        enhanceDates(scope);
         const roots = $$("[data-mx-init]", scope);
         if (scope instanceof Element && scope.matches("[data-mx-init]")) roots.unshift(scope);
 
@@ -744,6 +747,271 @@
        INIT
        ===================================================== */
 
+    /* =====================================================
+       JALALI DATE PICKER  (input[data-jdate])
+       The input stays a text box (typing works); a calendar button next to it and a click on it open one shared
+       popup. The popup keeps the focus on the input: arrows move the day (RTL), PageUp/PageDown the month,
+       Enter picks, Escape closes. Picking writes "۱۴۰۵/۰۷/۲۰" and fires input + change.
+       ===================================================== */
+
+    const JD = (() => {
+        const div = (a, b) => ~~(a / b);
+        const mod = (a, b) => a - ~~(a / b) * b;
+        const BREAKS = [-61, 9, 38, 199, 426, 686, 756, 818, 1111, 1181, 1210, 1635, 2060, 2097, 2192, 2262, 2324, 2394, 2456, 3178];
+        function cal(jy) {
+            const gy = jy + 621;
+            let leapJ = -14, jp = BREAKS[0], jump = 0;
+            for (let i = 1; i < BREAKS.length; i++) {
+                const jm = BREAKS[i];
+                jump = jm - jp;
+                if (jy < jm) break;
+                leapJ += div(jump, 33) * 8 + div(mod(jump, 33), 4);
+                jp = jm;
+            }
+            let n = jy - jp;
+            leapJ += div(n, 33) * 8 + div(mod(n, 33) + 3, 4);
+            if (mod(jump, 33) === 4 && jump - n === 4) leapJ++;
+            const march = 20 + leapJ - (div(gy, 4) - div((div(gy, 100) + 1) * 3, 4) - 150);
+            if (jump - n < 6) n = n - jump + div(jump + 4, 33) * 33;
+            let leap = mod(mod(n + 1, 33) - 1, 4);
+            if (leap === -1) leap = 4;
+            return { leap, gy, march };
+        }
+        const g2d = (gy, gm, gd) => div((gy + div(gm - 8, 6) + 100100) * 1461, 4) + div(153 * mod(gm + 9, 12) + 2, 5) + gd - 34840408
+            - div(div(gy + 100100 + div(gm - 8, 6), 100) * 3, 4) + 752;
+        function d2g(jdn) {
+            let j = 4 * jdn + 139361631;
+            j = j + div(div(4 * jdn + 183187720, 146097) * 3, 4) * 4 - 3908;
+            const i = div(mod(j, 1461), 4) * 5 + 308;
+            const gd = div(mod(i, 153), 5) + 1, gm = mod(div(i, 153), 12) + 1;
+            return { gy: div(j, 1461) - 100100 + div(8 - gm, 6), gm, gd };
+        }
+        const j2d = (jy, jm, jd) => { const r = cal(jy); return g2d(r.gy, 3, r.march) + (jm - 1) * 31 - div(jm, 7) * (jm - 7) + jd - 1; };
+        function d2j(jdn) {
+            const gy = d2g(jdn).gy;
+            let jy = gy - 621;
+            const r = cal(jy);
+            let k = jdn - g2d(gy, 3, r.march);
+            if (k >= 0) {
+                if (k <= 185) return { jy, jm: 1 + div(k, 31), jd: mod(k, 31) + 1 };
+                k -= 186;
+            } else { jy--; k += 179; if (r.leap === 1) k++; }
+            return { jy, jm: 7 + div(k, 30), jd: mod(k, 30) + 1 };
+        }
+        const monthLength = (jy, jm) => jm <= 6 ? 31 : jm <= 11 ? 30 : (cal(jy).leap === 0 ? 30 : 29);
+        // weekday of a day number with Saturday = 0, computed through the Gregorian date
+        const weekday = jdn => { const g = d2g(jdn); return (new Date(g.gy, g.gm - 1, g.gd).getDay() + 1) % 7; };
+        const today = () => { const d = new Date(); return g2d(d.getFullYear(), d.getMonth() + 1, d.getDate()); };
+        return { j2d, d2j, monthLength, weekday, today };
+    })();
+
+    const JD_MONTHS = ["فروردین", "اردیبهشت", "خرداد", "تیر", "مرداد", "شهریور", "مهر", "آبان", "آذر", "دی", "بهمن", "اسفند"];
+    const JD_DAYS = ["ش", "ی", "د", "س", "چ", "پ", "ج"];
+    const latin = s => String(s).replace(/[۰-۹]/g, d => d.charCodeAt(0) - 0x06F0).replace(/[٠-٩]/g, d => d.charCodeAt(0) - 0x0660);
+    // month/year arrows: "previous" sits on the right in RTL and points right
+    const CHEV = Object.fromEntries([["r1", "m9 6 6 6-6 6"], ["r2", "m6 6 6 6-6 6M12 6l6 6-6 6"], ["l1", "m15 6-6 6 6 6"], ["l2", "m18 6-6 6 6 6M12 6l-6 6 6 6"]]
+        .map(([k, d]) => [k, `<svg class="ico" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="${d}"/></svg>`]));
+    const ICO_CAL = '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>';
+
+    /** "1405/7/20" (Persian or Latin digits, / - .) → day number, or null. */
+    function parseJalali(text) {
+        const m = /^\s*(\d{4})[\/\-.](\d{1,2})[\/\-.](\d{1,2})/.exec(latin(text || ""));
+        if (!m) return null;
+        const jy = +m[1], jm = +m[2], jd = +m[3];
+        if (jy < 1200 || jy > 1600 || jm < 1 || jm > 12 || jd < 1 || jd > JD.monthLength(jy, jm)) return null;
+        return JD.j2d(jy, jm, jd);
+    }
+
+    function formatJalali(jdn, latinDigits) {
+        const j = JD.d2j(jdn);
+        const text = `${j.jy}/${String(j.jm).padStart(2, "0")}/${String(j.jd).padStart(2, "0")}`;
+        return latinDigits ? text : fa(text);
+    }
+
+    const picker = { el: null, input: null, view: null, active: null };
+
+    function pickerEl() {
+        if (picker.el) return picker.el;
+        const el = document.createElement("div");
+        el.className = "jdate-pop";
+        el.setAttribute("role", "dialog");
+        el.setAttribute("aria-label", "تقویم");
+        el.hidden = true;
+        // keep the focus on the input
+        el.addEventListener("pointerdown", e => e.preventDefault());
+        el.addEventListener("click", e => {
+            const b = e.target.closest("button");
+            if (!b) return;
+            if (b.dataset.day) choose(+b.dataset.day);
+            else if (b.dataset.move) moveMonth(+b.dataset.move);
+            else if (b.hasAttribute("data-today")) choose(JD.today());
+            else if (b.hasAttribute("data-clear")) choose(null);
+        });
+        document.body.appendChild(el);
+        picker.el = el;
+        return el;
+    }
+
+    function moveMonth(delta) {
+        let { jy, jm } = picker.view;
+        jm += delta;
+        while (jm > 12) { jm -= 12; jy++; }
+        while (jm < 1) { jm += 12; jy--; }
+        picker.view = { jy, jm };
+        picker.active = JD.j2d(jy, jm, Math.min(JD.d2j(picker.active).jd, JD.monthLength(jy, jm)));
+        renderPicker();
+    }
+
+    function renderPicker() {
+        const el = pickerEl();
+        const { jy, jm } = picker.view;
+        const first = JD.j2d(jy, jm, 1);
+        const len = JD.monthLength(jy, jm);
+        const chosen = parseJalali(picker.input.value);
+        const today = JD.today();
+        let html = `<div class="jdate-head">
+            <button type="button" class="icon-btn sm plain" data-move="-12" aria-label="سال قبل">${CHEV.r2}</button>
+            <button type="button" class="icon-btn sm plain" data-move="-1" aria-label="ماه قبل">${CHEV.r1}</button>
+            <div class="jdate-title">${JD_MONTHS[jm - 1]} ${fa(jy)}</div>
+            <button type="button" class="icon-btn sm plain" data-move="1" aria-label="ماه بعد">${CHEV.l1}</button>
+            <button type="button" class="icon-btn sm plain" data-move="12" aria-label="سال بعد">${CHEV.l2}</button>
+        </div><div class="jdate-grid">`;
+        html += JD_DAYS.map((d, i) => `<span class="jdate-dow${i === 6 ? " is-off" : ""}">${d}</span>`).join("");
+        for (let i = 0; i < JD.weekday(first); i++) html += "<span></span>";
+        for (let d = 1; d <= len; d++) {
+            const jdn = first + d - 1;
+            const cls = ["jdate-day"];
+            if (jdn === chosen) cls.push("is-chosen");
+            if (jdn === today) cls.push("is-today");
+            if (jdn === picker.active) cls.push("is-active");
+            if (JD.weekday(jdn) === 6) cls.push("is-off");
+            html += `<button type="button" tabindex="-1" class="${cls.join(" ")}" data-day="${jdn}" aria-label="${fa(d)} ${JD_MONTHS[jm - 1]} ${fa(jy)}">${fa(d)}</button>`;
+        }
+        html += `</div><div class="jdate-foot">
+            <button type="button" class="btn btn-ghost btn-sm" data-today>امروز</button>
+            <span class="spacer"></span>
+            <button type="button" class="btn btn-quiet btn-sm" data-clear>پاک کردن</button>
+        </div>`;
+        el.innerHTML = html;
+    }
+
+    function placePicker() {
+        const el = picker.el, r = picker.input.getBoundingClientRect();
+        const w = el.offsetWidth, h = el.offsetHeight;
+        let top = r.bottom + 6;
+        if (top + h > window.innerHeight - 8 && r.top - h - 6 > 8) top = r.top - h - 6;
+        // RTL: line up with the input's right edge
+        const left = Math.max(8, Math.min(r.right - w, window.innerWidth - w - 8));
+        el.style.top = `${Math.round(top)}px`;
+        el.style.left = `${Math.round(left)}px`;
+    }
+
+    function openPicker(input) {
+        if (input.disabled || input.readOnly) return;
+        picker.input = input;
+        const start = parseJalali(input.value) ?? JD.today();
+        const j = JD.d2j(start);
+        picker.view = { jy: j.jy, jm: j.jm };
+        picker.active = start;
+        renderPicker();
+        picker.el.hidden = false;
+        input.setAttribute("aria-expanded", "true");
+        placePicker();
+    }
+
+    function closePicker() {
+        if (!picker.el || picker.el.hidden) return;
+        picker.el.hidden = true;
+        picker.input?.setAttribute("aria-expanded", "false");
+        picker.input = null;
+    }
+
+    const pickerOpenFor = input => picker.input === input && picker.el && !picker.el.hidden;
+
+    function choose(jdn) {
+        const input = picker.input;
+        if (!input) return;
+        input.value = jdn === null ? "" : formatJalali(jdn, input.dataset.jdate === "latin");
+        closePicker();
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+        input.dispatchEvent(new Event("change", { bubbles: true }));
+        input.focus();
+    }
+
+    function enhanceDate(input) {
+        if (!input || input.mxJdate || !input.parentNode) return;
+        input.mxJdate = true;
+        const wrap = document.createElement("span");
+        wrap.className = "jdate";
+        input.before(wrap);
+        wrap.appendChild(input);
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "jdate-btn";
+        btn.tabIndex = -1;
+        btn.setAttribute("aria-label", "انتخاب تاریخ از تقویم");
+        btn.innerHTML = ICO_CAL;
+        wrap.appendChild(btn);
+        input.setAttribute("aria-haspopup", "dialog");
+        input.setAttribute("aria-expanded", "false");
+        input.setAttribute("autocomplete", "off");
+        btn.addEventListener("pointerdown", e => e.preventDefault());
+        btn.addEventListener("click", () => {
+            if (pickerOpenFor(input)) closePicker();
+            else { input.focus(); openPicker(input); }
+        });
+        input.addEventListener("click", () => { if (!pickerOpenFor(input)) openPicker(input); });
+        input.addEventListener("input", () => {
+            if (!pickerOpenFor(input)) return;
+            const d = parseJalali(input.value);
+            if (d === null) return;
+            const j = JD.d2j(d);
+            picker.view = { jy: j.jy, jm: j.jm };
+            picker.active = d;
+            renderPicker();
+        });
+        input.addEventListener("blur", () => setTimeout(() => { if (picker.input === input && document.activeElement !== input) closePicker(); }, 150));
+        input.addEventListener("keydown", e => {
+            if (!pickerOpenFor(input)) {
+                if (e.altKey && e.key === "ArrowDown") { e.preventDefault(); openPicker(input); }
+                return;
+            }
+            const rtl = getComputedStyle(input.closest("[dir]") || document.documentElement).direction === "rtl";
+            const steps = { ArrowUp: -7, ArrowDown: 7, ArrowLeft: rtl ? 1 : -1, ArrowRight: rtl ? -1 : 1 };
+            if (e.key in steps) {
+                e.preventDefault();
+                picker.active += steps[e.key];
+                const j = JD.d2j(picker.active);
+                picker.view = { jy: j.jy, jm: j.jm };
+                renderPicker();
+            } else if (e.key === "PageUp" || e.key === "PageDown") {
+                e.preventDefault();
+                moveMonth(e.key === "PageUp" ? -1 : 1);
+            } else if (e.key === "Enter") {
+                e.preventDefault();
+                e.stopPropagation();
+                choose(picker.active);
+            } else if (e.key === "Escape") {
+                e.preventDefault();
+                e.stopPropagation(); // not the modal around it
+                closePicker();
+            } else if (e.key === "Tab") {
+                closePicker();
+            }
+        });
+    }
+
+    function enhanceDates(scope = document) {
+        if (scope instanceof Element && scope.matches("input[data-jdate]")) enhanceDate(scope);
+        $$("input[data-jdate]", scope).forEach(enhanceDate);
+    }
+
+    document.addEventListener("pointerdown", e => {
+        if (picker.el && !picker.el.hidden && !picker.el.contains(e.target) && !e.target.closest?.(".jdate")) closePicker();
+    });
+    window.addEventListener("resize", closePicker);
+    window.addEventListener("scroll", () => { if (picker.el && !picker.el.hidden) placePicker(); }, true);
+
     function init() {
         syncSidebar();
         mqTablet.addEventListener("change", syncSidebar);
@@ -764,6 +1032,7 @@
         actions,
         openRemote,
         component: registerComponent,
+        jdate: input => input ? enhanceDate(input) : enhanceDates(),
         refreshFilters: () => filterGroups.forEach(apply => apply())
     };
 

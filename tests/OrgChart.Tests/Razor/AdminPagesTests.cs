@@ -70,6 +70,33 @@ public sealed class AdminPagesTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task The_graphical_chart_shows_units_heads_and_holders_and_one_branch()
+    {
+        await AdminAsync(async admin =>
+        {
+            await admin.CreatePositionAsync(new PositionInput("POS-FIN-HEAD", "مدیر مالی", "FIN"));
+            await admin.SetUnitManagerAsync("FIN", "POS-FIN-HEAD");
+            await admin.CreateUnitAsync(new UnitInput("OLD", "واحد قدیمی", "DEPARTMENT", "C"));
+            await admin.SetUnitActiveAsync("OLD", false);
+        });
+        HttpClient client = _host.Client("viewer");
+
+        string html = await AdminUiHost.TextAsync(await client.GetAsync("/OrgChart/Diagram"));
+        Assert.Contains("data-ocd", html);
+        Assert.Contains("data-key=\"C\"", html);
+        Assert.Contains("data-key=\"FIN\"", html);
+        Assert.Contains("<b>مدیر مالی</b>", html); // the unit's head, vacant
+        Assert.Contains("علی احمدی", html); // a holder (of the accountant position)
+        Assert.DoesNotContain("data-key=\"OLD\"", html); // inactive units only on request
+        Assert.Contains("data-key=\"OLD\"", await AdminUiHost.TextAsync(await client.GetAsync("/OrgChart/Diagram?inactive=true")));
+
+        string branch = await AdminUiHost.TextAsync(await client.GetAsync("/OrgChart/Diagram?unit=fin"));
+        Assert.Contains("data-key=\"FIN\"", branch);
+        Assert.DoesNotContain("data-key=\"C\"", branch);
+        Assert.Contains("ocd-path", branch); // the way back to the whole chart
+    }
+
+    [Fact]
     public async Task Editor_sees_edit_actions_and_every_page_renders()
     {
         HttpClient client = _host.Client("editor");

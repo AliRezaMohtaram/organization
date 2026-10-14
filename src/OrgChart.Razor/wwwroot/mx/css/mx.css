@@ -377,6 +377,20 @@ h1, h2, h3, h4, p { margin:0; }
 .topbar-title { min-width:0; }
 .topbar-title h1 { font-size:1.08rem; font-weight:800; color:var(--text-strong); line-height:1.3; }
 .topbar-title p { font-size:.74rem; color:var(--faint); white-space:nowrap; }
+/* Multi-select of org units (partial _UnitsPicker): search + scrollable checkbox list */
+.units-picker { display:grid; gap:.5rem; }
+.units-picker-list { max-height:15rem; overflow-y:auto; border:1px solid var(--line); border-radius:var(--radius-sm); padding:.3rem 0; background:var(--surface); }
+.units-picker-item { display:flex; align-items:center; gap:.55rem; padding:.35rem .6rem; font-size:.84rem; cursor:pointer; }
+.units-picker-item:hover { background:var(--surface-2); }
+.units-picker-item input { accent-color:var(--primary); }
+.units-picker-list .empty { margin:.4rem .6rem; }
+
+/* Breadcrumb (page path) above the page content */
+.crumbs { display:flex; align-items:center; flex-wrap:wrap; gap:.35rem; margin:-.35rem 0 .9rem; font-size:.78rem; color:var(--faint); }
+.crumbs a { color:var(--muted); text-decoration:none; font-weight:600; }
+.crumbs a:hover { color:var(--primary); }
+.crumbs .ico { width:.8rem; height:.8rem; opacity:.7; }
+.crumbs [aria-current] { color:var(--text-strong); font-weight:700; max-width:28rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .topbar-actions { display:flex; align-items:center; gap:.5rem; margin-inline-start:auto; }
 .menu-btn { display:none; }
 
@@ -533,6 +547,15 @@ tr:hover .row-actions, .row-actions:focus-within { opacity:1; }
 .tbl tbody tr:hover { background:rgb(var(--line-rgb) / .035); }
 .tbl tbody tr:last-child td { border-bottom:0; }
 .tbl.compact td { padding:.55rem 1rem; }
+.tbl tbody tr[data-row-modal], .tbl tbody tr[data-row-href] { cursor:pointer; }
+/* Row actions: the last column (left in RTL), kept in view while a wide table scrolls sideways. */
+.tbl .col-sticky {
+  position:sticky; inset-inline-end:0; z-index:1; width:1%; white-space:nowrap;
+  background:var(--surface); box-shadow:inset 1px 0 0 var(--line);
+}
+[dir="rtl"] .tbl .col-sticky { box-shadow:inset -1px 0 0 var(--line); }
+.tbl th.col-sticky { background-image:linear-gradient(rgb(var(--line-rgb) / .025), rgb(var(--line-rgb) / .025)); }
+.tbl tbody tr:hover .col-sticky { background-image:linear-gradient(rgb(var(--line-rgb) / .035), rgb(var(--line-rgb) / .035)); }
 .tbl tr.row-new { animation:mx-row-in .9s var(--ease); }
 .tbl tr.row-out { animation:mx-row-out .35s ease forwards; }
 .cell-main { color:var(--text-strong); font-weight:600; }
@@ -1268,3 +1291,38 @@ details.adv > .adv-body { padding:.9rem; }
   .kpi-foot { display:none; }
   .tiles { grid-template-columns:minmax(0, 1fr); }
 }
+
+/* ================================================================
+   JALALI DATE PICKER  (input[data-jdate] → .jdate wrapper + .jdate-pop, mx.js)
+   ================================================================ */
+.jdate { position:relative; display:block; min-width:0; }
+.jdate > .input { width:100%; padding-inline-end:2.3rem; }
+.jdate-btn {
+  position:absolute; inset-block:0; inset-inline-end:.2rem; margin:auto 0; width:2rem; height:2rem;
+  display:grid; place-items:center; border:0; border-radius:var(--radius-sm); background:transparent;
+  color:var(--faint); cursor:pointer;
+}
+.jdate-btn:hover, .jdate > .input[aria-expanded="true"] + .jdate-btn { color:var(--primary); background:var(--primary-soft); }
+.jdate-btn .ico { width:1.05rem; height:1.05rem; }
+/* a left-to-right input (Latin digits) starts at the left: the button goes to the other side */
+.jdate:has(> .ltr) .jdate-btn { inset-inline-end:auto; inset-inline-start:.2rem; }
+.jdate-pop {
+  position:fixed; z-index:700; width:17.5rem; padding:.6rem;
+  border:1px solid var(--line-strong); border-radius:var(--radius); background:var(--surface);
+  box-shadow:var(--shadow-lg); user-select:none;
+}
+.jdate-pop[hidden] { display:none; }
+.jdate-head { display:flex; align-items:center; gap:.1rem; margin-bottom:.4rem; }
+.jdate-title { flex:1; text-align:center; font-weight:800; font-size:.86rem; color:var(--text-strong); }
+.jdate-grid { display:grid; grid-template-columns:repeat(7, 1fr); gap:.15rem; }
+.jdate-dow { padding:.25rem 0; text-align:center; font-size:.7rem; font-weight:700; color:var(--faint); }
+.jdate-day {
+  height:2.1rem; border:1px solid transparent; border-radius:var(--radius-sm); background:transparent;
+  color:var(--text); font:inherit; font-size:.82rem; cursor:pointer;
+}
+.jdate-day:hover { background:var(--surface-2); color:var(--text-strong); }
+.jdate-dow.is-off, .jdate-day.is-off { color:var(--danger); }
+.jdate-day.is-today { border-color:var(--primary-border); }
+.jdate-day.is-active { background:var(--surface-2); box-shadow:inset 0 0 0 1px var(--primary); }
+.jdate-day.is-chosen { background:var(--primary); color:var(--on-primary); font-weight:800; }
+.jdate-foot { display:flex; align-items:center; gap:.4rem; margin-top:.5rem; padding-top:.5rem; border-top:1px solid var(--line-soft); }

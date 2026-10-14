@@ -382,4 +382,31 @@
   <data name="My_NoReceived" xml:space="preserve"><value>اختیاری به شما تفویض نشده است.</value></data>
   <data name="My_EndText" xml:space="preserve"><value>تفویض اختیار «{0}» از همین حالا پایان می‌یابد (اگر هنوز شروع نشده باشد، حذف می‌شود).</value></data>
   <data name="Field_SearchList" xml:space="preserve"><value>جستجو در فهرست…</value></data>
+  <data name="Nav_Diagram" xml:space="preserve"><value>نمودار سازمانی</value></data>
+  <data name="Diagram_OpenUnit" xml:space="preserve"><value>جزئیات واحد</value></data>
+  <data name="Diagram_NoHead" xml:space="preserve"><value>مدیر تعیین نشده</value></data>
+  <data name="Diagram_Positions" xml:space="preserve"><value>سمت‌ها</value></data>
+  <data name="Diagram_People" xml:space="preserve"><value>افراد (متصدیان کنونی)</value></data>
+  <data name="Diagram_Branch" xml:space="preserve"><value>فقط همین شاخه</value></data>
+  <data name="Diagram_Toggle" xml:space="preserve"><value>باز و بسته کردن زیرمجموعه‌های {0}</value></data>
+  <data name="Diagram_Below" xml:space="preserve"><value>{0} واحد زیرمجموعه</value></data>
+  <data name="Diagram_Search" xml:space="preserve"><value>جستجوی واحد، سمت یا شخص…</value></data>
+  <data name="Diagram_Found" xml:space="preserve"><value>{0} مورد</value></data>
+  <data name="Diagram_NotFound" xml:space="preserve"><value>پیدا نشد</value></data>
+  <data name="Diagram_Levels" xml:space="preserve"><value>سطح‌ها</value></data>
+  <data name="Diagram_Level1" xml:space="preserve"><value>یک سطح</value></data>
+  <data name="Diagram_Level2" xml:space="preserve"><value>دو سطح</value></data>
+  <data name="Diagram_All" xml:space="preserve"><value>همه</value></data>
+  <data name="Diagram_ShowPositions" xml:space="preserve"><value>نمایش سمت‌ها</value></data>
+  <data name="Diagram_ShowInactive" xml:space="preserve"><value>نمایش غیرفعال‌ها</value></data>
+  <data name="Diagram_HideInactive" xml:space="preserve"><value>پنهان کردن غیرفعال‌ها</value></data>
+  <data name="Diagram_Zoom" xml:space="preserve"><value>بزرگ‌نمایی</value></data>
+  <data name="Diagram_ZoomOut" xml:space="preserve"><value>کوچک‌تر</value></data>
+  <data name="Diagram_ZoomIn" xml:space="preserve"><value>بزرگ‌تر</value></data>
+  <data name="Diagram_ZoomFit" xml:space="preserve"><value>اندازهٔ اصلی</value></data>
+  <data name="Diagram_Print" xml:space="preserve"><value>چاپ</value></data>
+  <data name="Diagram_Whole" xml:space="preserve"><value>کل سازمان</value></data>
+  <data name="Diagram_Empty" xml:space="preserve"><value>هنوز واحدی تعریف نشده است.</value></data>
+  <data name="Diagram_Hint" xml:space="preserve"><value>برای جابه‌جایی، زمینه را بکشید؛ Ctrl + چرخ موس بزرگ‌نمایی می‌کند. روی عنوان هر واحد کلیک کنید تا جزئیاتش باز شود؛ دکمهٔ پایین هر کادر زیرمجموعه‌ها را باز و بسته می‌کند.</value></data>
+  <data name="Diagram_ShowUnit" xml:space="preserve"><value>نمایش در نمودار</value></data>
 </root>

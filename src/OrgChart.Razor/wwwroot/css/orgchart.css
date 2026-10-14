@@ -174,3 +174,105 @@
 /* Search box above a long select (orgchart.js selectSearch) */
 .oc-select-search { margin-bottom:.35rem; }
 select[size] { height:auto; padding-block:.25rem; }
+
+/* ---------------- graphical chart (Diagram page): boxes top-down joined by lines ---------------- */
+.ocd { --ocd-line: var(--faint); display: grid; gap: .6rem; }
+.ocd-bar {
+  display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; padding: .55rem .7rem;
+  border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface);
+}
+.ocd-search { flex: 0 1 18rem; min-width: 12rem; }
+.ocd-found { font-size: .78rem; }
+.ocd-spacer { flex: 1; }
+.ocd-check { display: inline-flex; align-items: center; gap: .35rem; font-size: .82rem; color: var(--muted); cursor: pointer; }
+.ocd-check input { accent-color: var(--primary); }
+.ocd-zoom button { min-width: 2.2rem; font-variant-numeric: tabular-nums; }
+.ocd-path { display: flex; flex-wrap: wrap; align-items: center; gap: .35rem; font-size: .8rem; color: var(--faint); }
+.ocd-path a { color: var(--muted); text-decoration: none; font-weight: 600; }
+.ocd-path a:hover { color: var(--primary); }
+.ocd-path b { color: var(--text-strong); }
+.ocd-scroll {
+  overflow: auto; height: calc(100vh - var(--topbar-h, 4rem) - 13rem); min-height: 22rem; padding: 1.5rem;
+  border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface-2); cursor: grab;
+  background-image: radial-gradient(rgb(var(--line-rgb) / .12) 1px, transparent 1px); background-size: 18px 18px;
+}
+.ocd-scroll.is-panning { cursor: grabbing; user-select: none; }
+.ocd-canvas { width: max-content; min-width: 100%; }
+.ocd-hint { margin: 0; font-size: .74rem; }
+
+/* the tree: each level a row of boxes; the lines are borders of the li pseudo-elements (logical, so RTL works) */
+.ocd-tree, .ocd-node > ul { display: flex; justify-content: center; margin: 0; padding: 0; list-style: none; }
+.ocd-node > ul { position: relative; padding-top: 1.4rem; }
+.ocd-node > ul::before {
+  content: ""; position: absolute; top: 0; inset-inline-start: 50%; height: 1.4rem;
+  border-inline-start: 2px solid var(--ocd-line);
+}
+.ocd-node { position: relative; display: flex; flex-direction: column; align-items: center; padding: 1.4rem .45rem 0; }
+.ocd-node::before, .ocd-node::after {
+  content: ""; position: absolute; top: 0; width: 50%; height: 1.4rem; border-top: 2px solid var(--ocd-line);
+}
+.ocd-node::before { inset-inline-end: 50%; }
+.ocd-node::after { inset-inline-start: 50%; border-inline-start: 2px solid var(--ocd-line); }
+.ocd-node:only-child::before, .ocd-node:only-child::after { border-top: 0; }
+.ocd-node:only-child::before { display: none; }
+.ocd-node:first-child::before, .ocd-node:last-child::after { border-top: 0; }
+.ocd-node:last-child::after { border-inline-start: 0; }
+.ocd-node:last-child::before { border-inline-end: 2px solid var(--ocd-line); border-start-end-radius: 6px; }
+.ocd-node:first-child::after { border-start-start-radius: 6px; }
+.ocd-node:only-child::after { border-radius: 0; border-top: 0; border-inline-start: 2px solid var(--ocd-line); }
+.ocd-tree > .ocd-node { padding-top: 0; }
+.ocd-tree > .ocd-node::before, .ocd-tree > .ocd-node::after { display: none; }
+.ocd-node.is-collapsed > ul { display: none; }
+
+/* a unit's box */
+.ocd-box {
+  position: relative; width: 14.5rem; display: grid; gap: .35rem; padding: .6rem .7rem .7rem; text-align: start; cursor: default;
+  border: 1px solid var(--line); border-top: 3px solid var(--primary); border-radius: var(--radius-sm);
+  background: var(--surface); box-shadow: var(--shadow-sm); transition: box-shadow .15s, border-color .15s;
+}
+.ocd-box:hover { box-shadow: var(--shadow, var(--shadow-sm)); }
+.ocd-box:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.ocd-box.is-top { border-top-width: 4px; }
+.ocd-box.is-match { border-color: rgb(var(--warn)); box-shadow: 0 0 0 2px rgb(var(--warn) / .35); }
+.ocd-box.is-current { box-shadow: 0 0 0 3px rgb(var(--warn) / .7); }
+.ocd-node.is-inactive > .ocd-box { opacity: .6; border-top-color: var(--line-strong); }
+.ocd-box-head { display: flex; align-items: flex-start; gap: .4rem; }
+.ocd-title { flex: 1; min-width: 0; font-weight: 800; font-size: .88rem; line-height: 1.5; color: var(--text-strong); text-decoration: none; }
+.ocd-title:hover { color: var(--primary); }
+.ocd-type { flex: none; padding: .05rem .4rem; border-radius: 99px; background: var(--primary-soft); color: var(--primary); font-size: .66rem; font-weight: 700; white-space: nowrap; }
+.ocd-head { display: flex; align-items: flex-start; gap: .35rem; font-size: .76rem; color: var(--text); line-height: 1.6; }
+.ocd-head .ico { flex: none; width: .85rem; height: .85rem; margin-top: .2rem; color: rgb(var(--warn)); }
+.ocd-head b { font-weight: 700; color: var(--muted); }
+.ocd-head.is-vacant span { color: var(--danger); }
+.ocd-head.is-none { color: var(--faint); }
+.ocd-head.is-none .ico { color: var(--faint); }
+.ocd-meta { display: flex; align-items: center; gap: .7rem; font-size: .72rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.ocd-meta > span { display: inline-flex; align-items: center; gap: .2rem; }
+.ocd-meta .ico { width: .8rem; height: .8rem; color: var(--faint); }
+.ocd-branch { margin-inline-start: auto; display: inline-grid; place-items: center; width: 1.5rem; height: 1.5rem; border-radius: var(--radius-sm); color: var(--faint); }
+.ocd-branch:hover { background: var(--surface-2); color: var(--primary); }
+.ocd-branch .ico { width: .85rem; height: .85rem; }
+.ocd-positions { display: none; margin: .1rem 0 0; padding: .4rem 0 0; list-style: none; border-top: 1px dashed var(--line); }
+.show-positions .ocd-positions { display: grid; gap: .2rem; }
+.ocd-positions li { display: grid; font-size: .72rem; line-height: 1.5; }
+.ocd-pos-title { color: var(--text-strong); font-weight: 600; }
+.ocd-pos-names { color: var(--muted); }
+.ocd-positions li.is-vacant .ocd-pos-names { color: var(--danger); }
+.ocd-positions li.is-inactive { opacity: .55; }
+.ocd-toggle {
+  position: absolute; bottom: -.7rem; inset-inline-start: 50%; translate: -50% 0; z-index: 1;
+  min-width: 1.4rem; height: 1.4rem; padding: 0 .35rem; border: 1px solid var(--line-strong); border-radius: 99px;
+  background: var(--surface); color: var(--muted); font: inherit; font-size: .72rem; font-weight: 800; line-height: 1; cursor: pointer;
+}
+[dir="rtl"] .ocd-toggle { translate: 50% 0; }
+.ocd-toggle:hover { border-color: var(--primary); color: var(--primary); }
+.ocd-toggle-plus, .is-collapsed > .ocd-box .ocd-toggle-minus { display: none; }
+.is-collapsed > .ocd-box .ocd-toggle-plus { display: inline; }
+.is-collapsed > .ocd-box .ocd-toggle { background: var(--primary); border-color: var(--primary); color: var(--surface); }
+.ocd-node:has(> ul) > .ocd-box { margin-bottom: .2rem; }
+
+@media print {
+  .ocd-bar, .ocd-hint, .oc-head nav, .ocd-branch, .ocd-toggle { display: none !important; }
+  .ocd-scroll { height: auto; overflow: visible; border: 0; padding: 0; background: none; }
+  .ocd-box { box-shadow: none; break-inside: avoid; }
+}
