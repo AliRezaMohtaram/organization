@@ -21,6 +21,9 @@
      data-mx-src="/js/x.js"     …loading that script first if needed
      data-jdate                 Jalali date picker on a text input; ="latin" writes Latin digits;
                                 MX.jdate(input) for inputs a script adds later
+     data-jtime                 time picker (HH:mm, hours + 5-minute steps); MX.jtime(input)
+     data-pick                  (on a select) searchable picker for data lists; ="placeholder";
+                                option data-detail = muted second line; MX.pick(select) after a coded change
    ========================================================= */
 
 (() => {
@@ -364,6 +367,7 @@
 
     async function initComponents(scope = document) {
         enhanceDates(scope);
+        enhancePicks(scope);
         const roots = $$("[data-mx-init]", scope);
         if (scope instanceof Element && scope.matches("[data-mx-init]")) roots.unshift(scope);
 
@@ -1004,13 +1008,554 @@
     function enhanceDates(scope = document) {
         if (scope instanceof Element && scope.matches("input[data-jdate]")) enhanceDate(scope);
         $$("input[data-jdate]", scope).forEach(enhanceDate);
+        if (scope instanceof Element && scope.matches("input[data-jtime]")) enhanceTime(scope);
+        $$("input[data-jtime]", scope).forEach(enhanceTime);
     }
 
     document.addEventListener("pointerdown", e => {
         if (picker.el && !picker.el.hidden && !picker.el.contains(e.target) && !e.target.closest?.(".jdate")) closePicker();
+        if (clock.el && !clock.el.hidden && e.target.isConnected && !clock.el.contains(e.target) && !e.target.closest?.(".jdate")) closeClock();
     });
-    window.addEventListener("resize", closePicker);
-    window.addEventListener("scroll", () => { if (picker.el && !picker.el.hidden) placePicker(); }, true);
+    window.addEventListener("resize", () => { closePicker(); closeClock(); });
+    window.addEventListener("scroll", () => {
+        if (picker.el && !picker.el.hidden) placePicker();
+        if (clock.el && !clock.el.hidden) placeClock();
+    }, true);
+
+    /* =====================================================
+       TIME PICKER  (input[data-jtime])
+       A clock dial in MX's style: the input stays a text box ("8:30", "۸:۳۰" are fine, written back as 08:30 on
+       blur); a clock button and a click open one shared popup with the time in large digits (hour / minute, click
+       to switch) and a dial. Hours: outer ring 1–12, inner ring 13–00; minutes every 5, any minute by dragging the
+       hand. Picking the hour goes on to the minutes; picking the minute closes. Arrows move the minute by 5
+       (Up/Down: an hour), Enter closes, Escape closes without the modal around it.
+       ===================================================== */
+
+    const ICO_CLOCK = '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>';
+    const clock = { el: null, input: null, mode: "hour", drag: false };
+    const two = n => String(n).padStart(2, "0");
+
+    /* dial geometry (px): size, outer and inner ring radius */
+    const DIAL = 224, OUTER = 88, INNER = 58;
+
+    /** "8", "8:30", "۰۸:۳۰" → minutes of the day, or null. */
+    function parseTime(text) {
+        const m = /^\s*(\d{1,2})(?:\s*[:.]\s*(\d{1,2}))?\s*$/.exec(latin(text || ""));
+        if (!m || +m[1] > 23 || +(m[2] || 0) > 59) return null;
+        return +m[1] * 60 + +(m[2] || 0);
+    }
+
+    const formatTime = mins => `${two(Math.floor(mins / 60))}:${two(mins % 60)}`;
+
+    /** Where a number sits on the dial: angle in degrees (0 = top, clockwise) and radius. */
+    const hourSpot = h => ({ angle: (h % 12) * 30, radius: h === 0 || h > 12 ? INNER : OUTER });
+    const minuteSpot = m => ({ angle: m * 6, radius: OUTER });
+
+    function clockEl() {
+        if (clock.el) return clock.el;
+        const el = document.createElement("div");
+        el.className = "jdate-pop jtime-pop";
+        el.setAttribute("role", "dialog");
+        el.setAttribute("aria-label", "انتخاب ساعت");
+        el.hidden = true;
+        el.addEventListener("pointerdown", e => {
+            e.preventDefault(); // keep the focus on the input
+            const face = e.target.closest(".jtime-face");
+            if (!face || !clock.input) return;
+            clock.drag = true;
+            clock.start = { x: e.clientX, y: e.clientY };
+            face.setPointerCapture?.(e.pointerId);
+            pickAt(face, e, false);
+        });
+        el.addEventListener("pointermove", e => {
+            if (!clock.drag) return;
+            const face = el.querySelector(".jtime-face");
+            if (face) pickAt(face, e, false);
+        });
+        el.addEventListener("pointerup", e => {
+            if (!clock.drag) return;
+            clock.drag = false;
+            const face = el.querySelector(".jtime-face");
+            if (face) pickAt(face, e, true);
+        });
+        el.addEventListener("pointercancel", () => { clock.drag = false; });
+        el.addEventListener("click", e => {
+            const b = e.target.closest("button");
+            if (!b || !clock.input) return;
+            if (b.dataset.mode) { clock.mode = b.dataset.mode; renderClock(); }
+            else if (b.hasAttribute("data-now")) { const d = new Date(); setTime(d.getHours() * 60 + d.getMinutes(), true); }
+            else if (b.hasAttribute("data-clear")) { clock.input.value = ""; fire(clock.input); closeClock(); }
+        });
+        document.body.appendChild(el);
+        clock.el = el;
+        return el;
+    }
+
+    /** The value under the pointer on the dial; on release, the hour goes on to the minutes and the minute closes. */
+    function pickAt(face, e, release) {
+        const r = face.getBoundingClientRect();
+        const dx = e.clientX - (r.left + r.width / 2), dy = e.clientY - (r.top + r.height / 2);
+        let angle = Math.atan2(dx, -dy) * 180 / Math.PI;
+        if (angle < 0) angle += 360;
+        const scale = r.width / DIAL, dist = Math.hypot(dx, dy) / scale;
+        const now = parseTime(clock.input.value);
+        const h = now === null ? 8 : Math.floor(now / 60), m = now === null ? 0 : now % 60;
+        if (clock.mode === "hour") {
+            const step = Math.round(angle / 30) % 12;
+            const inner = dist < (OUTER + INNER) / 2;
+            const hour = inner ? (step === 0 ? 0 : step + 12) : (step === 0 ? 12 : step);
+            setTime(hour * 60 + m, false);
+            if (release) { clock.mode = "minute"; renderClock(); }
+        } else {
+            // a tap snaps to 5 minutes, a drag takes any minute
+            const tap = release && clock.start && Math.hypot(e.clientX - clock.start.x, e.clientY - clock.start.y) < 6;
+            const minute = (tap ? Math.round(angle / 30) * 5 : Math.round(angle / 6)) % 60;
+            setTime(h * 60 + minute, release);
+        }
+    }
+
+    function renderClock() {
+        const el = clockEl();
+        const now = parseTime(clock.input.value);
+        const h = now === null ? -1 : Math.floor(now / 60), m = now === null ? -1 : now % 60;
+        const hourMode = clock.mode === "hour";
+        const place = ({ angle, radius }) => {
+            const rad = angle * Math.PI / 180;
+            return `left:${(DIAL / 2 + radius * Math.sin(rad)).toFixed(1)}px;top:${(DIAL / 2 - radius * Math.cos(rad)).toFixed(1)}px`;
+        };
+
+        let numbers = "";
+        if (hourMode) {
+            for (let i = 1; i <= 12; i++)
+                numbers += `<span class="jtime-num${i === h ? " is-chosen" : ""}" style="${place(hourSpot(i))}">${fa(i)}</span>`;
+            for (let i = 13; i <= 24; i++) {
+                const v = i % 24;
+                numbers += `<span class="jtime-num is-inner${v === h ? " is-chosen" : ""}" style="${place(hourSpot(v))}">${fa(two(v))}</span>`;
+            }
+        } else {
+            for (let i = 0; i < 60; i += 5)
+                numbers += `<span class="jtime-num${i === m ? " is-chosen" : ""}" style="${place(minuteSpot(i))}">${fa(two(i))}</span>`;
+        }
+
+        const chosen = hourMode ? (h < 0 ? null : hourSpot(h)) : (m < 0 ? null : minuteSpot(m));
+        const hand = chosen
+            ? `<span class="jtime-hand" style="height:${chosen.radius}px;transform:rotate(${chosen.angle}deg)"><span class="jtime-knob${!hourMode && m % 5 ? " is-between" : ""}"></span></span>`
+            : "";
+
+        el.innerHTML = `<div class="jtime-head">
+                <button type="button" tabindex="-1" class="jtime-part${hourMode ? " is-on" : ""}" data-mode="hour" aria-label="ساعت">${h < 0 ? "--" : fa(two(h))}</button>
+                <span class="jtime-colon">:</span>
+                <button type="button" tabindex="-1" class="jtime-part${hourMode ? "" : " is-on"}" data-mode="minute" aria-label="دقیقه">${m < 0 ? "--" : fa(two(m))}</button>
+            </div>
+            <div class="jtime-face" style="width:${DIAL}px;height:${DIAL}px">
+                <span class="jtime-center"></span>${hand}${numbers}
+            </div>
+            <div class="jtime-hint">${hourMode ? "ساعت را انتخاب کنید (حلقهٔ داخل: ۱۳ تا ۰۰)" : "دقیقه را انتخاب کنید یا عقربه را بکشید"}</div>
+            <div class="jdate-foot">
+                <button type="button" class="btn btn-ghost btn-sm" data-now>اکنون</button>
+                <span class="spacer"></span>
+                <button type="button" class="btn btn-quiet btn-sm" data-clear>پاک کردن</button>
+            </div>`;
+    }
+
+    function placeClock() {
+        const el = clock.el, r = clock.input.getBoundingClientRect();
+        const w = el.offsetWidth, h = el.offsetHeight;
+        let top = r.bottom + 6;
+        if (top + h > window.innerHeight - 8 && r.top - h - 6 > 8) top = r.top - h - 6;
+        el.style.top = `${Math.round(top)}px`;
+        el.style.left = `${Math.round(Math.max(8, Math.min(r.right - w, window.innerWidth - w - 8)))}px`;
+    }
+
+    function openClock(input) {
+        if (input.disabled || input.readOnly) return;
+        clock.input = input;
+        clock.mode = "hour";
+        renderClock();
+        clock.el.hidden = false;
+        input.setAttribute("aria-expanded", "true");
+        placeClock();
+    }
+
+    function closeClock() {
+        if (!clock.el || clock.el.hidden) return;
+        clock.el.hidden = true;
+        clock.input?.setAttribute("aria-expanded", "false");
+        clock.input = null;
+    }
+
+    const clockOpenFor = input => clock.input === input && clock.el && !clock.el.hidden;
+
+    function fire(input) {
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+        input.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+
+    function setTime(mins, close) {
+        const input = clock.input;
+        if (!input) return;
+        input.value = formatTime((mins + 1440) % 1440);
+        fire(input);
+        if (close) closeClock(); else renderClock();
+    }
+
+    function enhanceTime(input) {
+        if (!input || input.mxJtime || !input.parentNode) return;
+        input.mxJtime = true;
+        const wrap = document.createElement("span");
+        wrap.className = "jdate";
+        input.before(wrap);
+        wrap.appendChild(input);
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "jdate-btn";
+        btn.tabIndex = -1;
+        btn.setAttribute("aria-label", "انتخاب ساعت");
+        btn.innerHTML = ICO_CLOCK;
+        wrap.appendChild(btn);
+        input.setAttribute("aria-haspopup", "dialog");
+        input.setAttribute("aria-expanded", "false");
+        input.setAttribute("autocomplete", "off");
+        btn.addEventListener("pointerdown", e => e.preventDefault());
+        btn.addEventListener("click", () => {
+            if (clockOpenFor(input)) closeClock();
+            else { input.focus(); openClock(input); }
+        });
+        input.addEventListener("click", () => { if (!clockOpenFor(input)) openClock(input); });
+        input.addEventListener("input", () => { if (clockOpenFor(input)) renderClock(); });
+        input.addEventListener("blur", () => {
+            const mins = parseTime(input.value);
+            if (mins !== null && input.value !== formatTime(mins)) { input.value = formatTime(mins); fire(input); }
+            setTimeout(() => { if (clock.input === input && document.activeElement !== input) closeClock(); }, 150);
+        });
+        input.addEventListener("keydown", e => {
+            if (!clockOpenFor(input)) {
+                if (e.altKey && e.key === "ArrowDown") { e.preventDefault(); openClock(input); }
+                return;
+            }
+            const now = parseTime(input.value) ?? 8 * 60;
+            const rtl = getComputedStyle(input.closest("[dir]") || document.documentElement).direction === "rtl";
+            const steps = { ArrowUp: -60, ArrowDown: 60, ArrowLeft: rtl ? 5 : -5, ArrowRight: rtl ? -5 : 5 };
+            if (e.key in steps) {
+                e.preventDefault();
+                setTime(now + steps[e.key], false);
+            } else if (e.key === "Enter") {
+                e.preventDefault();
+                e.stopPropagation();
+                closeClock();
+            } else if (e.key === "Escape") {
+                e.preventDefault();
+                e.stopPropagation(); // not the modal around it
+                closeClock();
+            } else if (e.key === "Tab") {
+                closeClock();
+            }
+        });
+    }
+
+    /* =====================================================
+       SEARCHABLE PICKER  (select[data-pick])
+       For every list whose choices are data (people, positions, units, teams, base data rows…): the select stays in
+       the form as the value holder (hidden) and a text box takes its place — it shows the chosen title, typing
+       searches the options (title, option data-detail as a muted second line, and the option group; every word must
+       match, Persian/Arabic letters and digits alike), ✕ clears when the select has an empty option. One shared popup
+       (fixed, so cards, tables and modals do not clip it); arrows move, Enter picks, Escape closes without the modal
+       around it. Picking sets the select and fires its input/change events, so page scripts keep listening on the
+       select (its disabled and hidden follow too). Selects a script adds later are picked up on their own; MX.pick(select) re-reads a value set by code.
+       Server search: select[data-pick-url] lists only what the page drew (the first few and the chosen one) until the
+       user types; then it asks the url (&q=…, answer { items: [{ value, title, detail, group }], more }) and a picked
+       result becomes an option of the select. data-pick-more: the page drew only some — say that the rest are found by search.
+       ===================================================== */
+
+    const ICO_X = '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 7l10 10M17 7L7 17"/></svg>';
+    const PICK_MAX = 80;
+    const pick = { el: null, select: null, items: [], shown: [], active: -1, typed: false, remote: null, seq: 0, timer: 0, loading: false };
+
+    const normText = s => latin(String(s || "")).replace(/[يى]/g, "ی").replace(/ك/g, "ک").replace(/ة/g, "ه")
+        .replace(/[‌\s]+/g, " ").toLowerCase().trim();
+
+    const escHtml = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+
+    const hasEmptyOption = select => Array.from(select.options).some(o => o.value === "");
+
+    function pickEl() {
+        if (pick.el) return pick.el;
+        const el = document.createElement("div");
+        el.className = "pick-pop";
+        el.setAttribute("role", "listbox");
+        el.id = "mx-pick-pop";
+        el.hidden = true;
+        el.addEventListener("pointerdown", e => e.preventDefault()); // keep the focus in the box
+        el.addEventListener("click", e => {
+            const b = e.target.closest(".pick-item");
+            if (b && !b.disabled) choosePick(pick.select, b.dataset.value);
+        });
+        pick.el = el;
+        return el;
+    }
+
+    function syncPick(select) {
+        const box = select.pickBox;
+        if (!box) return;
+        const input = box.querySelector(".pick-input");
+        const o = select.selectedOptions[0];
+        const has = !!(o && o.value);
+        if (pick.select !== select || !pick.typed) input.value = has ? o.text : "";
+        input.disabled = select.disabled;
+        box.hidden = select.hidden;
+        box.classList.toggle("has-value", has);
+        box.classList.toggle("is-disabled", select.disabled);
+        box.querySelector(".pick-clear").hidden = !has || select.disabled || !hasEmptyOption(select);
+        const empty = Array.from(select.options).find(o => o.value === "");
+        input.placeholder = select.dataset.pick || (empty && empty.text.trim()) || "جستجو و انتخاب…";
+    }
+
+    function choosePick(select, value) {
+        if (!select) return;
+        if (value && !Array.from(select.options).some(o => o.value === value)) {
+            // a server result: it becomes an option, so the form posts it
+            const item = pick.items.find(i => i.value === value);
+            const o = new Option(item?.title ?? value, value);
+            if (item?.detail) o.dataset.detail = item.detail;
+            select.add(o);
+        }
+        const changed = select.value !== value;
+        select.value = value;
+        pick.typed = false;
+        select.pickBox?.classList.remove("pick-invalid");
+        syncPick(select);
+        closePick();
+        if (changed) {
+            select.dispatchEvent(new Event("input", { bubbles: true }));
+            select.dispatchEvent(new Event("change", { bubbles: true }));
+        }
+    }
+
+    function placePick() {
+        const box = pick.select?.pickBox;
+        if (!box || !box.isConnected) { closePick(); return; }
+        const r = box.getBoundingClientRect();
+        const el = pick.el;
+        const width = Math.max(r.width, 224);
+        el.style.width = `${width}px`;
+        el.style.left = `${Math.max(8, Math.min(r.right - width, window.innerWidth - width - 8))}px`;
+        const below = window.innerHeight - r.bottom - 8;
+        const up = below < 220 && r.top > below;
+        el.style.maxHeight = `${Math.max(140, Math.min(320, (up ? r.top : below) - 12))}px`;
+        el.style.top = up ? "" : `${r.bottom + 4}px`;
+        el.style.bottom = up ? `${window.innerHeight - r.top + 4}px` : "";
+    }
+
+    function renderPick() {
+        const select = pick.select;
+        const input = select.pickBox.querySelector(".pick-input");
+        const words = pick.typed ? normText(input.value).split(" ").filter(Boolean) : [];
+        const matches = pick.remote ? pick.items : pick.items.filter(i => words.every(w => i.key.includes(w)));
+        pick.shown = matches.slice(0, PICK_MAX);
+        if (pick.active >= pick.shown.length) pick.active = pick.shown.length - 1;
+        if (pick.active < 0 && pick.shown.length) {
+            const current = pick.shown.findIndex(i => i.value === select.value);
+            pick.active = words.length || current < 0 ? 0 : current;
+        }
+
+        let html = "", group = null;
+        pick.shown.forEach((item, n) => {
+            if (item.group && item.group !== group) html += `<div class="dd-head">${escHtml(item.group)}</div>`;
+            group = item.group;
+            html += `<button type="button" class="dd-item pick-item${n === pick.active ? " active" : ""}${item.value === select.value ? " selected" : ""}"` +
+                ` role="option" id="mx-pick-${n}" data-value="${escHtml(item.value)}" aria-selected="${item.value === select.value}"${item.disabled ? " disabled" : ""} tabindex="-1">` +
+                `<span class="pick-title">${escHtml(item.title)}</span>${item.detail ? `<small>${escHtml(item.detail)}</small>` : ""}</button>`;
+        });
+        const url = select.dataset.pickUrl;
+        if (pick.loading && !matches.length) html = `<div class="pick-empty">در حال جستجو…</div>`;
+        else if (!matches.length) html = `<div class="pick-empty">${pick.items.length || url ? "موردی پیدا نشد." : "گزینه‌ای نیست."}</div>`;
+        else if (matches.length > PICK_MAX) html += `<div class="pick-empty">${fa(matches.length - PICK_MAX)} مورد دیگر؛ دقیق‌تر بنویسید.</div>`;
+        else if (pick.remote?.more) html += `<div class="pick-empty">موارد بیشتری هست؛ دقیق‌تر بنویسید.</div>`;
+        else if (url && !pick.remote && select.hasAttribute("data-pick-more")) html += `<div class="pick-empty">بقیه با جستجو پیدا می‌شوند؛ نام را بنویسید.</div>`;
+        pick.el.innerHTML = html;
+        input.setAttribute("aria-activedescendant", pick.active >= 0 ? `mx-pick-${pick.active}` : "");
+        pick.el.querySelector(".pick-item.active")?.scrollIntoView({ block: "nearest" });
+    }
+
+    function openPick(select) {
+        if (select.disabled) return;
+        if (pick.select !== select) closePick();
+        const el = pickEl();
+        (document.fullscreenElement || document.body).appendChild(el);
+        pick.select = select;
+        pick.items = localItems(select);
+        pick.remote = null;
+        el.hidden = false;
+        select.pickBox.querySelector(".pick-input").setAttribute("aria-expanded", "true");
+        renderPick();
+        placePick();
+    }
+
+    function localItems(select) {
+        return Array.from(select.options).filter(o => o.value !== "").map(o => {
+            const group = o.parentElement.tagName === "OPTGROUP" ? o.parentElement.label : "";
+            const detail = o.dataset.detail || "";
+            return { value: o.value, title: o.text, detail, group, disabled: o.disabled, key: normText(`${o.text} ${detail} ${group}`) };
+        });
+    }
+
+    /** select[data-pick-url]: the server's matches for what is typed (an empty box goes back to the drawn options). */
+    function searchPick(select, text) {
+        clearTimeout(pick.timer);
+        const q = text.trim();
+        if (!q) {
+            pick.remote = null;
+            pick.loading = false;
+            pick.items = localItems(select);
+            renderPick();
+            return;
+        }
+        pick.loading = true;
+        const my = ++pick.seq;
+        pick.timer = setTimeout(async () => {
+            try {
+                const url = select.dataset.pickUrl;
+                const response = await fetch(url + (url.includes("?") ? "&" : "?") + "q=" + encodeURIComponent(q),
+                    { credentials: "same-origin", headers: { Accept: "application/json" } });
+                const data = response.ok ? await response.json() : { items: [] };
+                if (my !== pick.seq || pick.select !== select) return;
+                pick.loading = false;
+                pick.remote = { more: !!data.more };
+                pick.items = (data.items || []).map(i => ({ value: String(i.value), title: i.title, detail: i.detail || "", group: i.group || "", key: normText(`${i.title} ${i.detail || ""}`) }));
+                pick.active = -1;
+                renderPick();
+            } catch {
+                if (my === pick.seq) { pick.loading = false; renderPick(); }
+            }
+        }, 250);
+        renderPick();
+    }
+
+    function closePick() {
+        if (!pick.select) return;
+        clearTimeout(pick.timer);
+        pick.seq++;
+        pick.loading = false;
+        pick.remote = null;
+        const select = pick.select;
+        pick.select = null;
+        pick.active = -1;
+        pick.typed = false;
+        if (pick.el) pick.el.hidden = true;
+        const input = select.pickBox?.querySelector(".pick-input");
+        input?.setAttribute("aria-expanded", "false");
+        input?.removeAttribute("aria-activedescendant");
+        syncPick(select);
+    }
+
+    function enhancePick(select) {
+        if (select.pickBox) return;
+        // a copy of an enhanced select (a cloned row): drop the copied box and start again
+        if (select.parentElement?.classList.contains("pick")) select.parentElement.replaceWith(select);
+
+        const box = document.createElement("div");
+        box.className = "pick";
+        const input = document.createElement("input");
+        input.type = "text";
+        input.className = "input pick-input";
+        input.autocomplete = "off";
+        input.spellcheck = false;
+        input.setAttribute("role", "combobox");
+        input.setAttribute("aria-autocomplete", "list");
+        input.setAttribute("aria-controls", "mx-pick-pop");
+        input.setAttribute("aria-expanded", "false");
+        if (select.id) {
+            input.id = `${select.id}__pick`;
+            $$(`label[for="${CSS.escape(select.id)}"]`).forEach(l => { l.htmlFor = input.id; });
+        }
+        if (select.hasAttribute("aria-label")) input.setAttribute("aria-label", select.getAttribute("aria-label"));
+        const clear = document.createElement("button");
+        clear.type = "button";
+        clear.className = "pick-clear";
+        clear.tabIndex = -1;
+        clear.setAttribute("aria-label", "پاک کردن");
+        clear.innerHTML = ICO_X;
+
+        select.parentNode.insertBefore(box, select);
+        box.append(input, clear, select);
+        select.classList.add("pick-native");
+        select.tabIndex = -1;
+        select.setAttribute("aria-hidden", "true");
+        select.pickBox = box;
+
+        input.addEventListener("focus", () => {
+            if (box.quiet) { box.quiet = false; return; } // focused to show a validation message: keep it in view
+            openPick(select);
+            input.select();
+        });
+        input.addEventListener("click", () => { if (pick.select !== select) openPick(select); });
+        // the box's own typing is not the form's: page scripts hear the select's events only
+        input.addEventListener("change", e => e.stopPropagation());
+        input.addEventListener("input", e => {
+            e.stopPropagation();
+            if (pick.select !== select) openPick(select);
+            pick.typed = true;
+            pick.active = -1;
+            if (select.dataset.pickUrl) searchPick(select, input.value);
+            else renderPick();
+        });
+        input.addEventListener("keydown", e => {
+            const open = pick.select === select;
+            if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+                e.preventDefault();
+                if (!open) { openPick(select); return; }
+                const n = pick.shown.length;
+                if (n) { pick.active = (pick.active + (e.key === "ArrowDown" ? 1 : n - 1)) % n; renderPick(); }
+            } else if (e.key === "Enter") {
+                if (!open) return;
+                e.preventDefault(); // picking, not submitting
+                const item = pick.shown[pick.active];
+                if (item && !item.disabled) choosePick(select, item.value);
+            } else if (e.key === "Escape" && open) {
+                e.preventDefault();
+                e.stopPropagation(); // not the modal around it
+                closePick();
+                input.select();
+            } else if (e.key === "Tab" && open) {
+                closePick();
+            }
+        });
+        input.addEventListener("blur", () => {
+            if (pick.select !== select) return;
+            if (pick.typed && !input.value.trim() && hasEmptyOption(select)) choosePick(select, "");
+            else closePick();
+        });
+        clear.addEventListener("click", () => { choosePick(select, ""); input.focus(); });
+        select.addEventListener("change", () => syncPick(select));
+        select.addEventListener("invalid", e => {
+            // the hidden select cannot show the browser's message: the box shows it (only the form's first problem)
+            e.preventDefault();
+            box.classList.add("pick-invalid");
+            const first = select.form && Array.from(select.form.elements).find(x => x.willValidate && !x.validity.valid);
+            if (first && first !== select) return;
+            input.setCustomValidity(select.validationMessage || "یکی را انتخاب کنید.");
+            box.quiet = document.activeElement !== input;
+            input.reportValidity();
+            setTimeout(() => input.setCustomValidity(""), 2500);
+        });
+        new MutationObserver(() => syncPick(select)).observe(select, { attributes: true, attributeFilter: ["disabled", "hidden"], childList: true, subtree: true });
+        syncPick(select);
+    }
+
+    function enhancePicks(scope = document) {
+        if (scope instanceof Element && scope.matches("select[data-pick]")) enhancePick(scope);
+        $$("select[data-pick]", scope).forEach(enhancePick);
+    }
+
+    document.addEventListener("pointerdown", e => {
+        if (pick.select && !pick.el.contains(e.target) && !pick.select.pickBox?.contains(e.target)) closePick();
+    });
+    window.addEventListener("resize", closePick);
+    window.addEventListener("scroll", () => { if (pick.select) placePick(); }, true);
+    document.addEventListener("fullscreenchange", closePick);
+    new MutationObserver(records => {
+        for (const r of records) for (const n of r.addedNodes) if (n.nodeType === 1 && n !== pick.el) enhancePicks(n);
+    }).observe(document.documentElement, { childList: true, subtree: true });
 
     function init() {
         syncSidebar();
@@ -1033,6 +1578,8 @@
         openRemote,
         component: registerComponent,
         jdate: input => input ? enhanceDate(input) : enhanceDates(),
+        jtime: input => input ? enhanceTime(input) : enhanceDates(),
+        pick: select => select ? (select.pickBox ? syncPick(select) : enhancePick(select)) : enhancePicks(),
         refreshFilters: () => filterGroups.forEach(apply => apply())
     };
 

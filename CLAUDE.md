@@ -373,4 +373,6 @@ All UI must follow the **MX design system** from https://github.com/AliRezaMohta
      Test: `AdminPagesTests.The_graphical_chart_shows_units_heads_and_holders_and_one_branch`.
    - Tables: row actions in the last column with `col-sticky` (sticky while a wide table scrolls); `wwwroot/mx` synced with
      Mapper's mx.css/mx.js.
-15. NEXT: user's manual tests in Mapper (`docs/modules-test-checklist.md` there). Later: shared NuGet feed.
+15. DONE: 0.2.5 — `wwwroot/mx` synced with Mapper's mx.css/mx.js (clock-dial time picker, «Liquid Glass» preset, also in
+   the standalone theme drawer).
+16. NEXT: user's manual tests in Mapper (`docs/modules-test-checklist.md` there). Later: shared NuGet feed.
